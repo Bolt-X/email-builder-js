@@ -1,18 +1,20 @@
+# ---- Base Node image ----
 FROM node:18-alpine
 
+# ---- Tạo thư mục làm việc ----
 WORKDIR /app
 
-# copy đúng thư mục editor-sample
-COPY packages/editor-sample/package*.json ./
+# ---- Copy toàn bộ code vào container ----
+COPY . .
+
+# ---- Chuyển vào package editor-sample ----
+WORKDIR /app/packages/editor-sample
+
+# ---- Cài đặt dependencies ----
 RUN npm install
 
-COPY packages/editor-sample ./
+# ---- Expose port cho Vite ----
+EXPOSE 5173
 
-# build Vite
-RUN npm run build
-
-# serve app bằng nginx (production)
-FROM nginx:alpine
-COPY --from=0 /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# ---- Chạy Vite server ----
+CMD ["npx", "vite", "--host", "0.0.0.0"]
