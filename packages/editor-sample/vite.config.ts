@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/email-builder-js/',
   server: {
-    allowedHosts: ['https://mail-template.bolter.work/', 'http://localhost'],
+    allowedHosts: ['mail-template.bolter.work', 'localhost'],
     port: 5173
   },
 });
