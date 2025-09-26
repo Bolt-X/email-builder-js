@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 
-import { FormatAlignCenterOutlined, FormatAlignLeftOutlined, FormatAlignRightOutlined } from '@mui/icons-material';
+import {
+  FormatAlignCenterOutlined,
+  FormatAlignJustifyOutlined,
+  FormatAlignLeftOutlined,
+  FormatAlignRightOutlined,
+} from '@mui/icons-material';
 import { ToggleButton } from '@mui/material';
 
 import RadioGroupInput from './RadioGroupInput';
@@ -30,6 +35,9 @@ export default function TextAlignInput({ label, defaultValue, onChange }: Props)
       </ToggleButton>
       <ToggleButton value="right">
         <FormatAlignRightOutlined fontSize="small" />
+      </ToggleButton>
+      <ToggleButton value="justify">
+        <FormatAlignJustifyOutlined fontSize="small" />
       </ToggleButton>
     </RadioGroupInput>
   );

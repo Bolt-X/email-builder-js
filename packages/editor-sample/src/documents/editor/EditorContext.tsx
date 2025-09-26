@@ -7,6 +7,9 @@ import { TEditorConfiguration } from './core';
 type TValue = {
   document: TEditorConfiguration;
 
+  pastDocument: TEditorConfiguration[];
+  futureDocument: TEditorConfiguration[];
+
   selectedBlockId: string | null;
   selectedSidebarTab: 'block-configuration' | 'styles';
   selectedMainTab: 'editor' | 'preview' | 'json' | 'html';
@@ -18,6 +21,9 @@ type TValue = {
 
 const editorStateStore = create<TValue>(() => ({
   document: getConfiguration(window.location.hash),
+  pastDocument: [],
+  futureDocument: [],
+
   selectedBlockId: null,
   selectedSidebarTab: 'styles',
   selectedMainTab: 'editor',
@@ -77,20 +83,23 @@ export function setSidebarTab(selectedSidebarTab: TValue['selectedSidebarTab']) 
 }
 
 export function resetDocument(document: TValue['document']) {
-  return editorStateStore.setState({
+  editorStateStore.setState({
     document,
+    pastDocument: [],
+    futureDocument: [],
     selectedSidebarTab: 'styles',
     selectedBlockId: null,
   });
 }
 
 export function setDocument(document: TValue['document']) {
-  const originalDocument = editorStateStore.getState().document;
-  return editorStateStore.setState({
-    document: {
-      ...originalDocument,
-      ...document,
-    },
+  const { document: current, pastDocument } = editorStateStore.getState();
+
+  // lưu document hiện tại vào past trước khi set document mới
+  editorStateStore.setState({
+    pastDocument: [...pastDocument, current],
+    document: { ...current, ...document },
+    futureDocument: [], // clear future khi có action mới
   });
 }
 
@@ -106,4 +115,43 @@ export function toggleSamplesDrawerOpen() {
 
 export function setSelectedScreenSize(selectedScreenSize: TValue['selectedScreenSize']) {
   return editorStateStore.setState({ selectedScreenSize });
+}
+
+// ====== Undo / Redo ======
+export function undo() {
+  const { pastDocument, document, futureDocument } = editorStateStore.getState();
+  if (pastDocument.length === 0) return;
+
+  const previous = pastDocument[pastDocument.length - 1];
+  const newPast = pastDocument.slice(0, -1);
+
+  editorStateStore.setState({
+    pastDocument: newPast,
+    document: previous,
+    futureDocument: [document, ...futureDocument],
+  });
+}
+
+export function redo() {
+  const { pastDocument, document, futureDocument } = editorStateStore.getState();
+  if (futureDocument.length === 0) return;
+
+  const next = futureDocument[0];
+  const newFuture = futureDocument.slice(1);
+
+  editorStateStore.setState({
+    pastDocument: [...pastDocument, document],
+    document: next,
+    futureDocument: newFuture,
+  });
+}
+
+// ====== Hook Undo/Redo ======
+export function useUndoRedo() {
+  return editorStateStore((s) => ({
+    canUndo: s.pastDocument.length > 0,
+    canRedo: s.futureDocument.length > 0,
+    undo,
+    redo,
+  }));
 }

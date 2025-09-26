@@ -10,6 +10,7 @@ import FontWeightInput from '../inputs/FontWeightInput';
 import PaddingInput from '../inputs/PaddingInput';
 import SliderInput from '../inputs/SliderInput';
 import TextAlignInput from '../inputs/TextAlignInput';
+// import ImageInput from '../inputs/ImageInput';
 
 type StylePropertyPanelProps = {
   name: keyof TStyle;
@@ -26,6 +27,8 @@ export default function SingleStylePropertyPanel({ name, value, onChange }: Styl
   switch (name) {
     case 'backgroundColor':
       return <NullableColorInput label="Background color" defaultValue={defaultValue} onChange={handleChange} />;
+    // case 'backgroundImage':
+    //   return <ImageInput label="Background image" defaultValue={defaultValue} onChange={handleChange} />;
     case 'borderColor':
       return <NullableColorInput label="Border color" defaultValue={defaultValue} onChange={handleChange} />;
     case 'borderRadius':

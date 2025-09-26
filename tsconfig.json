@@ -4,19 +4,21 @@
     "module": "esnext",
     "lib": [],
     "moduleResolution": "node",
-    "jsx": "react",
+    "jsx": "react-jsx",
     "strict": true,
     "sourceMap": true,
     "allowJs": true,
     "esModuleInterop": true,
-
     "skipLibCheck": true,
     "declarationMap": true,
     "declaration": true,
     "noUnusedLocals": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
   },
-  "exclude": ["dist"]
+  "exclude": [
+    "dist"
+  ]
 }

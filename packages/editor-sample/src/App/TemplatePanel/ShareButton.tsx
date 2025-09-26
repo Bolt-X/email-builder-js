@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-import { IosShareOutlined } from '@mui/icons-material';
-import { IconButton, Snackbar, Tooltip } from '@mui/material';
+import { Button, IconButton, Snackbar } from '@mui/material';
 
 import { useDocument } from '../../documents/editor/EditorContext';
 
@@ -21,11 +20,9 @@ export default function ShareButton() {
 
   return (
     <>
-      <IconButton onClick={onClick}>
-        <Tooltip title="Share current template">
-          <IosShareOutlined fontSize="small" />
-        </Tooltip>
-      </IconButton>
+      <Button onClick={onClick} variant="contained" color="primary" sx={{ justifyContent: 'center' }}>
+        Save
+      </Button>
       <Snackbar
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         open={message !== null}

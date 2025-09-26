@@ -2,7 +2,17 @@
   "compilerOptions": {
     "target": "es2015",
     "module": "esnext",
-    "outDir": "dist"
+    "outDir": "dist",
+    "jsx": "react-jsx",
+    "moduleResolution": "node", // hoặc "nodenext" nếu project dùng ESM
+    "baseUrl": "/packages/", // tùy chọn
+    "paths": {
+      "@/*": [
+        "*"
+      ]
+    }
   },
-  "exclude": ["dist"]
+  "exclude": [
+    "dist"
+  ]
 }

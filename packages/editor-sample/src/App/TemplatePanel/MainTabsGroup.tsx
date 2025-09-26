@@ -38,7 +38,7 @@ export default function MainTabsGroup() {
           </Tooltip>
         }
       />
-      <Tab
+      {/* <Tab
         value="html"
         label={
           <Tooltip title="HTML output">
@@ -53,7 +53,7 @@ export default function MainTabsGroup() {
             <DataObjectOutlined fontSize="small" />
           </Tooltip>
         }
-      />
+      /> */}
     </Tabs>
   );
 }

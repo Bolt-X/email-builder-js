@@ -7,6 +7,7 @@ import { useInspectorDrawerOpen, useSamplesDrawerOpen } from '../documents/edito
 import InspectorDrawer, { INSPECTOR_DRAWER_WIDTH } from './InspectorDrawer';
 import SamplesDrawer, { SAMPLES_DRAWER_WIDTH } from './SamplesDrawer';
 import TemplatePanel from './TemplatePanel';
+import { useUndoRedoShortcuts } from '../hooks/useUndoRedoShortcuts';
 
 function useDrawerTransition(cssProperty: 'margin-left' | 'margin-right', open: boolean) {
   const { transitions } = useTheme();
@@ -17,6 +18,7 @@ function useDrawerTransition(cssProperty: 'margin-left' | 'margin-right', open: 
 }
 
 export default function App() {
+  useUndoRedoShortcuts();
   const inspectorDrawerOpen = useInspectorDrawerOpen();
   const samplesDrawerOpen = useSamplesDrawerOpen();
 

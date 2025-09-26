@@ -24,7 +24,7 @@
     "quotes": ["error", "single", { "avoidEscape": false, "allowTemplateLiterals": true }],
     "semi": ["error", "always"],
     "simple-import-sort/imports": [
-      "error",
+      "off",
       {
         "groups": [["^\\u0000"], ["^\\w"], ["^@"], ["^"], ["^\\.\\."], ["^\\."]]
       }

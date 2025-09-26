@@ -6,6 +6,7 @@ import BaseSidebarPanel from './helpers/BaseSidebarPanel';
 import BooleanInput from './helpers/inputs/BooleanInput';
 import TextInput from './helpers/inputs/TextInput';
 import MultiStylePropertyPanel from './helpers/style-inputs/MultiStylePropertyPanel';
+import RichTextEditorInput from './helpers/inputs/RichTextEditorInput';
 
 type TextSidebarPanelProps = {
   data: TextProps;
@@ -26,12 +27,20 @@ export default function TextSidebarPanel({ data, setData }: TextSidebarPanelProp
 
   return (
     <BaseSidebarPanel title="Text block">
-      <TextInput
-        label="Content"
-        rows={5}
-        defaultValue={data.props?.text ?? ''}
-        onChange={(text) => updateData({ ...data, props: { ...data.props, text } })}
-      />
+      {data.props?.markdown ? (
+        <RichTextEditorInput
+          defaultValue={data.props?.text ?? ''}
+          onChange={(text) => updateData({ ...data, props: { ...data.props, text } })}
+        />
+      ) : (
+        <TextInput
+          label="Content"
+          rows={5}
+          defaultValue={data.props?.text ?? ''}
+          onChange={(text) => updateData({ ...data, props: { ...data.props, text } })}
+        />
+      )}
+
       <BooleanInput
         label="Markdown"
         defaultValue={data.props?.markdown ?? false}
@@ -39,7 +48,16 @@ export default function TextSidebarPanel({ data, setData }: TextSidebarPanelProp
       />
 
       <MultiStylePropertyPanel
-        names={['color', 'backgroundColor', 'fontFamily', 'fontSize', 'fontWeight', 'textAlign', 'padding']}
+        names={[
+          'color',
+          'backgroundColor',
+          'backgroundImage',
+          'fontFamily',
+          'fontSize',
+          'fontWeight',
+          'textAlign',
+          'padding',
+        ]}
         value={data.style}
         onChange={(style) => updateData({ ...data, style })}
       />

@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import { MonitorOutlined, PhoneIphoneOutlined } from '@mui/icons-material';
-import { Box, Stack, SxProps, ToggleButton, ToggleButtonGroup, Tooltip } from '@mui/material';
+import { CodeOutlined, MonitorOutlined, PhoneIphoneOutlined } from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  Menu,
+  MenuItem,
+  Stack,
+  SxProps,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+} from '@mui/material';
 import { Reader } from '@usewaypoint/email-builder';
 
 import EditorBlock from '../../documents/editor/EditorBlock';
@@ -20,11 +32,22 @@ import ImportJson from './ImportJson';
 import JsonPanel from './JsonPanel';
 import MainTabsGroup from './MainTabsGroup';
 import ShareButton from './ShareButton';
+import UndoButton from './UndoButton';
+import RedoButton from './RedoButton';
 
 export default function TemplatePanel() {
   const document = useDocument();
   const selectedMainTab = useSelectedMainTab();
   const selectedScreenSize = useSelectedScreenSize();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   let mainBoxSx: SxProps = {
     height: '100%',
@@ -93,10 +116,25 @@ export default function TemplatePanel() {
         <Stack px={2} direction="row" gap={2} width="100%" justifyContent="space-between" alignItems="center">
           <Stack direction="row" spacing={2}>
             <MainTabsGroup />
+            <Divider orientation="vertical" flexItem />
+            <UndoButton />
+            <RedoButton />
           </Stack>
           <Stack direction="row" spacing={2}>
-            <DownloadJson />
-            <ImportJson />
+            {/* Dropdown JSON Menu */}
+            <Tooltip title="JSON actions">
+              <IconButton size="small" onClick={handleClick}>
+                <CodeOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+              <MenuItem onClick={handleClose}>
+                <DownloadJson />
+              </MenuItem>
+              <MenuItem onClick={handleClose}>
+                <ImportJson />
+              </MenuItem>
+            </Menu>
             <ToggleButtonGroup value={selectedScreenSize} exclusive size="small" onChange={handleScreenSizeChange}>
               <ToggleButton value="desktop">
                 <Tooltip title="Desktop view">
