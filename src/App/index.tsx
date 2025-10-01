@@ -1,44 +1,60 @@
-import React from 'react';
+import React from "react";
 
-import { Stack, useTheme } from '@mui/material';
+import { Stack, useTheme } from "@mui/material";
 
-import { useInspectorDrawerOpen, useSamplesDrawerOpen } from '../documents/editor/EditorContext';
+import {
+	useInspectorDrawerOpen,
+	useSamplesDrawerOpen,
+} from "../documents/editor/EditorContext";
 
-import InspectorDrawer, { INSPECTOR_DRAWER_WIDTH } from './InspectorDrawer';
-import SamplesDrawer, { SAMPLES_DRAWER_WIDTH } from './SamplesDrawer';
-import TemplatePanel from './TemplatePanel';
-import { useUndoRedoShortcuts } from '../hooks/useUndoRedoShortcuts';
+import InspectorDrawer, { INSPECTOR_DRAWER_WIDTH } from "./InspectorDrawer";
+import SamplesDrawer, { SAMPLES_DRAWER_WIDTH } from "./SamplesDrawer";
+import TemplatePanel from "./TemplatePanel";
+import { useUndoRedoShortcuts } from "../hooks/useUndoRedoShortcuts";
+import ModalSearch from "../components/modals/ModalSearch";
 
-function useDrawerTransition(cssProperty: 'margin-left' | 'margin-right', open: boolean) {
-  const { transitions } = useTheme();
-  return transitions.create(cssProperty, {
-    easing: !open ? transitions.easing.sharp : transitions.easing.easeOut,
-    duration: !open ? transitions.duration.leavingScreen : transitions.duration.enteringScreen,
-  });
+function useDrawerTransition(
+	cssProperty: "margin-left" | "margin-right",
+	open: boolean
+) {
+	const { transitions } = useTheme();
+	return transitions.create(cssProperty, {
+		easing: !open ? transitions.easing.sharp : transitions.easing.easeOut,
+		duration: !open
+			? transitions.duration.leavingScreen
+			: transitions.duration.enteringScreen,
+	});
 }
 
 export default function App() {
-  useUndoRedoShortcuts();
-  const inspectorDrawerOpen = useInspectorDrawerOpen();
-  const samplesDrawerOpen = useSamplesDrawerOpen();
+	useUndoRedoShortcuts();
+	const inspectorDrawerOpen = useInspectorDrawerOpen();
+	const samplesDrawerOpen = useSamplesDrawerOpen();
 
-  const marginLeftTransition = useDrawerTransition('margin-left', samplesDrawerOpen);
-  const marginRightTransition = useDrawerTransition('margin-right', inspectorDrawerOpen);
+	const marginLeftTransition = useDrawerTransition(
+		"margin-left",
+		samplesDrawerOpen
+	);
+	const marginRightTransition = useDrawerTransition(
+		"margin-right",
+		inspectorDrawerOpen
+	);
 
-  return (
-    <>
-      <InspectorDrawer />
-      <SamplesDrawer />
+	return (
+		<>
+			<InspectorDrawer />
+			<SamplesDrawer />
+			<ModalSearch />
 
-      <Stack
-        sx={{
-          marginRight: inspectorDrawerOpen ? `${INSPECTOR_DRAWER_WIDTH}px` : 0,
-          marginLeft: samplesDrawerOpen ? `${SAMPLES_DRAWER_WIDTH}px` : 0,
-          transition: [marginLeftTransition, marginRightTransition].join(', '),
-        }}
-      >
-        <TemplatePanel />
-      </Stack>
-    </>
-  );
+			<Stack
+				sx={{
+					marginRight: inspectorDrawerOpen ? `${INSPECTOR_DRAWER_WIDTH}px` : 0,
+					marginLeft: samplesDrawerOpen ? `${SAMPLES_DRAWER_WIDTH}px` : 0,
+					transition: [marginLeftTransition, marginRightTransition].join(", "),
+				}}
+			>
+				<TemplatePanel />
+			</Stack>
+		</>
+	);
 }

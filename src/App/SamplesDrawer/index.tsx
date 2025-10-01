@@ -1,79 +1,184 @@
-import React from 'react';
+import React from "react";
 
-import { Box, Button, Divider, Drawer, Link, Stack, Typography } from '@mui/material';
-
-import { useSamplesDrawerOpen } from '../../documents/editor/EditorContext';
-
-import SidebarButton from './SidebarButton';
-import logo from './waypoint.svg';
+import {
+	Avatar,
+	Box,
+	Button,
+	Collapse,
+	Divider,
+	Drawer,
+	Link,
+	List,
+	ListItemButton,
+	ListItemIcon,
+	ListItemText,
+	Stack,
+	Typography,
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { useSamplesDrawerOpen } from "../../documents/editor/EditorContext";
+import {
+	Search,
+	DescriptionOutlined,
+	HistoryOutlined,
+	ExpandLess,
+	ExpandMore,
+} from "@mui/icons-material";
+import { toggleSearchModalOpen } from "../../contexts";
 
 export const SAMPLES_DRAWER_WIDTH = 240;
 
 export default function SamplesDrawer() {
-  const samplesDrawerOpen = useSamplesDrawerOpen();
+	const samplesDrawerOpen = useSamplesDrawerOpen();
+	const [openTemplate, setOpenTemplate] = React.useState(false);
 
-  return (
-    <Drawer
-      variant="persistent"
-      anchor="left"
-      open={samplesDrawerOpen}
-      sx={{
-        width: samplesDrawerOpen ? SAMPLES_DRAWER_WIDTH : 0,
-      }}
-    >
-      <Stack spacing={3} py={1} px={2} width={SAMPLES_DRAWER_WIDTH} justifyContent="space-between" height="100%">
-        <Stack spacing={2} sx={{ '& .MuiButtonBase-root': { width: '100%', justifyContent: 'flex-start' } }}>
-          <Typography variant="h6" component="h1" sx={{ p: 0.75 }} align="center">
-            BoltX
-          </Typography>
+	return (
+		<Drawer
+			variant="persistent"
+			anchor="left"
+			open={samplesDrawerOpen}
+			sx={{
+				width: samplesDrawerOpen ? SAMPLES_DRAWER_WIDTH : 0,
+				"& .MuiDrawer-paper": {
+					width: SAMPLES_DRAWER_WIDTH,
+					boxSizing: "border-box",
+					display: "flex",
+					flexDirection: "column",
+					justifyContent: "space-between",
+					p: 2,
+				},
+			}}
+		>
+			{/* Top Section */}
+			<Stack spacing={2}>
+				{/* Header */}
+				<Stack
+					direction="row"
+					alignItems="center"
+					spacing={1}
+					sx={{ pl: 2, py: 1 }} // căn trái và padding gọn
+				>
+					<MenuIcon fontSize="small" />
+					<Typography
+						variant="subtitle1"
+						fontWeight="bold"
+					>
+						MailBolter
+					</Typography>
+				</Stack>
 
-          <Stack alignItems="flex-start">
-            <SidebarButton href="#">Empty</SidebarButton>
-            <SidebarButton href="#sample/welcome">Welcome email</SidebarButton>
-            <SidebarButton href="#sample/one-time-password">One-time passcode (OTP)</SidebarButton>
-            <SidebarButton href="#sample/reset-password">Reset password</SidebarButton>
-            <SidebarButton href="#sample/order-ecomerce">E-commerce receipt</SidebarButton>
-            <SidebarButton href="#sample/subscription-receipt">Subscription receipt</SidebarButton>
-            <SidebarButton href="#sample/reservation-reminder">Reservation reminder</SidebarButton>
-            <SidebarButton href="#sample/post-metrics-report">Post metrics</SidebarButton>
-            <SidebarButton href="#sample/respond-to-message">Respond to inquiry</SidebarButton>
-          </Stack>
+				{/* Menu items */}
+				<List sx={{ pt: 0 }}>
+					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+						<ListItemIcon sx={{ minWidth: 32 }}>
+							<Search fontSize="small" />
+						</ListItemIcon>
+						<ListItemText
+							primary="Tìm kiếm"
+							onClick={toggleSearchModalOpen}
+						/>
+					</ListItemButton>
 
-          <Divider />
+					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+						<ListItemIcon sx={{ minWidth: 32 }}>
+							<DescriptionOutlined fontSize="small" />
+						</ListItemIcon>
+						<ListItemText primary="Ghi chú" />
+					</ListItemButton>
 
-          {/* <Stack>
-            <Button size="small" href="https://www.usewaypoint.com/open-source/emailbuilderjs" target="_blank">
-              Learn more
-            </Button>
-            <Button size="small" href="https://github.com/usewaypoint/email-builder-js" target="_blank">
-              View on GitHub
-            </Button>
-          </Stack> */}
-        </Stack>
-        {/* <Stack spacing={2} px={0.75} py={3}>
-          <Link href="https://usewaypoint.com?utm_source=emailbuilderjs" target="_blank" sx={{ lineHeight: 1 }}>
-            <Box component="img" src={logo} width={32} />
-          </Link>
-          <Box>
-            <Typography variant="overline" gutterBottom>
-              Looking to send emails?
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Waypoint is an end-to-end email API with a &apos;pro&apos; version of this template builder with dynamic
-              variables, loops, conditionals, drag and drop, layouts, and more.
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ justifyContent: 'center' }}
-            href="https://usewaypoint.com?utm_source=emailbuilderjs"
-            target="_blank"
-          >
-            Learn more
-          </Button>
-        </Stack> */}
-      </Stack>
-    </Drawer>
-  );
+					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+						<ListItemIcon sx={{ minWidth: 32 }}>
+							<HistoryOutlined fontSize="small" />
+						</ListItemIcon>
+						<ListItemText primary="Lịch sử" />
+					</ListItemButton>
+
+					<Divider />
+
+					<ListItemButton
+						onClick={() => setOpenTemplate(!openTemplate)}
+						sx={{ py: 0.75, px: 2 }}
+					>
+						<ListItemText primary="Template" />
+						{openTemplate ? <ExpandLess /> : <ExpandMore />}
+					</ListItemButton>
+
+					<Collapse
+						in={openTemplate}
+						timeout="auto"
+						unmountOnExit
+					>
+						<List
+							component="div"
+							disablePadding
+						>
+							<ListItemButton sx={{ py: 0.5, pl: 4 }}>
+								<ListItemText primary="Chào mừng Trung thu 2025" />
+							</ListItemButton>
+							<ListItemButton sx={{ py: 0.5, pl: 4 }}>
+								<ListItemText primary="Chào mừng 20/10" />
+							</ListItemButton>
+						</List>
+					</Collapse>
+				</List>
+			</Stack>
+
+			{/* Footer */}
+			<Stack spacing={2}>
+				{/* Main Section */}
+				<Stack spacing={1}>
+					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+						<ListItemText primary="Dashboard" />
+					</ListItemButton>
+					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+						<ListItemText primary="List" />
+					</ListItemButton>
+					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+						<ListItemText primary="Subscribers" />
+					</ListItemButton>
+					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+						<ListItemText primary="Campaign" />
+					</ListItemButton>
+				</Stack>
+				<Divider />
+
+				<Box>
+					<Typography
+						variant="h6"
+						color="primary"
+					>
+						boltx
+					</Typography>
+					<Typography
+						variant="body2"
+						color="text.secondary"
+					>
+						Giải pháp rút ngắn thời gian soạn và gửi email
+					</Typography>
+					<Button
+						size="small"
+						sx={{ mt: 1 }}
+					>
+						Learn more
+					</Button>
+				</Box>
+
+				<Divider />
+
+				<Stack
+					direction="row"
+					alignItems="center"
+					spacing={1}
+				>
+					<Avatar sx={{ width: 32, height: 32 }}>A</Avatar>
+					<Typography
+						variant="body2"
+						fontWeight="medium"
+					>
+						Account name
+					</Typography>
+				</Stack>
+			</Stack>
+		</Drawer>
+	);
 }
