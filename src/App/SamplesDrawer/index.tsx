@@ -26,12 +26,18 @@ import {
 	AddBox,
 } from "@mui/icons-material";
 import { toggleDrawerNoteOpen, toggleSearchModalOpen } from "../../contexts";
-import { useSamplesDrawerOpen } from "../../documents/editor/EditorContext";
-import { useTemplates } from "../../contexts/templates";
+import {
+	setDocument,
+	useSamplesDrawerOpen,
+} from "../../documents/editor/EditorContext";
+import { setCurrentTemplate, useTemplates } from "../../contexts/templates";
+import { useNavigate } from "react-router-dom";
+import EMPTY_EMAIL_MESSAGE from "../../getConfiguration/sample/empty-email-message";
 
 export const SAMPLES_DRAWER_WIDTH = 240;
 
 export default function SamplesDrawer() {
+	const navigate = useNavigate();
 	const templates = useTemplates();
 	const samplesDrawerOpen = useSamplesDrawerOpen();
 	const [openTemplate, setOpenTemplate] = React.useState(true);
@@ -75,8 +81,11 @@ export default function SamplesDrawer() {
 				<List sx={{ pt: 0 }}>
 					<ListItemButton
 						sx={{ py: 0.75, px: 2 }}
-						LinkComponent={Link}
-						href="/"
+						onClick={() => {
+							navigate("/");
+							setDocument(EMPTY_EMAIL_MESSAGE);
+							setCurrentTemplate(null);
+						}}
 					>
 						<ListItemIcon sx={{ minWidth: 32 }}>
 							<AddBox fontSize="small" />
@@ -134,8 +143,7 @@ export default function SamplesDrawer() {
 									<ListItemButton
 										key={"template_" + template.id}
 										sx={{ py: 0.5, pl: 4 }}
-										LinkComponent={Link}
-										href={"/templates/" + template.id}
+										onClick={() => navigate("/templates/" + template.id)}
 									>
 										<ListItemText primary={template.name} />
 									</ListItemButton>

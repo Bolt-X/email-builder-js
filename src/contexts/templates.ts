@@ -28,7 +28,7 @@ export const useCurrentTemplate = () => templateState((s) => s.currentTemplate)
 export const setCurrentTemplate = (template: Partial<Template>) => {
   const currentTemplate = templateState.getState().currentTemplate
   return templateState.setState({
-    currentTemplate: { ...currentTemplate, ...template }
+    currentTemplate: template ? { ...currentTemplate, ...template } : template
   })
 }
 
