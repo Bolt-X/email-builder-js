@@ -16,21 +16,25 @@ import {
 	Typography,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { useSamplesDrawerOpen } from "../../documents/editor/EditorContext";
 import {
 	Search,
 	DescriptionOutlined,
 	HistoryOutlined,
 	ExpandLess,
 	ExpandMore,
+	EditOutlined,
+	AddBox,
 } from "@mui/icons-material";
-import { toggleSearchModalOpen } from "../../contexts";
+import { toggleDrawerNoteOpen, toggleSearchModalOpen } from "../../contexts";
+import { useSamplesDrawerOpen } from "../../documents/editor/EditorContext";
+import { useTemplates } from "../../contexts/templates";
 
 export const SAMPLES_DRAWER_WIDTH = 240;
 
 export default function SamplesDrawer() {
+	const templates = useTemplates();
 	const samplesDrawerOpen = useSamplesDrawerOpen();
-	const [openTemplate, setOpenTemplate] = React.useState(false);
+	const [openTemplate, setOpenTemplate] = React.useState(true);
 
 	return (
 		<Drawer
@@ -69,12 +73,22 @@ export default function SamplesDrawer() {
 
 				{/* Menu items */}
 				<List sx={{ pt: 0 }}>
+					<ListItemButton
+						sx={{ py: 0.75, px: 2 }}
+						LinkComponent={Link}
+						href="/"
+					>
+						<ListItemIcon sx={{ minWidth: 32 }}>
+							<AddBox fontSize="small" />
+						</ListItemIcon>
+						<ListItemText primary="New template" />
+					</ListItemButton>
 					<ListItemButton sx={{ py: 0.75, px: 2 }}>
 						<ListItemIcon sx={{ minWidth: 32 }}>
 							<Search fontSize="small" />
 						</ListItemIcon>
 						<ListItemText
-							primary="Tìm kiếm"
+							primary="Search"
 							onClick={toggleSearchModalOpen}
 						/>
 					</ListItemButton>
@@ -83,14 +97,17 @@ export default function SamplesDrawer() {
 						<ListItemIcon sx={{ minWidth: 32 }}>
 							<DescriptionOutlined fontSize="small" />
 						</ListItemIcon>
-						<ListItemText primary="Ghi chú" />
+						<ListItemText
+							primary="Notes"
+							onClick={toggleDrawerNoteOpen}
+						/>
 					</ListItemButton>
 
 					<ListItemButton sx={{ py: 0.75, px: 2 }}>
 						<ListItemIcon sx={{ minWidth: 32 }}>
 							<HistoryOutlined fontSize="small" />
 						</ListItemIcon>
-						<ListItemText primary="Lịch sử" />
+						<ListItemText primary="History" />
 					</ListItemButton>
 
 					<Divider />
@@ -99,7 +116,7 @@ export default function SamplesDrawer() {
 						onClick={() => setOpenTemplate(!openTemplate)}
 						sx={{ py: 0.75, px: 2 }}
 					>
-						<ListItemText primary="Template" />
+						<ListItemText primary="Templates" />
 						{openTemplate ? <ExpandLess /> : <ExpandMore />}
 					</ListItemButton>
 
@@ -112,12 +129,17 @@ export default function SamplesDrawer() {
 							component="div"
 							disablePadding
 						>
-							<ListItemButton sx={{ py: 0.5, pl: 4 }}>
-								<ListItemText primary="Chào mừng Trung thu 2025" />
-							</ListItemButton>
-							<ListItemButton sx={{ py: 0.5, pl: 4 }}>
-								<ListItemText primary="Chào mừng 20/10" />
-							</ListItemButton>
+							{templates &&
+								templates.map((template) => (
+									<ListItemButton
+										key={"template_" + template.id}
+										sx={{ py: 0.5, pl: 4 }}
+										LinkComponent={Link}
+										href={"/templates/" + template.id}
+									>
+										<ListItemText primary={template.name} />
+									</ListItemButton>
+								))}
 						</List>
 					</Collapse>
 				</List>
@@ -126,7 +148,7 @@ export default function SamplesDrawer() {
 			{/* Footer */}
 			<Stack spacing={2}>
 				{/* Main Section */}
-				<Stack spacing={1}>
+				{/* <Stack spacing={1}>
 					<ListItemButton sx={{ py: 0.75, px: 2 }}>
 						<ListItemText primary="Dashboard" />
 					</ListItemButton>
@@ -139,7 +161,7 @@ export default function SamplesDrawer() {
 					<ListItemButton sx={{ py: 0.75, px: 2 }}>
 						<ListItemText primary="Campaign" />
 					</ListItemButton>
-				</Stack>
+				</Stack> */}
 				<Divider />
 
 				<Box>

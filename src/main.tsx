@@ -1,11 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import "./main.css";
 
 import { CssBaseline, ThemeProvider } from "@mui/material";
 
 import App from "./App";
 import theme from "./theme";
 import { BrowserRouter, Routes, Route } from "react-router";
+import MainLayout from "./components/layouts";
+import TemplateDetailPage from "./App/TemplateDetailPage";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
 	<React.StrictMode>
@@ -15,8 +18,18 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 				<Routes>
 					<Route
 						path="/"
-						element={<App />}
-					/>
+						element={<MainLayout />}
+					>
+						<Route
+							index
+							element={<App />}
+						/>
+						{/* chi tiết template */}
+						<Route
+							path="templates/:id"
+							element={<TemplateDetailPage />}
+						/>
+					</Route>
 				</Routes>
 			</ThemeProvider>
 		</BrowserRouter>

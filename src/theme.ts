@@ -356,6 +356,17 @@ const THEME = createTheme(BASE_THEME, {
     },
     MuiOutlinedInput: {
       styleOverrides: {
+        root: {
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#ddd", // xám nhạt
+          },
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#ccc", // đậm hơn chút khi hover
+          },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#aaa", // khi focus
+          },
+        },
         notchedOutline: {
           '& legend': {
             fontSize: '0.85em',

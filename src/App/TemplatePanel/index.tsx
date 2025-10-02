@@ -40,6 +40,10 @@ import MainTabsGroup from "./MainTabsGroup";
 import ShareButton from "./ShareButton";
 import UndoButton from "./UndoButton";
 import RedoButton from "./RedoButton";
+import DrawerNote from "../../components/drawers/DrawerNote";
+import { useCurrentTemplate } from "../../contexts/templates";
+import TemplateNameField from "../../components/inputs/TemplateNameField";
+import ShowHTML from "../ShowHTML";
 
 export default function TemplatePanel() {
 	const document = useDocument();
@@ -141,6 +145,11 @@ export default function TemplatePanel() {
 						/>
 						<UndoButton />
 						<RedoButton />
+						<Divider
+							orientation="vertical"
+							flexItem
+						/>
+						<TemplateNameField />
 					</Stack>
 					<Stack
 						direction="row"
@@ -173,6 +182,9 @@ export default function TemplatePanel() {
 							<IconButton
 								size="small"
 								onClick={handleClick}
+								sx={{
+									padding: 1,
+								}}
 							>
 								<CodeOutlined fontSize="small" />
 							</IconButton>
@@ -197,6 +209,9 @@ export default function TemplatePanel() {
 							<MenuItem>
 								<ImportJson />
 							</MenuItem>
+							<MenuItem>
+								<ShowHTML />
+							</MenuItem>
 						</Menu>
 
 						<Divider
@@ -212,6 +227,7 @@ export default function TemplatePanel() {
 				sx={{ height: "calc(100vh - 49px)", overflow: "auto", minWidth: 370 }}
 			>
 				{renderMainPanel()}
+				<DrawerNote />
 			</Box>
 		</>
 	);

@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@directus/sdk": "^20.1.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^5.15.10",
@@ -15,6 +16,7 @@
     "@tiptap/extension-blockquote": "^3.5.0",
     "@tiptap/extension-link": "^3.5.0",
     "@tiptap/extension-list": "^3.5.0",
+    "@tiptap/extension-placeholder": "^3.6.2",
     "@tiptap/extension-subscript": "^3.5.0",
     "@tiptap/extension-superscript": "^3.5.0",
     "@tiptap/extension-table": "^3.5.0",
