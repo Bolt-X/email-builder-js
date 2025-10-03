@@ -145,11 +145,11 @@ export default function TemplatePanel() {
 						/>
 						<UndoButton />
 						<RedoButton />
-						<Divider
+						{/* <Divider
 							orientation="vertical"
 							flexItem
-						/>
-						<TemplateNameField />
+						/> */}
+						{/* <TemplateNameField /> */}
 					</Stack>
 					<Stack
 						direction="row"

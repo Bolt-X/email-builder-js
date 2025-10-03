@@ -9,6 +9,7 @@ import theme from "./theme";
 import { BrowserRouter, Routes, Route } from "react-router";
 import MainLayout from "./components/layouts";
 import TemplateDetailPage from "./App/TemplateDetailPage";
+import CampaignListPage from "./App/CampaignListPage";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
 	<React.StrictMode>
@@ -28,6 +29,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 						<Route
 							path="templates/:id"
 							element={<TemplateDetailPage />}
+						/>
+
+						{/* Danh sách campaign */}
+						<Route
+							path="campaigns"
+							element={<CampaignListPage />}
 						/>
 					</Route>
 				</Routes>

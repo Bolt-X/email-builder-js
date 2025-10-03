@@ -35,6 +35,9 @@ import {
 	ExpandMore,
 	EditOutlined,
 	AddBox,
+	ControlPointDuplicate,
+	ContentCopy,
+	DriveFileRenameOutlineOutlined,
 } from "@mui/icons-material";
 import {
 	setMessage,
@@ -53,6 +56,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import EMPTY_EMAIL_MESSAGE from "../../getConfiguration/sample/empty-email-message";
 import { deleteTemplate } from "../../services/template";
+import TemplateSidebarList from "./TemplateSidebarList";
 
 export const SAMPLES_DRAWER_WIDTH = 320;
 
@@ -100,6 +104,16 @@ export default function SamplesDrawer() {
 			handleMenuClose();
 			useFetchTemplates();
 		}
+	};
+
+	const handleRenameTemplate = async () => {
+		try {
+		} catch (error) {}
+	};
+
+	const handleDuplicateTemplate = async () => {
+		try {
+		} catch (error) {}
 	};
 
 	return (
@@ -181,136 +195,30 @@ export default function SamplesDrawer() {
 
 					<Divider />
 
-					<ListItemButton
-						onClick={() => setOpenTemplate(!openTemplate)}
-						sx={{ py: 0.75, px: 2 }}
-					>
-						<ListItemText primary="Templates" />
-						{openTemplate ? <ExpandLess /> : <ExpandMore />}
-					</ListItemButton>
-
-					<Collapse
-						in={openTemplate}
-						timeout="auto"
-						unmountOnExit
-					>
-						<List
-							component="div"
-							disablePadding
-						>
-							{templates &&
-								templates.map((template) => (
-									<ListItem
-										key={"template_" + template.id}
-										disablePadding
-										sx={{
-											"&:hover .more-btn": {
-												opacity: 1,
-											},
-										}}
-										secondaryAction={
-											<IconButton
-												edge="end"
-												onClick={(e) => handleMenuOpen(e, template.id)}
-												className="more-btn"
-												sx={{
-													opacity: 0,
-													transition: "opacity 0.2s",
-													"& .MuiSvgIcon-root": { fontSize: 18 }, // nhỏ hơn mặc định
-												}}
-											>
-												<MoreVertIcon />
-											</IconButton>
-										}
-									>
-										<ListItemButton
-											sx={{ py: 0.5, pl: 4 }}
-											onClick={() => navigate("/templates/" + template.id)}
-										>
-											<ListItemText primary={template.name} />
-										</ListItemButton>
-									</ListItem>
-								))}
-						</List>
-						{/* Action Menu */}
-						<Menu
-							anchorEl={anchorEl}
-							open={Boolean(anchorEl)}
-							onClose={handleMenuClose}
-							slotProps={{
-								paper: {
-									sx: {
-										boxShadow: "0px 2px 12px rgba(0,0,0,0.2)", // shadow
-										borderRadius: 2, // bo góc
-										overflow: "hidden",
-									},
-								},
-							}}
-						>
-							<MenuItem onClick={handleOpenConfirm}>
-								<ListItemIcon>
-									<DeleteIcon
-										color="error"
-										fontSize="small"
-										sx={{
-											mr: 0,
-											width: 24,
-										}}
-									/>
-								</ListItemIcon>
-								Xóa
-							</MenuItem>
-						</Menu>
-
-						{/* Popup confirm */}
-						<Dialog
-							open={openConfirm}
-							onClose={handleCloseConfirm}
-							PaperProps={{
-								sx: {
-									borderRadius: 2,
-								},
-							}}
-						>
-							<DialogTitle>Xác nhận xóa</DialogTitle>
-							<DialogContent>
-								<DialogContentText>
-									Bạn có chắc chắn muốn xóa template này không? Hành động này
-									không thể hoàn tác.
-								</DialogContentText>
-							</DialogContent>
-							<DialogActions>
-								<Button onClick={handleCloseConfirm}>Hủy</Button>
-								<Button
-									onClick={handleConfirmDelete}
-									color="error"
-									variant="contained"
-								>
-									Xóa
-								</Button>
-							</DialogActions>
-						</Dialog>
-					</Collapse>
+					<TemplateSidebarList />
 				</List>
 			</Stack>
 
 			{/* Footer */}
 			<Stack spacing={2}>
 				{/* Main Section */}
-				{/* <Stack spacing={1}>
-					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+				<Stack spacing={1}>
+					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
 						<ListItemText primary="Dashboard" />
-					</ListItemButton>
-					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+					</ListItemButton> */}
+					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
 						<ListItemText primary="List" />
-					</ListItemButton>
-					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+					</ListItemButton> */}
+					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
 						<ListItemText primary="Subscribers" />
-					</ListItemButton>
-					<ListItemButton sx={{ py: 0.75, px: 2 }}>
-						<ListItemText primary="Campaign" />
-					</ListItemButton>
-				</Stack> */}
+					</ListItemButton> */}
+					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
+						<ListItemText
+							primary="Campaigns"
+							onClick={() => navigate("/campaigns")}
+						/>
+					</ListItemButton> */}
+				</Stack>
 				<Divider />
 
 				<Box>
