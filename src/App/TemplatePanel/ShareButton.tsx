@@ -1,37 +1,44 @@
+import { Button, CircularProgress, Snackbar } from "@mui/material";
 import { useMemo, useState } from "react";
-import { Button, Snackbar, CircularProgress } from "@mui/material";
 
-import { setDocument, useDocument } from "../../documents/editor/EditorContext";
 import { renderToStaticMarkup } from "@usewaypoint/email-builder";
-import { createTemplate, updateTemplate } from "../../services/template";
+import { setMessage, useMessage } from "../../contexts";
 import {
-	setCurrentTemplate,
 	useCurrentTemplate,
 	useFetchTemplates,
 } from "../../contexts/templates";
-import EMPTY_EMAIL_MESSAGE from "../../getConfiguration/sample/empty-email-message";
+import { useDocument } from "../../documents/editor/EditorContext";
+import { createTemplate, updateTemplate } from "../../services/template";
+import { useNavigate } from "react-router-dom";
 
 export default function ShareButton() {
 	const document = useDocument();
+	const message = useMessage();
+	const navigate = useNavigate();
 	const currentTemplate = useCurrentTemplate();
 	const code = useMemo(
 		() => renderToStaticMarkup(document, { rootBlockId: "root" }),
 		[document]
 	);
 
-	const [message, setMessage] = useState<string | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 
 	const handleCreateTemplate = async () => {
-		const templatePayload = {
-			name: currentTemplate.name,
-			subject: "No Subject",
-			body: code,
-			settings: JSON.stringify(document),
-		};
+		let newId = "";
+		try {
+			const templatePayload = {
+				name: currentTemplate?.name || "Untitled",
+				subject: "No Subject",
+				body: code,
+				settings: JSON.stringify(document),
+			};
 
-		const res = await createTemplate(templatePayload);
-		return res;
+			const res = await createTemplate(templatePayload);
+			newId = res.id;
+		} catch (error) {
+		} finally {
+			navigate("/templates/" + newId);
+		}
 	};
 
 	const handleUpdateTemplate = async () => {

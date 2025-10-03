@@ -1,20 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 
 import {
 	Avatar,
 	Box,
 	Button,
 	Collapse,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
 	Divider,
 	Drawer,
+	IconButton,
 	Link,
 	List,
+	ListItem,
 	ListItemButton,
 	ListItemIcon,
 	ListItemText,
+	Menu,
+	MenuItem,
 	Stack,
 	Typography,
 } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import DeleteIcon from "@mui/icons-material/Delete";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
 	Search,
@@ -25,22 +36,71 @@ import {
 	EditOutlined,
 	AddBox,
 } from "@mui/icons-material";
-import { toggleDrawerNoteOpen, toggleSearchModalOpen } from "../../contexts";
+import {
+	setMessage,
+	toggleDrawerNoteOpen,
+	toggleSearchModalOpen,
+} from "../../contexts";
 import {
 	setDocument,
 	useSamplesDrawerOpen,
 } from "../../documents/editor/EditorContext";
-import { setCurrentTemplate, useTemplates } from "../../contexts/templates";
+import {
+	setCurrentTemplate,
+	useFetchTemplates,
+	useTemplates,
+} from "../../contexts/templates";
 import { useNavigate } from "react-router-dom";
 import EMPTY_EMAIL_MESSAGE from "../../getConfiguration/sample/empty-email-message";
+import { deleteTemplate } from "../../services/template";
 
-export const SAMPLES_DRAWER_WIDTH = 240;
+export const SAMPLES_DRAWER_WIDTH = 320;
 
 export default function SamplesDrawer() {
 	const navigate = useNavigate();
 	const templates = useTemplates();
 	const samplesDrawerOpen = useSamplesDrawerOpen();
 	const [openTemplate, setOpenTemplate] = React.useState(true);
+	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+	const [selectedId, setSelectedId] = useState<number | null>(null);
+	const [openConfirm, setOpenConfirm] = useState(false);
+
+	const handleOpenConfirm = () => {
+		setOpenConfirm(true);
+	};
+
+	const handleCloseConfirm = () => {
+		setOpenConfirm(false);
+	};
+
+	const handleMenuOpen = (
+		event: React.MouseEvent<HTMLButtonElement>,
+		id: number
+	) => {
+		setAnchorEl(event.currentTarget);
+		setSelectedId(id);
+	};
+
+	const handleMenuClose = () => {
+		setAnchorEl(null);
+		setSelectedId(null);
+	};
+
+	const handleConfirmDelete = async () => {
+		try {
+			await deleteTemplate(selectedId);
+			setCurrentTemplate(null);
+			setDocument(EMPTY_EMAIL_MESSAGE);
+			// TODO: tạm thời redirect về trang Home
+			navigate("/");
+		} catch (error) {
+			setMessage(error);
+		} finally {
+			setOpenConfirm(false);
+			handleMenuClose();
+			useFetchTemplates();
+		}
+	};
 
 	return (
 		<Drawer
@@ -140,15 +200,96 @@ export default function SamplesDrawer() {
 						>
 							{templates &&
 								templates.map((template) => (
-									<ListItemButton
+									<ListItem
 										key={"template_" + template.id}
-										sx={{ py: 0.5, pl: 4 }}
-										onClick={() => navigate("/templates/" + template.id)}
+										disablePadding
+										sx={{
+											"&:hover .more-btn": {
+												opacity: 1,
+											},
+										}}
+										secondaryAction={
+											<IconButton
+												edge="end"
+												onClick={(e) => handleMenuOpen(e, template.id)}
+												className="more-btn"
+												sx={{
+													opacity: 0,
+													transition: "opacity 0.2s",
+													"& .MuiSvgIcon-root": { fontSize: 18 }, // nhỏ hơn mặc định
+												}}
+											>
+												<MoreVertIcon />
+											</IconButton>
+										}
 									>
-										<ListItemText primary={template.name} />
-									</ListItemButton>
+										<ListItemButton
+											sx={{ py: 0.5, pl: 4 }}
+											onClick={() => navigate("/templates/" + template.id)}
+										>
+											<ListItemText primary={template.name} />
+										</ListItemButton>
+									</ListItem>
 								))}
 						</List>
+						{/* Action Menu */}
+						<Menu
+							anchorEl={anchorEl}
+							open={Boolean(anchorEl)}
+							onClose={handleMenuClose}
+							slotProps={{
+								paper: {
+									sx: {
+										boxShadow: "0px 2px 12px rgba(0,0,0,0.2)", // shadow
+										borderRadius: 2, // bo góc
+										overflow: "hidden",
+									},
+								},
+							}}
+						>
+							<MenuItem onClick={handleOpenConfirm}>
+								<ListItemIcon>
+									<DeleteIcon
+										color="error"
+										fontSize="small"
+										sx={{
+											mr: 0,
+											width: 24,
+										}}
+									/>
+								</ListItemIcon>
+								Xóa
+							</MenuItem>
+						</Menu>
+
+						{/* Popup confirm */}
+						<Dialog
+							open={openConfirm}
+							onClose={handleCloseConfirm}
+							PaperProps={{
+								sx: {
+									borderRadius: 2,
+								},
+							}}
+						>
+							<DialogTitle>Xác nhận xóa</DialogTitle>
+							<DialogContent>
+								<DialogContentText>
+									Bạn có chắc chắn muốn xóa template này không? Hành động này
+									không thể hoàn tác.
+								</DialogContentText>
+							</DialogContent>
+							<DialogActions>
+								<Button onClick={handleCloseConfirm}>Hủy</Button>
+								<Button
+									onClick={handleConfirmDelete}
+									color="error"
+									variant="contained"
+								>
+									Xóa
+								</Button>
+							</DialogActions>
+						</Dialog>
 					</Collapse>
 				</List>
 			</Stack>

@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { getAllTemplates, getTemplateById } from "../services/template";
 import { Template } from "../types";
 import { setDocument } from "../documents/editor/EditorContext";
+import { setMessage } from ".";
 
 type TemplateState = {
   templates: Template[];
@@ -36,18 +37,23 @@ export const useFetchTemplateDetail = async (id: string | number) => {
   try {
     templateState.setState({ loading: true, error: null });
     const res = await getTemplateById(id);
-    console.log("🚀 ~ useFetchTemplateDetail ~ res:", res)
+    if (res) {
+      templateState.setState({
+        currentTemplate: res,
+        loading: false,
+      });
+      setDocument(res.settings)
+    } else {
+      throw new Error("Template with ID " + id + " not found!")
+    }
 
-    templateState.setState({
-      currentTemplate: res,
-      loading: false,
-    });
-    setDocument(res.settings)
   } catch (err) {
+    setMessage(err.message)
     templateState.setState({
       error: err.message,
       loading: false,
     });
+    window.location.href = "/"
   }
 }
 

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-import { Stack, useTheme } from "@mui/material";
+import { Snackbar, Stack, useTheme } from "@mui/material";
 import { INSPECTOR_DRAWER_WIDTH } from "../../App/InspectorDrawer";
 import SamplesDrawer, { SAMPLES_DRAWER_WIDTH } from "../../App/SamplesDrawer";
 import {
@@ -11,6 +11,7 @@ import { useUndoRedoShortcuts } from "../../hooks/useUndoRedoShortcuts";
 import ModalSearch from "../modals/ModalSearch";
 import { Outlet } from "react-router-dom";
 import { useFetchTemplates } from "../../contexts/templates";
+import { useMessage } from "../../contexts";
 
 function useDrawerTransition(
 	cssProperty: "margin-left" | "margin-right",
@@ -26,6 +27,7 @@ function useDrawerTransition(
 }
 
 export default function MainLayout() {
+	const message = useMessage();
 	useUndoRedoShortcuts();
 	const inspectorDrawerOpen = useInspectorDrawerOpen();
 	const samplesDrawerOpen = useSamplesDrawerOpen();
@@ -46,6 +48,12 @@ export default function MainLayout() {
 		<>
 			<SamplesDrawer />
 			<ModalSearch />
+			<Snackbar
+				anchorOrigin={{ vertical: "top", horizontal: "center" }}
+				open={message !== null}
+				message={message}
+				autoHideDuration={3000}
+			/>
 
 			<Stack
 				sx={{

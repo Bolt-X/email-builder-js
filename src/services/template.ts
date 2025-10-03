@@ -1,4 +1,4 @@
-import { createItem, readItem, readItems, updateItem } from "@directus/sdk"
+import { createItem, deleteItem, readItem, readItems, updateItem } from "@directus/sdk"
 import { directusClientWithRest } from "./directus"
 import { Template } from "../types"
 
@@ -29,6 +29,14 @@ export const createTemplate = async (payload: Template) => {
 export const updateTemplate = async (id: string | number, payload: Template) => {
   try {
     const res = await directusClientWithRest.request(updateItem('templates', id, payload))
+    return res
+  } catch (error) {
+  }
+}
+
+export const deleteTemplate = async (id: string | number) => {
+  try {
+    const res = await directusClientWithRest.request(deleteItem('templates', id))
     return res
   } catch (error) {
   }

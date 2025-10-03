@@ -4,12 +4,14 @@ type TValue = {
 	modalSearchOpen: boolean;
 	searchTerm: string | null;
 	drawerNoteOpen: boolean;
+	message: string | null;
 };
 
 const appState = create<TValue>(() => ({
 	modalSearchOpen: false,
 	searchTerm: null,
 	drawerNoteOpen: false,
+	message: null
 }));
 
 export const useModalSearchOpen = () => {
@@ -37,3 +39,13 @@ export const toggleDrawerNoteOpen = () => {
 		drawerNoteOpen: !currentState,
 	});
 };
+
+export const useMessage = () => {
+	return appState((s) => s.message);
+};
+
+export const setMessage = (errMsg: string) => {
+	appState.setState({
+		message: errMsg
+	})
+}
