@@ -1,30 +1,31 @@
-import React, { useState } from "react";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteIcon from "@mui/icons-material/Delete";
+import LinkIcon from "@mui/icons-material/Link";
 import {
+	Alert,
 	Box,
-	Tabs,
-	Tab,
 	Button,
-	Typography,
 	IconButton,
+	LinearProgress,
 	Stack,
+	Tab,
+	Tabs,
 	ToggleButton,
 } from "@mui/material";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import LinkIcon from "@mui/icons-material/Link";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { useState } from "react";
 
-import { ImageProps, ImagePropsSchema } from "@usewaypoint/block-image";
-import BaseSidebarPanel from "./helpers/BaseSidebarPanel";
-import TextInput from "./helpers/inputs/TextInput";
 import {
-	VerticalAlignTopOutlined,
-	VerticalAlignCenterOutlined,
 	VerticalAlignBottomOutlined,
+	VerticalAlignCenterOutlined,
+	VerticalAlignTopOutlined,
 } from "@mui/icons-material";
+import { ImageProps, ImagePropsSchema } from "@usewaypoint/block-image";
+import { uploadImageWithProgress } from "../../../../services/files";
+import BaseSidebarPanel from "./helpers/BaseSidebarPanel";
 import RadioGroupInput from "./helpers/inputs/RadioGroupInput";
 import TextDimensionInput from "./helpers/inputs/TextDimensionInput";
+import TextInput from "./helpers/inputs/TextInput";
 import MultiStylePropertyPanel from "./helpers/style-inputs/MultiStylePropertyPanel";
-import { uploadImage } from "../../../../services/files";
 
 type ImageSidebarPanelProps = {
 	data: ImageProps;
@@ -39,6 +40,8 @@ export default function ImageSidebarPanel({
 }: ImageSidebarPanelProps) {
 	const [tab, setTab] = useState(0);
 	const [uploading, setUploading] = useState(false);
+	const [progress, setProgress] = useState(0);
+	const [error, setError] = useState(null);
 
 	const updateData = (d: unknown) => {
 		const res = ImagePropsSchema.safeParse(d);
@@ -48,13 +51,26 @@ export default function ImageSidebarPanel({
 	};
 
 	const handleUpload = async (file: File) => {
-		const formData = new FormData();
-		formData.append("file", file);
+		setUploading(true);
+		setError(null);
+		setProgress(0);
+		try {
+			const res = await uploadImageWithProgress(file, (percent: number) =>
+				setProgress(percent)
+			);
+			const url = assetURL + res?.id;
+			updateData({ ...data, props: { ...data.props, url } });
+		} catch (err) {
+			console.error(err);
+			setError("Upload thất bại. Vui lòng thử lại!");
+		} finally {
+			setUploading(false);
+		}
+	};
 
-		// Upload API (tùy bạn triển khai)
-		const res = await uploadImage(formData);
-		const url = assetURL + res?.id;
-		updateData({ ...data, props: { ...data.props, url } });
+	const onFileChange = (e) => {
+		const file = e.target.files?.[0];
+		if (file) handleUpload(file);
 	};
 
 	return (
@@ -98,7 +114,18 @@ export default function ImageSidebarPanel({
 						backgroundColor: "#f9fbfc",
 					}}
 				>
-					{!data.props?.url ? (
+					{error && (
+						<Alert
+							severity="error"
+							sx={{ mb: 2 }}
+							onClose={() => setError(null)}
+						>
+							{error}
+						</Alert>
+					)}
+
+					{/* Chưa có ảnh */}
+					{!data.props?.url && !uploading && (
 						<Button
 							component="label"
 							variant="text"
@@ -109,13 +136,25 @@ export default function ImageSidebarPanel({
 								type="file"
 								accept="image/*"
 								hidden
-								onChange={(e) => {
-									const file = e.target.files?.[0];
-									if (file) handleUpload(file);
-								}}
+								onChange={onFileChange}
 							/>
 						</Button>
-					) : (
+					)}
+
+					{/* Đang upload */}
+					{uploading && (
+						<Box>
+							<LinearProgress
+								variant="determinate"
+								value={progress}
+								sx={{ height: 8, borderRadius: 0.5, mb: 1 }}
+							/>
+							<Box>{progress}%</Box>
+						</Box>
+					)}
+
+					{/* Đã có ảnh */}
+					{data.props?.url && !uploading && (
 						<Box>
 							<img
 								src={data.props.url}

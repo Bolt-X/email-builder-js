@@ -53,7 +53,8 @@ const ModalSearch = () => {
 
 					{/* Input */}
 					<InputBase
-						placeholder="Tìm kiếm thông minh – Tìm lại email đã gửi chỉ trong vài giây"
+						type="text"
+						placeholder="Tìm kiếm thông minh"
 						sx={{ flex: 1, fontSize: 14 }}
 					/>
 

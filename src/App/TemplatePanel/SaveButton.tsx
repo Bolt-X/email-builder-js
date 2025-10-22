@@ -11,7 +11,7 @@ import { useDocument } from "../../documents/editor/EditorContext";
 import { createTemplate, updateTemplate } from "../../services/template";
 import { useNavigate } from "react-router-dom";
 
-export default function ShareButton() {
+export default function SaveButton() {
 	const document = useDocument();
 	const message = useMessage();
 	const navigate = useNavigate();

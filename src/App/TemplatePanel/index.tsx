@@ -37,7 +37,7 @@ import HtmlPanel from "./HtmlPanel";
 import ImportJson from "./ImportJson";
 import JsonPanel from "./JsonPanel";
 import MainTabsGroup from "./MainTabsGroup";
-import ShareButton from "./ShareButton";
+import SaveButton from "./SaveButton";
 import UndoButton from "./UndoButton";
 import RedoButton from "./RedoButton";
 import DrawerNote from "../../components/drawers/DrawerNote";
@@ -218,7 +218,7 @@ export default function TemplatePanel() {
 							orientation="vertical"
 							flexItem
 						/>
-						<ShareButton />
+						<SaveButton />
 					</Stack>
 				</Stack>
 				<ToggleInspectorPanelButton />
