@@ -28,7 +28,7 @@ import {
 	TextField,
 } from "@mui/material";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { setMessage } from "../../contexts";
 import {
 	setCurrentTemplate,
@@ -47,7 +47,11 @@ type Props = {};
 
 const TemplateSidebarList = (props: Props) => {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const templates = useTemplates();
+	const checkActiveTemplate = (templateId: number) => {
+		return Number(location.pathname.split("/")[2]) === templateId;
+	};
 
 	const [openTemplate, setOpenTemplate] = useState(true);
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -162,88 +166,92 @@ const TemplateSidebarList = (props: Props) => {
 					autoFocus={false}
 				>
 					{templates &&
-						templates.map((template) => (
-							<ListItem
-								key={"template_" + template.id}
-								disablePadding
-								sx={{
-									"&:hover .more-btn": {
-										opacity: 1,
-									},
-								}}
-								secondaryAction={
-									renameId !== template.id && (
-										<IconButton
-											edge="end"
-											onClick={(e) => handleMenuOpen(e, template.id)}
-											className="more-btn"
-											sx={{
-												opacity: 0,
-												transition: "opacity 0.2s",
-												"& .MuiSvgIcon-root": { fontSize: 18 },
-											}}
+						templates.map((template) => {
+							const isActive = checkActiveTemplate(template.id);
+							return (
+								<ListItem
+									key={"template_" + template.id}
+									disablePadding
+									sx={{
+										"&:hover .more-btn": {
+											opacity: 1,
+										},
+										background: isActive ? "#DDD" : "",
+									}}
+									secondaryAction={
+										renameId !== template.id && (
+											<IconButton
+												edge="end"
+												onClick={(e) => handleMenuOpen(e, template.id)}
+												className="more-btn"
+												sx={{
+													opacity: 0,
+													transition: "opacity 0.2s",
+													"& .MuiSvgIcon-root": { fontSize: 18 },
+												}}
+											>
+												<MoreVertIcon />
+											</IconButton>
+										)
+									}
+								>
+									{renameId === template.id ? (
+										<Stack
+											direction="row"
+											alignItems="center"
+											sx={{ flex: 1, pl: 2 }}
 										>
-											<MoreVertIcon />
-										</IconButton>
-									)
-								}
-							>
-								{renameId === template.id ? (
-									<Stack
-										direction="row"
-										alignItems="center"
-										sx={{ flex: 1, pl: 2 }}
-									>
-										<TextField
-											size="small"
-											value={renameValue}
-											autoFocus
-											onChange={(e) => setRenameValue(e.target.value)}
-											fullWidth
-											variant="standard"
-											error={!renameValue.trim()} // 👈 báo lỗi nếu trống
-											helperText={
-												!renameValue.trim() ? "This field is required" : ""
-											}
-											InputProps={{
-												sx: {
-													px: 0,
-													py: 1.06,
-													"& .MuiInputBase-input": {
-														p: 0,
+											<TextField
+												size="small"
+												value={renameValue}
+												autoFocus
+												onChange={(e) => setRenameValue(e.target.value)}
+												fullWidth
+												variant="standard"
+												error={!renameValue.trim()} // 👈 báo lỗi nếu trống
+												helperText={
+													!renameValue.trim() ? "This field is required" : ""
+												}
+												InputProps={{
+													sx: {
+														px: 0,
+														py: 1.06,
+														"& .MuiInputBase-input": {
+															p: 0,
+														},
 													},
-												},
-											}}
-											inputProps={{
-												onFocus: (e) => e.target.select(), // 👈 select toàn bộ khi focus
-											}}
-										/>
+												}}
+												inputProps={{
+													onFocus: (e) => e.target.select(), // 👈 select toàn bộ khi focus
+												}}
+											/>
 
-										<IconButton
-											size="small"
-											onClick={handleRenameSave}
-											color="success"
+											<IconButton
+												size="small"
+												onClick={handleRenameSave}
+												color="success"
+											>
+												<Check fontSize="small" />
+											</IconButton>
+											<IconButton
+												size="small"
+												onClick={handleRenameCancel}
+												color="error"
+											>
+												<Close fontSize="small" />
+											</IconButton>
+										</Stack>
+									) : (
+										<ListItemButton
+											sx={{ py: 0.5, pl: 2 }}
+											onClick={() => navigate("/templates/" + template.id)}
 										>
-											<Check fontSize="small" />
-										</IconButton>
-										<IconButton
-											size="small"
-											onClick={handleRenameCancel}
-											color="error"
-										>
-											<Close fontSize="small" />
-										</IconButton>
-									</Stack>
-								) : (
-									<ListItemButton
-										sx={{ py: 0.5, pl: 2 }}
-										onClick={() => navigate("/templates/" + template.id)}
-									>
-										<ListItemText primary={template.name} />
-									</ListItemButton>
-								)}
-							</ListItem>
-						))}
+											<ListItemText primary={template.name} />
+										</ListItemButton>
+									)}
+								</ListItem>
+							);
+						})}
 				</List>
 
 				{/* Action Menu */}

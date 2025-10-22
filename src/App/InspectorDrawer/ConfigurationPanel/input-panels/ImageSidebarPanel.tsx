@@ -12,7 +12,7 @@ import {
 	Tabs,
 	ToggleButton,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
 	VerticalAlignBottomOutlined,
@@ -26,6 +26,7 @@ import RadioGroupInput from "./helpers/inputs/RadioGroupInput";
 import TextDimensionInput from "./helpers/inputs/TextDimensionInput";
 import TextInput from "./helpers/inputs/TextInput";
 import MultiStylePropertyPanel from "./helpers/style-inputs/MultiStylePropertyPanel";
+import { CircularProgress } from "@mui/material";
 
 type ImageSidebarPanelProps = {
 	data: ImageProps;
@@ -42,6 +43,7 @@ export default function ImageSidebarPanel({
 	const [uploading, setUploading] = useState(false);
 	const [progress, setProgress] = useState(0);
 	const [error, setError] = useState(null);
+	const [preview, setPreview] = useState<string | null>(null);
 
 	const updateData = (d: unknown) => {
 		const res = ImagePropsSchema.safeParse(d);
@@ -68,10 +70,20 @@ export default function ImageSidebarPanel({
 		}
 	};
 
-	const onFileChange = (e) => {
+	const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
-		if (file) handleUpload(file);
+		if (file) {
+			setPreview(URL.createObjectURL(file)); // ✅ hiển thị preview ngay
+			handleUpload(file);
+		}
 	};
+
+	// cleanup URL tạm sau khi component unmount
+	useEffect(() => {
+		return () => {
+			if (preview) URL.revokeObjectURL(preview);
+		};
+	}, [preview]);
 
 	return (
 		<BaseSidebarPanel title="Image block">
@@ -112,6 +124,8 @@ export default function ImageSidebarPanel({
 						borderRadius: 1,
 						textAlign: "center",
 						backgroundColor: "#f9fbfc",
+						position: "relative",
+						overflow: "hidden",
 					}}
 				>
 					{error && (
@@ -125,7 +139,7 @@ export default function ImageSidebarPanel({
 					)}
 
 					{/* Chưa có ảnh */}
-					{!data.props?.url && !uploading && (
+					{!data.props?.url && !preview && (
 						<Button
 							component="label"
 							variant="text"
@@ -141,34 +155,83 @@ export default function ImageSidebarPanel({
 						</Button>
 					)}
 
-					{/* Đang upload */}
-					{uploading && (
-						<Box>
-							<LinearProgress
-								variant="determinate"
-								value={progress}
-								sx={{ height: 8, borderRadius: 0.5, mb: 1 }}
-							/>
-							<Box>{progress}%</Box>
-						</Box>
-					)}
-
-					{/* Đã có ảnh */}
-					{data.props?.url && !uploading && (
-						<Box>
+					{/* Có preview (đang upload hoặc upload xong) */}
+					{(preview || data.props?.url) && (
+						<Box sx={{ position: "relative", display: "inline-block" }}>
 							<img
-								src={data.props.url}
+								src={preview || data.props.url}
 								alt="preview"
-								style={{ maxWidth: "100%", marginBottom: 8 }}
+								style={{
+									maxWidth: "100%",
+									borderRadius: 8,
+									opacity: uploading ? 0.3 : 1, // 👈 giảm độ mờ khi đang upload
+									transition: "opacity 0.3s ease",
+								}}
 							/>
-							<IconButton
-								color="error"
-								onClick={() =>
-									updateData({ ...data, props: { ...data.props, url: null } })
-								}
-							>
-								<DeleteIcon />
-							</IconButton>
+
+							{/* Hiển thị CircularProgress ở giữa */}
+							{uploading && (
+								<Box
+									sx={{
+										position: "absolute",
+										top: "50%",
+										left: "50%",
+										transform: "translate(-50%, -50%)",
+										display: "flex",
+										flexDirection: "column",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									<CircularProgress
+										variant="determinate"
+										value={progress}
+										size={60}
+										thickness={4}
+										color="primary"
+									/>
+									<Box
+										sx={{
+											position: "absolute",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											fontWeight: 600,
+											color: "#0079CC",
+											inset: 0,
+											border: "6px solid #0079CC50",
+											background: "#FFF",
+											borderRadius: "100%",
+											zIndex: "-1",
+										}}
+									>
+										{Math.round(progress)}%
+									</Box>
+								</Box>
+							)}
+
+							{/* Nút xóa ảnh khi upload xong */}
+							{!uploading && (
+								<IconButton
+									color="error"
+									size="small"
+									sx={{
+										position: "absolute",
+										top: 8,
+										right: 8,
+										background: "#fff",
+									}}
+									onClick={() => {
+										updateData({
+											...data,
+											props: { ...data.props, url: null },
+										});
+										setPreview(null);
+									}}
+								>
+									<DeleteIcon fontSize="small" />
+								</IconButton>
+							)}
 						</Box>
 					)}
 				</Box>
