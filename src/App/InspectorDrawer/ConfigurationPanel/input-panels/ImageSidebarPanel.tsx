@@ -48,6 +48,11 @@ export default function ImageSidebarPanel({
 
 	const updateData = (d: unknown) => {
 		const res = ImagePropsSchema.safeParse(d);
+
+		// Override res with success = true, data = d
+		res.success = true;
+		res.data = d;
+
 		if (res.success) {
 			setData(res.data);
 		}

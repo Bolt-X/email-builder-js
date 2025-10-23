@@ -2,7 +2,7 @@
 import { create } from "zustand";
 import { getAllTemplates, getTemplateById } from "../services/template";
 import { Template } from "../types";
-import { setDocument } from "../documents/editor/EditorContext";
+import { resetDocument } from "../documents/editor/EditorContext";
 import { setMessage } from ".";
 
 type TemplateState = {
@@ -42,7 +42,7 @@ export const useFetchTemplateDetail = async (id: string | number) => {
         currentTemplate: res,
         loading: false,
       });
-      setDocument(res.settings)
+      resetDocument(res.settings)
     } else {
       throw new Error("Template with ID " + id + " not found!")
     }

@@ -1,121 +1,193 @@
-import { Button, CircularProgress, Snackbar } from "@mui/material";
-import { useMemo, useState } from "react";
-
+import { Cloud, CloudDone, CloudOff, Sync } from "@mui/icons-material";
+import { Box } from "@mui/material";
 import { renderToStaticMarkup } from "@usewaypoint/email-builder";
-import { setMessage, useMessage } from "../../contexts";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { setMessage } from "../../contexts";
 import {
 	useCurrentTemplate,
 	useFetchTemplates,
 } from "../../contexts/templates";
 import { useDocument } from "../../documents/editor/EditorContext";
 import { createTemplate, updateTemplate } from "../../services/template";
-import { useNavigate } from "react-router-dom";
 
-export default function SaveButton() {
+export default function AutoSaveStatus() {
 	const document = useDocument();
-	const message = useMessage();
-	const navigate = useNavigate();
 	const currentTemplate = useCurrentTemplate();
+	const navigate = useNavigate();
+
+	const [initialized, setInitialized] = useState(false);
+	const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+	const [timer, setTimer] = useState<any>(null);
+	const idRef = useRef<string | number | null>(null);
+	const initialDocRef = useRef<string>("");
+
 	const code = useMemo(
 		() => renderToStaticMarkup(document, { rootBlockId: "root" }),
 		[document]
 	);
 
-	const [loading, setLoading] = useState<boolean>(false);
-
 	const handleCreateTemplate = async () => {
 		let newId = "";
 		try {
-			const templatePayload = {
+			const res = await createTemplate({
 				name: currentTemplate?.name || "Untitled",
 				subject: "No Subject",
 				body: code,
 				settings: JSON.stringify(document),
-			};
-
-			const res = await createTemplate(templatePayload);
+			});
 			newId = res.id;
-		} catch (error) {
-		} finally {
 			navigate("/templates/" + newId);
+			return res;
+		} catch (error) {
+			console.error(error);
 		}
 	};
 
 	const handleUpdateTemplate = async () => {
-		if (!currentTemplate) return null;
-		const templatePayload = {
+		if (!currentTemplate?.id) return null;
+		const res = await updateTemplate(currentTemplate.id, {
 			name: currentTemplate.name,
 			subject: "No Subject",
 			body: code,
 			settings: JSON.stringify(document),
-		};
-
-		const res = await updateTemplate(currentTemplate.id, templatePayload);
+		});
 		return res;
 	};
 
-	// Unified save handler with loading + message handling
 	const handleSave = async () => {
-		// prevent double clicks
-		if (loading) return;
-
-		setLoading(true);
 		try {
 			const res = currentTemplate?.id
 				? await handleUpdateTemplate()
 				: await handleCreateTemplate();
 
-			// adjust message based on result shape - try to be generic
-			if (res && (res?.id || res?.data)) {
-				setMessage(currentTemplate ? "Template updated" : "Template created");
-			} else {
-				// if the service returns something else, still treat as success
-				setMessage("Saved successfully");
+			if (res && res.id) {
+				setTimeout(() => setStatus("saved"), 500);
+				setTimeout(() => setStatus("idle"), 2000);
+			}
+
+			if (res?.id && !idRef.current) {
+				idRef.current = res.id;
 			}
 		} catch (err: any) {
-			// show friendly error
-			const errorMessage =
-				err?.message || err?.toString?.() || "An error occurred while saving";
-			setMessage(`Error: ${errorMessage}`);
-			console.error("Save template error:", err);
+			console.error("AutoSave error:", err);
+			setMessage("Error: " + err.message);
+			setStatus("idle");
 		} finally {
-			setLoading(false);
 			useFetchTemplates();
 		}
 	};
 
-	const onClose = () => {
-		setMessage(null);
-	};
+	useEffect(() => {
+		if (currentTemplate?.id) {
+			idRef.current = currentTemplate.id;
+		}
+		setInitialized(true);
+		initialDocRef.current = JSON.stringify(document);
+	}, [currentTemplate?.id]);
+
+	useEffect(() => {
+		if (!initialized || !document) return;
+
+		const currentDocString = JSON.stringify(document);
+		const hasChanged = currentDocString !== initialDocRef.current;
+
+		if (!hasChanged) return;
+
+		if (timer) clearTimeout(timer);
+		setStatus("saving");
+
+		if (!currentTemplate?.id) {
+			const newTimer = setTimeout(() => handleSave(), 3000);
+			setTimer(newTimer);
+			return () => clearTimeout(newTimer);
+		}
+
+		if (currentTemplate?.id === idRef.current) {
+			const newTimer = setTimeout(() => handleSave(), 3000);
+			setTimer(newTimer);
+			return () => clearTimeout(newTimer);
+		}
+
+		return () => timer && clearTimeout(timer);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [document, code, currentTemplate?.id, initialized]);
 
 	return (
-		<>
-			<Button
-				onClick={handleSave}
-				variant="contained"
-				color="primary"
-				sx={{ justifyContent: "center" }}
-				disabled={loading}
-				startIcon={
-					// show small spinner when loading, otherwise no icon
-					loading ? (
-						<CircularProgress
-							size={18}
-							thickness={5}
-						/>
-					) : undefined
-				}
-			>
-				{loading ? (currentTemplate ? "Updating..." : "Saving...") : "Save"}
-			</Button>
+		<Box
+			display="flex"
+			alignItems="center"
+			gap={1}
+		>
+			<AutoSaveIndicator status={status} />
+		</Box>
+	);
+}
 
-			<Snackbar
-				anchorOrigin={{ vertical: "top", horizontal: "center" }}
-				open={message !== null}
-				onClose={onClose}
-				message={message}
-				autoHideDuration={3000}
-			/>
-		</>
+function AutoSaveIndicator({
+	status,
+}: {
+	status: "idle" | "saving" | "saved";
+}) {
+	// const [dots, setDots] = useState(".");
+
+	// useEffect(() => {
+	// 	if (status !== "saving") return;
+	// 	const interval = setInterval(() => {
+	// 		setDots((prev) => (prev.length >= 3 ? "." : prev + "."));
+	// 	}, 500);
+	// 	return () => clearInterval(interval);
+	// }, [status]);
+
+	return (
+		<Box
+			display="flex"
+			alignItems="center"
+			gap={1}
+			position="relative"
+		>
+			{/* IDLE */}
+			{status === "idle" && (
+				<CloudOff
+					color="disabled"
+					fontSize="small"
+				/>
+			)}
+
+			{/* SAVING */}
+			{status === "saving" && (
+				<Box
+					position="relative"
+					display="inline-flex"
+					alignItems="center"
+					justifyContent="center"
+				>
+					{/* Icon Cloud nền */}
+					<Cloud
+						color="info"
+						fontSize="small"
+					/>
+					{/* Icon Sync quay tròn nằm giữa */}
+					<Sync
+						fontSize="inherit"
+						sx={{
+							color: "white",
+							position: "absolute",
+							fontSize: "0.75rem",
+							animation: "spin 1.5s linear infinite",
+							zIndex: 1,
+						}}
+					/>
+				</Box>
+			)}
+
+			{/* SAVED */}
+			{status === "saved" && (
+				<CloudDone
+					color="success"
+					fontSize="small"
+				/>
+			)}
+		</Box>
 	);
 }

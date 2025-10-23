@@ -45,6 +45,7 @@ import {
 	toggleSearchModalOpen,
 } from "../../contexts";
 import {
+	resetDocument,
 	setDocument,
 	useSamplesDrawerOpen,
 } from "../../documents/editor/EditorContext";
@@ -157,8 +158,10 @@ export default function SamplesDrawer() {
 					<ListItemButton
 						sx={{ py: 0.75, px: 2 }}
 						onClick={() => {
+							console.log("ListItemButton onClick");
+
 							navigate("/");
-							setDocument(EMPTY_EMAIL_MESSAGE);
+							resetDocument(EMPTY_EMAIL_MESSAGE);
 							setCurrentTemplate(null);
 						}}
 					>

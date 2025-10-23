@@ -145,6 +145,7 @@ export default function TemplatePanel() {
 						/>
 						<UndoButton />
 						<RedoButton />
+						<SaveButton />
 						{/* <Divider
 							orientation="vertical"
 							flexItem
@@ -218,7 +219,6 @@ export default function TemplatePanel() {
 							orientation="vertical"
 							flexItem
 						/>
-						<SaveButton />
 					</Stack>
 				</Stack>
 				<ToggleInspectorPanelButton />
