@@ -15,7 +15,7 @@ export function zFontWeight() {
 }
 
 export function zTextAlign() {
-  return z.enum(['left', 'center', 'right']);
+  return z.enum(['left', 'center', 'right', 'justify']);
 }
 
 export function zPadding() {

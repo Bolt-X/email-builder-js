@@ -1,11 +1,20 @@
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LinkIcon from "@mui/icons-material/Link";
-import { Box, Button, IconButton, Tab, Tabs } from "@mui/material";
+import {
+	Box,
+	Button,
+	IconButton,
+	Tab,
+	Tabs,
+	CircularProgress,
+	Alert,
+	Stack,
+	InputLabel,
+} from "@mui/material";
 import { useState } from "react";
 import TextInput from "./TextInput";
-
-import { ImagePropsSchema } from "@usewaypoint/block-image";
+import { uploadImageWithProgress } from "../../../../../../services/files";
 
 type Props = {
 	label: string;
@@ -13,30 +22,62 @@ type Props = {
 	onChange: (value: string) => void;
 };
 
+const assetURL = import.meta.env.VITE_ASSETS_URL;
+
 const ImageInput = ({ label, defaultValue, onChange }: Props) => {
 	const [tab, setTab] = useState(0);
+	const [uploading, setUploading] = useState(false);
+	const [progress, setProgress] = useState(0);
+	const [error, setError] = useState<string | null>(null);
+	const [preview, setPreview] = useState<string | null>(null);
 
-	const handleUpload = async (file: File) => {
-		console.log("🚀 ~ handleUpload ~ handleUpload:", handleUpload);
-		const formData = new FormData();
-		formData.append("file", file);
-
-		// Upload qua API
-		const res = await fetch("/api/upload", {
-			method: "POST",
-			body: formData,
-		});
-		const { url } = await res.json();
-		const backgroundImageValue = `url(${url})`;
-		onChange(backgroundImageValue);
-	};
-
+	// Xóa ảnh hiện tại
 	const handleClear = () => {
-		const clearImageValue = "";
-		onChange(clearImageValue);
+		onChange(null);
+		setPreview(null);
 	};
+
+	// Upload file có theo dõi % tiến trình
+	const handleUpload = async (file: File) => {
+		setUploading(true);
+		setError(null);
+		setProgress(0);
+
+		try {
+			const res = await uploadImageWithProgress(file, (percent: number) =>
+				setProgress(percent)
+			);
+			const url = assetURL + res?.id;
+			onChange(url);
+			setPreview(null); // sau khi upload xong thì dùng ảnh chính thức
+		} catch (err) {
+			console.error(err);
+			setError("Upload failed. Please try again!");
+		} finally {
+			setUploading(false);
+		}
+	};
+
+	// Xử lý khi người dùng chọn file
+	const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		const maxSize = 5 * 1024 * 1024; // 5MB
+		if (file.size > maxSize) {
+			setError("Your file exceeds the 5MB limit. Please upload a smaller one!");
+			return;
+		}
+
+		setPreview(URL.createObjectURL(file));
+		handleUpload(file);
+	};
+
+	const imageToShow = preview || defaultValue;
+
 	return (
-		<>
+		<Stack alignItems="flex-start w-full">
+			<InputLabel sx={{ mb: 0.5 }}>{label}</InputLabel>
 			{/* Tabs */}
 			<Tabs
 				value={tab}
@@ -45,10 +86,11 @@ const ImageInput = ({ label, defaultValue, onChange }: Props) => {
 				sx={{
 					borderBottom: 1,
 					borderColor: "divider",
-					minHeight: 32, // giảm chiều cao chung của Tabs
+					minHeight: 32,
 					"& .MuiTab-root": {
-						minHeight: 32, // giảm chiều cao của Tab
-						paddingY: 0.5, // chỉnh lại padding top/bottom
+						minHeight: 32,
+						paddingY: 0.5,
+						fontSize: 12,
 					},
 				}}
 			>
@@ -74,9 +116,21 @@ const ImageInput = ({ label, defaultValue, onChange }: Props) => {
 						borderRadius: 1,
 						textAlign: "center",
 						backgroundColor: "#f9fbfc",
+						position: "relative",
 					}}
 				>
-					{defaultValue ? (
+					{error && (
+						<Alert
+							severity="error"
+							sx={{ mb: 2 }}
+							onClose={() => setError(null)}
+						>
+							{error}
+						</Alert>
+					)}
+
+					{/* Khi chưa có ảnh */}
+					{!imageToShow && !uploading && (
 						<Button
 							component="label"
 							variant="text"
@@ -87,25 +141,86 @@ const ImageInput = ({ label, defaultValue, onChange }: Props) => {
 								type="file"
 								accept="image/*"
 								hidden
-								onChange={(e) => {
-									const file = e.target.files?.[0];
-									if (file) handleUpload(file);
-								}}
+								onChange={onFileChange}
 							/>
 						</Button>
-					) : (
-						<Box>
+					)}
+
+					{/* Khi có ảnh (preview hoặc ảnh chính thức) */}
+					{imageToShow && (
+						<Box
+							sx={{
+								position: "relative",
+								display: "inline-block",
+								width: "100%",
+								maxWidth: 300,
+							}}
+						>
 							<img
-								src={defaultValue}
+								src={imageToShow}
 								alt="preview"
-								style={{ maxWidth: "100%", marginBottom: 8 }}
+								style={{
+									width: "100%",
+									opacity: uploading ? 0.5 : 1,
+									borderRadius: 8,
+								}}
 							/>
-							<IconButton
-								color="error"
-								onClick={handleClear}
-							>
-								<DeleteIcon />
-							</IconButton>
+							{/* Overlay progress */}
+							{uploading && (
+								<Box
+									sx={{
+										position: "absolute",
+										top: "50%",
+										left: "50%",
+										transform: "translate(-50%, -50%)",
+										display: "flex",
+										flexDirection: "column",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									<CircularProgress
+										variant="determinate"
+										value={progress}
+										size={60}
+										thickness={4}
+										color="primary"
+									/>
+									<Box
+										sx={{
+											position: "absolute",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											fontWeight: 600,
+											color: "#0079CC",
+											inset: 0,
+											border: "6px solid #0079CC50",
+											background: "#FFF",
+											borderRadius: "100%",
+											zIndex: "-1",
+										}}
+									>
+										{Math.round(progress)}%
+									</Box>
+								</Box>
+							)}
+
+							{/* Nút xóa ảnh */}
+							{!uploading && (
+								<IconButton
+									color="error"
+									onClick={handleClear}
+									sx={{
+										position: "absolute",
+										top: 8,
+										right: 8,
+										background: "rgba(255,255,255,0.7)",
+									}}
+								>
+									<DeleteIcon />
+								</IconButton>
+							)}
 						</Box>
 					)}
 				</Box>
@@ -115,17 +230,16 @@ const ImageInput = ({ label, defaultValue, onChange }: Props) => {
 			{tab === 1 && (
 				<Box mt={2}>
 					<TextInput
-						label="Image URL"
+						label={null}
 						defaultValue={defaultValue}
 						onChange={(v) => {
 							const url = v.trim().length === 0 ? null : v.trim();
-							const backgroundImageValue = `url(${url})`;
-							onChange(backgroundImageValue);
+							onChange(url);
 						}}
 					/>
 				</Box>
 			)}
-		</>
+		</Stack>
 	);
 };
 

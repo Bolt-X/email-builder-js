@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
 
 import { Snackbar, Stack, useTheme } from "@mui/material";
-import { INSPECTOR_DRAWER_WIDTH } from "../../App/InspectorDrawer";
-import SamplesDrawer, { SAMPLES_DRAWER_WIDTH } from "../../App/SamplesDrawer";
+import SamplesDrawer from "../../App/SamplesDrawer";
 import {
 	useInspectorDrawerOpen,
 	useSamplesDrawerOpen,
@@ -12,6 +11,8 @@ import ModalSearch from "../modals/ModalSearch";
 import { Outlet } from "react-router-dom";
 import { useFetchTemplates } from "../../contexts/templates";
 import { useMessage } from "../../contexts";
+import { useSamplesDrawerWidth } from "../../hooks/useSamplesDrawerWidth";
+import { useInspectorDrawerWidth } from "../../hooks/useInspectorDrawerWidth";
 
 function useDrawerTransition(
 	cssProperty: "margin-left" | "margin-right",
@@ -27,10 +28,13 @@ function useDrawerTransition(
 }
 
 export default function MainLayout() {
-	const message = useMessage();
 	useUndoRedoShortcuts();
+	const message = useMessage();
 	const inspectorDrawerOpen = useInspectorDrawerOpen();
+	const INSPECTOR_DRAWER_WIDTH = useInspectorDrawerWidth();
+
 	const samplesDrawerOpen = useSamplesDrawerOpen();
+	const SAMPLES_DRAWER_WIDTH = useSamplesDrawerWidth();
 
 	const marginLeftTransition = useDrawerTransition(
 		"margin-left",

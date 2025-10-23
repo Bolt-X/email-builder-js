@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Box, Drawer, Tab, Tabs } from "@mui/material";
+import { Box, Drawer, Tab, Tabs, useMediaQuery } from "@mui/material";
 
 import {
 	setSidebarTab,
@@ -10,12 +10,12 @@ import {
 
 import ConfigurationPanel from "./ConfigurationPanel";
 import StylesPanel from "./StylesPanel";
-
-export const INSPECTOR_DRAWER_WIDTH = 500;
+import { useInspectorDrawerWidth } from "../../hooks/useInspectorDrawerWidth";
 
 export default function InspectorDrawer() {
 	const selectedSidebarTab = useSelectedSidebarTab();
 	const inspectorDrawerOpen = useInspectorDrawerOpen();
+	const INSPECTOR_DRAWER_WIDTH = useInspectorDrawerWidth();
 
 	const renderCurrentSidebarPanel = () => {
 		switch (selectedSidebarTab) {

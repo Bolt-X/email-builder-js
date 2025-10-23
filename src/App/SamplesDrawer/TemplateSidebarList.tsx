@@ -176,7 +176,7 @@ const TemplateSidebarList = (props: Props) => {
 										"&:hover .more-btn": {
 											opacity: 1,
 										},
-										background: isActive ? "#DDD" : "",
+										background: isActive ? "#DFDFDF90" : "",
 									}}
 									secondaryAction={
 										renameId !== template.id && (
@@ -246,7 +246,20 @@ const TemplateSidebarList = (props: Props) => {
 											sx={{ py: 0.5, pl: 2 }}
 											onClick={() => navigate("/templates/" + template.id)}
 										>
-											<ListItemText primary={template.name} />
+											<ListItemText
+												primary={template.name}
+												title={template.name}
+												primaryTypographyProps={{
+													sx: {
+														maxWidth: "100%",
+														overflow: "hidden",
+														whiteSpace: "nowrap",
+														textOverflow: "ellipsis",
+														display: "inline-block",
+														verticalAlign: "middle",
+													},
+												}}
+											/>
 										</ListItemButton>
 									)}
 								</ListItem>

@@ -57,13 +57,14 @@ import { useNavigate } from "react-router-dom";
 import EMPTY_EMAIL_MESSAGE from "../../getConfiguration/sample/empty-email-message";
 import { deleteTemplate } from "../../services/template";
 import TemplateSidebarList from "./TemplateSidebarList";
-
-export const SAMPLES_DRAWER_WIDTH = 320;
+import { useSamplesDrawerWidth } from "../../hooks/useSamplesDrawerWidth";
 
 export default function SamplesDrawer() {
 	const navigate = useNavigate();
 	const templates = useTemplates();
 	const samplesDrawerOpen = useSamplesDrawerOpen();
+	const SAMPLES_DRAWER_WIDTH = useSamplesDrawerWidth();
+
 	const [openTemplate, setOpenTemplate] = React.useState(true);
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<number | null>(null);

@@ -65,7 +65,7 @@ export default function TextSidebarPanel({
 				names={[
 					"color",
 					"backgroundColor",
-					"backgroundImage",
+					// "backgroundImage",
 					"fontFamily",
 					"fontSize",
 					"fontWeight",

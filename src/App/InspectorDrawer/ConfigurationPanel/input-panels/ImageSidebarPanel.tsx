@@ -11,6 +11,7 @@ import {
 	Tab,
 	Tabs,
 	ToggleButton,
+	Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 
@@ -64,7 +65,7 @@ export default function ImageSidebarPanel({
 			updateData({ ...data, props: { ...data.props, url } });
 		} catch (err) {
 			console.error(err);
-			setError("Upload thất bại. Vui lòng thử lại!");
+			setError("Upload successfully. Please try again!");
 		} finally {
 			setUploading(false);
 		}
@@ -72,10 +73,16 @@ export default function ImageSidebarPanel({
 
 	const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
-		if (file) {
-			setPreview(URL.createObjectURL(file)); // ✅ hiển thị preview ngay
-			handleUpload(file);
+		if (!file) return;
+
+		// ✅ Kiểm tra dung lượng tối đa (5MB)
+		const maxSize = 5 * 1024 * 1024; // 5MB
+		if (file.size > maxSize) {
+			setError("Your file exceeds the 5MB limit. Please upload a smaller one!");
+			return;
 		}
+		setPreview(URL.createObjectURL(file));
+		handleUpload(file);
 	};
 
 	// cleanup URL tạm sau khi component unmount
@@ -140,19 +147,27 @@ export default function ImageSidebarPanel({
 
 					{/* Chưa có ảnh */}
 					{!data.props?.url && !preview && (
-						<Button
-							component="label"
-							variant="text"
-							startIcon={<CloudUploadIcon />}
-						>
-							Upload image
-							<input
-								type="file"
-								accept="image/*"
-								hidden
-								onChange={onFileChange}
-							/>
-						</Button>
+						<Stack>
+							<Button
+								component="label"
+								variant="text"
+								startIcon={<CloudUploadIcon />}
+							>
+								Upload image
+								<input
+									type="file"
+									accept="image/*"
+									hidden
+									onChange={onFileChange}
+								/>
+							</Button>
+							<Typography
+								variant="caption"
+								color="text.secondary"
+							>
+								Maxium file size: 5MB
+							</Typography>
+						</Stack>
 					)}
 
 					{/* Có preview (đang upload hoặc upload xong) */}

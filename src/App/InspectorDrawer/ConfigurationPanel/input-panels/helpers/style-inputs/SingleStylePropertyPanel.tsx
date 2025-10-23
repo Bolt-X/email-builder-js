@@ -10,6 +10,7 @@ import FontWeightInput from "../inputs/FontWeightInput";
 import PaddingInput from "../inputs/PaddingInput";
 import SliderInput from "../inputs/SliderInput";
 import TextAlignInput from "../inputs/TextAlignInput";
+import ImageInput from "../inputs/ImageInput";
 // import ImageInput from '../inputs/ImageInput';
 
 type StylePropertyPanelProps = {
@@ -37,8 +38,14 @@ export default function SingleStylePropertyPanel({
 					onChange={handleChange}
 				/>
 			);
-		// case 'backgroundImage':
-		//   return <ImageInput label="Background image" defaultValue={defaultValue} onChange={handleChange} />;
+		case "backgroundImage":
+			return (
+				<ImageInput
+					label="Background image"
+					defaultValue={defaultValue}
+					onChange={handleChange}
+				/>
+			);
 		case "borderColor":
 			return (
 				<NullableColorInput
