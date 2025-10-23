@@ -1,64 +1,36 @@
 import React, { useState } from "react";
 
+import { AddBoxOutlined, Search } from "@mui/icons-material";
+import MenuIcon from "@mui/icons-material/Menu";
 import {
 	Avatar,
 	Box,
 	Button,
-	Collapse,
-	Dialog,
-	DialogActions,
-	DialogContent,
-	DialogContentText,
-	DialogTitle,
 	Divider,
 	Drawer,
-	IconButton,
-	Link,
 	List,
-	ListItem,
 	ListItemButton,
 	ListItemIcon,
 	ListItemText,
-	Menu,
-	MenuItem,
 	Stack,
 	Typography,
 } from "@mui/material";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import DeleteIcon from "@mui/icons-material/Delete";
-import MenuIcon from "@mui/icons-material/Menu";
-import {
-	Search,
-	DescriptionOutlined,
-	HistoryOutlined,
-	ExpandLess,
-	ExpandMore,
-	EditOutlined,
-	AddBox,
-	ControlPointDuplicate,
-	ContentCopy,
-	DriveFileRenameOutlineOutlined,
-} from "@mui/icons-material";
-import {
-	setMessage,
-	toggleDrawerNoteOpen,
-	toggleSearchModalOpen,
-} from "../../contexts";
-import {
-	resetDocument,
-	setDocument,
-	useSamplesDrawerOpen,
-} from "../../documents/editor/EditorContext";
+import { useNavigate } from "react-router-dom";
+import { setMessage, toggleSearchModalOpen } from "../../contexts";
 import {
 	setCurrentTemplate,
 	useFetchTemplates,
 	useTemplates,
 } from "../../contexts/templates";
-import { useNavigate } from "react-router-dom";
+import {
+	resetDocument,
+	setDocument,
+	useSamplesDrawerOpen,
+} from "../../documents/editor/EditorContext";
 import EMPTY_EMAIL_MESSAGE from "../../getConfiguration/sample/empty-email-message";
+import { useSamplesDrawerWidth } from "../../hooks/useSamplesDrawerWidth";
 import { deleteTemplate } from "../../services/template";
 import TemplateSidebarList from "./TemplateSidebarList";
-import { useSamplesDrawerWidth } from "../../hooks/useSamplesDrawerWidth";
 
 export default function SamplesDrawer() {
 	const navigate = useNavigate();
@@ -166,7 +138,7 @@ export default function SamplesDrawer() {
 						}}
 					>
 						<ListItemIcon sx={{ minWidth: 32 }}>
-							<AddBox fontSize="small" />
+							<AddBoxOutlined fontSize="small" />
 						</ListItemIcon>
 						<ListItemText primary="New template" />
 					</ListItemButton>
@@ -180,7 +152,7 @@ export default function SamplesDrawer() {
 						/>
 					</ListItemButton>
 
-					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
 						<ListItemIcon sx={{ minWidth: 32 }}>
 							<DescriptionOutlined fontSize="small" />
 						</ListItemIcon>
@@ -188,14 +160,14 @@ export default function SamplesDrawer() {
 							primary="Notes"
 							onClick={toggleDrawerNoteOpen}
 						/>
-					</ListItemButton>
+					</ListItemButton> */}
 
-					<ListItemButton sx={{ py: 0.75, px: 2 }}>
+					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
 						<ListItemIcon sx={{ minWidth: 32 }}>
 							<HistoryOutlined fontSize="small" />
 						</ListItemIcon>
 						<ListItemText primary="History" />
-					</ListItemButton>
+					</ListItemButton> */}
 
 					<Divider />
 
