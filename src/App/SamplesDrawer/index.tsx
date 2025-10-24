@@ -1,7 +1,4 @@
 import React, { useState } from "react";
-
-import { AddBoxOutlined, Search } from "@mui/icons-material";
-import MenuIcon from "@mui/icons-material/Menu";
 import {
 	Avatar,
 	Box,
@@ -12,82 +9,56 @@ import {
 	ListItemButton,
 	ListItemIcon,
 	ListItemText,
+	Menu,
+	MenuItem,
 	Stack,
 	Typography,
 } from "@mui/material";
+import { AddBoxOutlined, Logout, Search } from "@mui/icons-material";
+import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
-import { setMessage, toggleSearchModalOpen } from "../../contexts";
-import {
-	setCurrentTemplate,
-	useFetchTemplates,
-	useTemplates,
-} from "../../contexts/templates";
+
+import { setCurrentTemplate, useTemplates } from "../../contexts/templates";
 import {
 	resetDocument,
-	setDocument,
 	useSamplesDrawerOpen,
 } from "../../documents/editor/EditorContext";
 import EMPTY_EMAIL_MESSAGE from "../../getConfiguration/sample/empty-email-message";
 import { useSamplesDrawerWidth } from "../../hooks/useSamplesDrawerWidth";
-import { deleteTemplate } from "../../services/template";
 import TemplateSidebarList from "./TemplateSidebarList";
+import { useAuthStore } from "../../contexts/auth";
+import { toggleSearchModalOpen } from "../../contexts";
 
 export default function SamplesDrawer() {
 	const navigate = useNavigate();
-	const templates = useTemplates();
 	const samplesDrawerOpen = useSamplesDrawerOpen();
 	const SAMPLES_DRAWER_WIDTH = useSamplesDrawerWidth();
+	const { user, logout } = useAuthStore((s) => ({
+		user: s.user,
+		logout: s.logout,
+	}));
 
-	const [openTemplate, setOpenTemplate] = React.useState(true);
+	const userFullName = user
+		? user.first_name + " " + user.last_name
+		: "Unknown user";
+	const userFirstLetter = userFullName.charAt(0);
+
+	// menu state
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-	const [selectedId, setSelectedId] = useState<number | null>(null);
-	const [openConfirm, setOpenConfirm] = useState(false);
+	const menuOpen = Boolean(anchorEl);
 
-	const handleOpenConfirm = () => {
-		setOpenConfirm(true);
-	};
-
-	const handleCloseConfirm = () => {
-		setOpenConfirm(false);
-	};
-
-	const handleMenuOpen = (
-		event: React.MouseEvent<HTMLButtonElement>,
-		id: number
-	) => {
+	const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
 		setAnchorEl(event.currentTarget);
-		setSelectedId(id);
 	};
 
 	const handleMenuClose = () => {
 		setAnchorEl(null);
-		setSelectedId(null);
 	};
 
-	const handleConfirmDelete = async () => {
-		try {
-			await deleteTemplate(selectedId);
-			setCurrentTemplate(null);
-			setDocument(EMPTY_EMAIL_MESSAGE);
-			// TODO: tạm thời redirect về trang Home
-			navigate("/");
-		} catch (error) {
-			setMessage(error);
-		} finally {
-			setOpenConfirm(false);
-			handleMenuClose();
-			useFetchTemplates();
-		}
-	};
-
-	const handleRenameTemplate = async () => {
-		try {
-		} catch (error) {}
-	};
-
-	const handleDuplicateTemplate = async () => {
-		try {
-		} catch (error) {}
+	const handleLogout = () => {
+		handleMenuClose();
+		logout();
+		navigate("/auth/login", { replace: true });
 	};
 
 	return (
@@ -107,14 +78,14 @@ export default function SamplesDrawer() {
 				},
 			}}
 		>
-			{/* Top Section */}
+			{/* --- Top Section --- */}
 			<Stack spacing={2}>
 				{/* Header */}
 				<Stack
 					direction="row"
 					alignItems="center"
 					spacing={1}
-					sx={{ pl: 2, py: 1 }} // căn trái và padding gọn
+					sx={{ pl: 2, py: 1 }}
 				>
 					<MenuIcon fontSize="small" />
 					<Typography
@@ -130,8 +101,6 @@ export default function SamplesDrawer() {
 					<ListItemButton
 						sx={{ py: 0.75, px: 2 }}
 						onClick={() => {
-							console.log("ListItemButton onClick");
-
 							navigate("/");
 							resetDocument(EMPTY_EMAIL_MESSAGE);
 							setCurrentTemplate(null);
@@ -152,51 +121,15 @@ export default function SamplesDrawer() {
 						/>
 					</ListItemButton>
 
-					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
-						<ListItemIcon sx={{ minWidth: 32 }}>
-							<DescriptionOutlined fontSize="small" />
-						</ListItemIcon>
-						<ListItemText
-							primary="Notes"
-							onClick={toggleDrawerNoteOpen}
-						/>
-					</ListItemButton> */}
-
-					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
-						<ListItemIcon sx={{ minWidth: 32 }}>
-							<HistoryOutlined fontSize="small" />
-						</ListItemIcon>
-						<ListItemText primary="History" />
-					</ListItemButton> */}
-
 					<Divider />
 
 					<TemplateSidebarList />
 				</List>
 			</Stack>
 
-			{/* Footer */}
+			{/* --- Footer --- */}
 			<Stack spacing={2}>
-				{/* Main Section */}
-				<Stack spacing={1}>
-					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
-						<ListItemText primary="Dashboard" />
-					</ListItemButton> */}
-					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
-						<ListItemText primary="List" />
-					</ListItemButton> */}
-					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
-						<ListItemText primary="Subscribers" />
-					</ListItemButton> */}
-					{/* <ListItemButton sx={{ py: 0.75, px: 2 }}>
-						<ListItemText
-							primary="Campaigns"
-							onClick={() => navigate("/campaigns")}
-						/>
-					</ListItemButton> */}
-				</Stack>
 				<Divider />
-
 				<Box>
 					<Typography
 						variant="h6"
@@ -208,7 +141,7 @@ export default function SamplesDrawer() {
 						variant="body2"
 						color="text.secondary"
 					>
-						Giải pháp rút ngắn thời gian soạn và gửi email
+						The modern way to create and deliver your emails.
 					</Typography>
 					<Button
 						size="small"
@@ -220,19 +153,65 @@ export default function SamplesDrawer() {
 
 				<Divider />
 
+				{/* User info + menu */}
 				<Stack
 					direction="row"
 					alignItems="center"
 					spacing={1}
+					sx={{
+						cursor: "pointer",
+						padding: "4px",
+						borderRadius: "4px",
+						background: "#EEE",
+						":hover": {
+							background: "#DDD",
+						},
+					}}
+					onClick={handleMenuOpen}
 				>
-					<Avatar sx={{ width: 32, height: 32 }}>A</Avatar>
-					<Typography
-						variant="body2"
-						fontWeight="medium"
-					>
-						Account name
-					</Typography>
+					<Avatar sx={{ width: 32, height: 32, background: "#0079CC" }}>
+						{userFirstLetter}
+					</Avatar>
+					<Typography variant="body1">{userFullName}</Typography>
 				</Stack>
+
+				{/* Popup Menu */}
+				<Menu
+					anchorEl={anchorEl}
+					open={menuOpen}
+					onClose={handleMenuClose}
+					anchorOrigin={{
+						vertical: "top",
+						horizontal: "center",
+					}}
+					transformOrigin={{
+						vertical: "bottom",
+						horizontal: "right",
+					}}
+					slotProps={{
+						paper: {
+							sx: {
+								width: "280px",
+								borderRadius: "4px",
+								boxShadow: "0px 8px 10px #AAA",
+							},
+						},
+					}}
+				>
+					<MenuItem
+						onClick={handleLogout}
+						sx={{
+							display: "flex",
+							gap: "12px",
+						}}
+					>
+						<Logout
+							fontSize="small"
+							color="action"
+						/>{" "}
+						<Typography variant="body1">Log out</Typography>
+					</MenuItem>
+				</Menu>
 			</Stack>
 		</Drawer>
 	);

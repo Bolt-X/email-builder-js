@@ -70,6 +70,20 @@ const THEME = createTheme(BASE_THEME, {
     },
   },
   components: {
+    MuiListItem: {
+      styleOverrides: {
+        root: {
+          borderRadius: 4,
+        },
+      },
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 4,
+        },
+      },
+    },
     MuiCssBaseline: {
       styleOverrides: `
         address {
