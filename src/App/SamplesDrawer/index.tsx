@@ -87,13 +87,10 @@ export default function SamplesDrawer() {
 					spacing={1}
 					sx={{ pl: 2, py: 1 }}
 				>
-					<MenuIcon fontSize="small" />
-					<Typography
-						variant="subtitle1"
-						fontWeight="bold"
-					>
-						MailBolter
-					</Typography>
+					<img
+						alt="logo-boltx"
+						src="/assets/logo/Logo BoltX primary.svg"
+					/>
 				</Stack>
 
 				{/* Menu items */}

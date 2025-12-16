@@ -51,13 +51,13 @@ export default function MainLayout() {
 	return (
 		<>
 			<SamplesDrawer />
-			<ModalSearch />
-			<Snackbar
+			{/* <ModalSearch /> */}
+			{/* <Snackbar
 				anchorOrigin={{ vertical: "top", horizontal: "center" }}
 				open={message !== null}
 				message={message}
 				autoHideDuration={3000}
-			/>
+			/> */}
 
 			<Stack
 				sx={{
