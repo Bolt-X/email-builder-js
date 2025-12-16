@@ -9,6 +9,7 @@ const OPTIONS = FONT_FAMILIES.map((option) => (
     {option.label}
   </MenuItem>
 ));
+console.log("🚀 ~ OPTIONS:", OPTIONS)
 
 type NullableProps = {
   label: string;
