@@ -7,6 +7,7 @@ import BooleanInput from "./helpers/inputs/BooleanInput";
 import TextInput from "./helpers/inputs/TextInput";
 import MultiStylePropertyPanel from "./helpers/style-inputs/MultiStylePropertyPanel";
 import RichTextEditorInput from "./helpers/inputs/RichTextEditorInput";
+import { RichTextEditorInputAlt } from "./helpers/inputs/RichTextEditorInputAlt";
 
 type TextSidebarPanelProps = {
 	data: TextProps;
@@ -36,7 +37,13 @@ export default function TextSidebarPanel({
 	return (
 		<BaseSidebarPanel title="Text block">
 			{data.props?.markdown ? (
-				<RichTextEditorInput
+				// <RichTextEditorInput
+				// 	defaultValue={data.props?.text ?? ""}
+				// 	onChange={(text) =>
+				// 		updateData({ ...data, props: { ...data.props, text } })
+				// 	}
+				// />
+				<RichTextEditorInputAlt
 					defaultValue={data.props?.text ?? ""}
 					onChange={(text) =>
 						updateData({ ...data, props: { ...data.props, text } })
