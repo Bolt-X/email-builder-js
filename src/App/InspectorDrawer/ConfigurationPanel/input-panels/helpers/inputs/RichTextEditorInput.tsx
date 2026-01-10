@@ -1,13 +1,12 @@
-import Blockquote from "@tiptap/extension-blockquote";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import { ListItem } from "@tiptap/extension-list";
-import Paragraph from "@tiptap/extension-paragraph";
+import Link from "@tiptap/extension-link"; // Thêm này nếu chưa có
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
-import Text from "@tiptap/extension-text";
 import TextAlign from "@tiptap/extension-text-align";
-import { Dropcursor } from "@tiptap/extensions";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Underline from "@tiptap/extension-underline"; // ← THÊM DÒNG NÀY
 import StarterKit from "@tiptap/starter-kit";
 import {
 	LinkBubbleMenu,
@@ -16,10 +15,12 @@ import {
 	MenuButtonBold,
 	MenuButtonBulletedList,
 	MenuButtonEditLink,
+	MenuButtonHighlightColor,
 	MenuButtonItalic,
 	MenuButtonOrderedList,
 	MenuButtonSubscript,
 	MenuButtonSuperscript,
+	MenuButtonTextColor,
 	MenuButtonUnderline,
 	MenuControlsContainer,
 	MenuDivider,
@@ -42,26 +43,28 @@ const RichTextEditorInput = ({ defaultValue, onChange }: Props) => {
 			ref={rteRef}
 			extensions={[
 				StarterKit,
-				Text,
-				Paragraph,
-				Link,
+				TextStyle, // Phải có trước Color và Highlight
+				Color,
+				Highlight.configure({
+					multicolor: true,
+				}),
+				Underline, // ← THÊM VÀO ĐÂY
+				Link.configure({
+					// Nếu bạn dùng LinkBubbleMenu
+					openOnClick: false,
+				}),
 				LinkBubbleMenuHandler,
 				TextAlign.configure({
 					types: ["heading", "paragraph"],
 				}),
 				Superscript,
-				Blockquote,
-				ListItem,
 				Subscript,
-				Dropcursor,
 				Image,
-			]} // Or any Tiptap extensions you wish!
+			]}
 			content={defaultValue}
 			onUpdate={({ editor }) => {
 				onChange(editor.getHTML());
 			}}
-			// Initial content for the editor
-			// Optionally include `renderControls` for a menu-bar atop the editor:
 			renderControls={() => (
 				<MenuControlsContainer>
 					<MenuSelectHeading />
@@ -69,11 +72,34 @@ const RichTextEditorInput = ({ defaultValue, onChange }: Props) => {
 					<MenuButtonBold />
 					<MenuButtonItalic />
 					<MenuButtonUnderline />
+					<MenuDivider />
+
+					<MenuButtonTextColor
+						swatchColors={[
+							{ value: "#000000", label: "Đen" },
+							{ value: "#f44336", label: "Đỏ" },
+							{ value: "#2196f3", label: "Xanh dương" },
+							{ value: "#4caf50", label: "Xanh lá" },
+							{ value: "#ff9800", label: "Cam" },
+						]}
+					/>
+
+					<MenuButtonHighlightColor
+						swatchColors={[
+							{ value: "#ffff00", label: "Vàng" },
+							{ value: "#00ffff", label: "Xanh lơ" },
+							{ value: "#ff00ff", label: "Hồng" },
+							{ value: "#00ff00", label: "Xanh lá sáng" },
+						]}
+					/>
+
+					<MenuDivider />
 					<MenuButtonBlockquote />
 					<MenuButtonEditLink />
 					<LinkBubbleMenu />
 					<MenuButtonSubscript />
 					<MenuButtonSuperscript />
+					<MenuDivider />
 					<MenuButtonOrderedList />
 					<MenuButtonBulletedList />
 				</MenuControlsContainer>

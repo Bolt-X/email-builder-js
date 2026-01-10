@@ -5,7 +5,7 @@ import { Template } from "../types"
 export const getAllTemplates = async () => {
   try {
     const res = await directusClientWithRest.request(readItems('templates', {
-      fields: ["id", "name"],
+      fields: ["*"],
       sort: "name"
     }))
     return res
