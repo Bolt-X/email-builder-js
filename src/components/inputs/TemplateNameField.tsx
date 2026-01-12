@@ -4,7 +4,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
 	setCurrentTemplate,
 	useCurrentTemplate,
-} from "../../contexts/templates";
+} from "../../modules/templates/store";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 
 export default function TemplateNameField() {

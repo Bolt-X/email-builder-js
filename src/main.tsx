@@ -8,8 +8,13 @@ import App from "./App";
 import theme from "./theme";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import MainLayout from "./components/layouts";
+import DashboardLayout from "./layouts/DashboardLayout";
 import TemplateDetailPage from "./App/TemplateDetailPage";
 import CampaignListPage from "./App/CampaignListPage";
+import CampaignEditPage from "./modules/campaigns/components/CampaignEditPage/CampaignEditPage";
+import ContactListPage from "./modules/contacts/components/ContactListPage/ContactListPage";
+import ContactListDetailPage from "./modules/contacts/components/ContactListDetailPage";
+import AnalyticsDashboard from "./modules/analytics/components/AnalyticsDashboard";
 import AuthLayout from "./components/layouts/AuthLayout";
 import LoginPage from "./App/LoginPage";
 import PrivateRoute from "./components/PrivateRoute";
@@ -22,24 +27,64 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 				<CssBaseline />
 				<Routes>
 					<Route element={<PrivateRoute />}>
+						{/* Dashboard routes with new layout */}
 						<Route
 							path="/"
+							element={<DashboardLayout />}
+						>
+							{/* Campaign routes */}
+							<Route
+								path="campaigns"
+								element={<CampaignListPage />}
+							/>
+							{/* Campaign Edit Page */}
+							<Route
+								path="campaigns/:id"
+								element={<CampaignEditPage />}
+							/>
+							{/* Template editing from campaign context */}
+							<Route
+								path="campaigns/:campaignId/templates/:templateId"
+								element={<TemplateDetailPage />}
+							/>
+							{/* Contacts routes */}
+							<Route
+								path="contacts"
+								element={<ContactListPage />}
+							/>
+							<Route
+								path="contacts/lists/:id"
+								element={<ContactListDetailPage />}
+							/>
+							{/* Analytics route */}
+							<Route
+								path="analytics"
+								element={<AnalyticsDashboard />}
+							/>
+							{/* Default redirect to campaigns */}
+							<Route
+								index
+								element={
+									<Navigate
+										to="/campaigns"
+										replace
+									/>
+								}
+							/>
+						</Route>
+
+						{/* Legacy template routes - keep for backward compatibility */}
+						<Route
+							path="/legacy"
 							element={<MainLayout />}
 						>
 							<Route
 								index
 								element={<App />}
 							/>
-							{/* chi tiết template */}
 							<Route
 								path="templates/:id"
 								element={<TemplateDetailPage />}
-							/>
-
-							{/* Danh sách campaign */}
-							<Route
-								path="campaigns"
-								element={<CampaignListPage />}
 							/>
 						</Route>
 					</Route>

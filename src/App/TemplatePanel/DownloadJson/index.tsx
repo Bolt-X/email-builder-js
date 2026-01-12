@@ -4,7 +4,7 @@ import { FileDownloadOutlined } from "@mui/icons-material";
 import { Button, IconButton, Tooltip } from "@mui/material";
 
 import { useDocument } from "../../../documents/editor/EditorContext";
-import { useCurrentTemplate } from "../../../contexts/templates";
+import { useCurrentTemplate } from "../../../modules/templates/store";
 
 export default function DownloadJson() {
 	const doc = useDocument();

@@ -4,7 +4,7 @@ import { FileUploadOutlined } from "@mui/icons-material";
 import { Button, IconButton, Tooltip } from "@mui/material";
 
 import ImportJsonDialog from "./ImportJsonDialog";
-import { useCurrentTemplate } from "../../../contexts/templates";
+import { useCurrentTemplate } from "../../../modules/templates/store";
 
 export default function ImportJson() {
 	const [open, setOpen] = useState(false);

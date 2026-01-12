@@ -41,7 +41,7 @@ import SaveButton from "./SaveButton";
 import UndoButton from "./UndoButton";
 import RedoButton from "./RedoButton";
 import DrawerNote from "../../components/drawers/DrawerNote";
-import { useCurrentTemplate } from "../../contexts/templates";
+import { useCurrentTemplate } from "../../modules/templates/store";
 import TemplateNameField from "../../components/inputs/TemplateNameField";
 import ShowHTML from "../ShowHTML";
 

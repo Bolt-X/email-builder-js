@@ -4,12 +4,13 @@ import { renderToStaticMarkup } from "@usewaypoint/email-builder";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { setMessage } from "../../contexts";
-import {
-	useCurrentTemplate,
-	useFetchTemplates,
-} from "../../contexts/templates";
+import { useCurrentTemplate } from "../../modules/templates/store";
 import { useDocument } from "../../documents/editor/EditorContext";
-import { createTemplate, updateTemplate } from "../../services/template";
+import {
+	createTemplateAction,
+	updateTemplateAction,
+	fetchTemplates,
+} from "../../modules/templates/store";
 
 export default function AutoSaveStatus() {
 	const document = useDocument();
@@ -30,13 +31,22 @@ export default function AutoSaveStatus() {
 	const handleCreateTemplate = async () => {
 		let newId = "";
 		try {
-			const res = await createTemplate({
+			// Get campaignId from currentTemplate or URL params
+			const campaignId =
+				currentTemplate?.campaignId ||
+				(window.location.pathname.match(/\/campaigns\/(\d+)/)?.[1] || "");
+			
+			if (!campaignId) {
+				throw new Error("Campaign ID is required to create a template");
+			}
+
+			const res = await createTemplateAction(campaignId, {
 				name: currentTemplate?.name || "Untitled",
-				subject: "No Subject",
-				body: code,
-				settings: JSON.stringify(document),
+				description: "No Subject",
+				html: code,
+				json: document,
 			});
-			newId = res.id;
+			newId = res.id.toString();
 			navigate("/templates/" + newId);
 			return res;
 		} catch (error) {
@@ -46,11 +56,11 @@ export default function AutoSaveStatus() {
 
 	const handleUpdateTemplate = async () => {
 		if (!currentTemplate?.id) return null;
-		const res = await updateTemplate(currentTemplate.id, {
+		const res = await updateTemplateAction(currentTemplate.id, {
 			name: currentTemplate.name,
-			subject: "No Subject",
-			body: code,
-			settings: JSON.stringify(document),
+			description: currentTemplate.description,
+			html: code,
+			json: document,
 		});
 		return res;
 	};
@@ -74,7 +84,7 @@ export default function AutoSaveStatus() {
 			setMessage("Error: " + err.message);
 			setStatus("idle");
 		} finally {
-			useFetchTemplates();
+			fetchTemplates();
 		}
 	};
 

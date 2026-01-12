@@ -18,7 +18,7 @@ import { AddBoxOutlined, Logout, Search } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
 
-import { setCurrentTemplate, useTemplates } from "../../contexts/templates";
+import { setCurrentTemplate } from "../../modules/templates/store";
 import {
 	resetDocument,
 	useSamplesDrawerOpen,

@@ -9,7 +9,7 @@ import {
 import { useUndoRedoShortcuts } from "../../hooks/useUndoRedoShortcuts";
 import ModalSearch from "../modals/ModalSearch";
 import { Outlet } from "react-router-dom";
-import { useFetchTemplates } from "../../contexts/templates";
+import { fetchTemplates } from "../../modules/templates/store";
 import { useMessage } from "../../contexts";
 import { useSamplesDrawerWidth } from "../../hooks/useSamplesDrawerWidth";
 import { useInspectorDrawerWidth } from "../../hooks/useInspectorDrawerWidth";
@@ -45,7 +45,7 @@ export default function MainLayout() {
 		inspectorDrawerOpen
 	);
 	useEffect(() => {
-		useFetchTemplates();
+		fetchTemplates();
 	}, []);
 
 	return (

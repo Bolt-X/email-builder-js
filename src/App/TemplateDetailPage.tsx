@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import InspectorDrawer from "./InspectorDrawer";
 import TemplatePanel from "./TemplatePanel";
 import { useParams } from "react-router-dom";
-import { useFetchTemplateDetail } from "../contexts/templates";
+import { fetchTemplateDetail } from "../modules/templates/store";
 import { useDocument } from "../documents/editor/EditorContext";
 
 type Props = {};
@@ -10,7 +10,9 @@ type Props = {};
 const TemplateDetailPage = (props: Props) => {
 	const { id } = useParams();
 	useEffect(() => {
-		useFetchTemplateDetail(id);
+		if (id) {
+			fetchTemplateDetail(id);
+		}
 	}, [id]);
 
 	return (
