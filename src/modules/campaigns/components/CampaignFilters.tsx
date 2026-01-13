@@ -40,7 +40,7 @@ const statusOptions: CampaignStatus[] = [
 	"cancelled",
 ];
 
-export default function CampaignFilters() {
+export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 	const filters = useCampaignFilters();
 	const viewMode = useCampaignViewMode();
 
@@ -67,6 +67,7 @@ export default function CampaignFilters() {
 							if (newMode) setViewMode(newMode);
 						}}
 						size="small"
+						disabled={disabled}
 					>
 						<ToggleButton value="table">
 							<ViewList sx={{ mr: 1 }} />
@@ -92,12 +93,14 @@ export default function CampaignFilters() {
 						value={filters.searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						sx={{ minWidth: 200 }}
+						disabled={disabled}
 					/>
 
 					{/* Status Filter */}
 					<FormControl
 						size="small"
 						sx={{ minWidth: 150 }}
+						disabled={disabled}
 					>
 						<InputLabel>Status</InputLabel>
 						<Select
@@ -143,6 +146,7 @@ export default function CampaignFilters() {
 						}
 						InputLabelProps={{ shrink: true }}
 						sx={{ minWidth: 150 }}
+						disabled={disabled}
 					/>
 					<TextField
 						label="End Date"
@@ -157,6 +161,7 @@ export default function CampaignFilters() {
 						}
 						InputLabelProps={{ shrink: true }}
 						sx={{ minWidth: 150 }}
+						disabled={disabled}
 					/>
 				</Stack>
 

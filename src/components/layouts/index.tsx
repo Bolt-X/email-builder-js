@@ -51,14 +51,6 @@ export default function MainLayout() {
 	return (
 		<>
 			<SamplesDrawer />
-			{/* <ModalSearch /> */}
-			{/* <Snackbar
-				anchorOrigin={{ vertical: "top", horizontal: "center" }}
-				open={message !== null}
-				message={message}
-				autoHideDuration={3000}
-			/> */}
-
 			<Stack
 				sx={{
 					marginRight: inspectorDrawerOpen ? `${INSPECTOR_DRAWER_WIDTH}px` : 0,

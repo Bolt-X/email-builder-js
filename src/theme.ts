@@ -15,7 +15,7 @@ const MONOSPACE_FONT_FAMILY =
 const BASE_THEME = createTheme({
 	palette: {
 		background: {
-			default: "#f2f5f7",
+			default: "#FAFAFA",
 		},
 		text: {
 			primary: "#1F1F21",
@@ -296,6 +296,9 @@ const THEME = createTheme(BASE_THEME, {
 				disableElevation: true,
 			},
 			styleOverrides: {
+				root: {
+					borderRadius: 100,
+				},
 				textPrimary: {
 					color: BASE_THEME.palette.text.primary,
 				},

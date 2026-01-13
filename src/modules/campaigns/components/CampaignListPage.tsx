@@ -21,6 +21,7 @@ import CampaignFilters from "./CampaignFilters";
 import CampaignActionsToolbar from "./CampaignActionsToolbar";
 import CampaignFormDrawer from "./CampaignFormDrawer";
 
+
 export default function CampaignListPage() {
 	const navigate = useNavigate();
 	const campaigns = useCampaigns();
@@ -76,6 +77,12 @@ export default function CampaignListPage() {
 		);
 	}
 
+	const isEmpty = campaigns.length === 0 && !loading;
+
+
+
+// ... existing imports
+
 	return (
 		<Box>
 			<Stack
@@ -88,55 +95,78 @@ export default function CampaignListPage() {
 				<Button
 					variant="contained"
 					startIcon={<Add />}
-					onClick={handleCreateCampaign}
+					onClick={() => navigate("/campaigns/new")}
 				>
 					Create Campaign
 				</Button>
 			</Stack>
 
 			<Stack spacing={2}>
-				{/* Filters */}
-				<CampaignFilters />
+				{/* Filters - Disabled when empty */}
+				<CampaignFilters disabled={isEmpty} />
 
-				{/* Actions Toolbar */}
-				<CampaignActionsToolbar />
+				{/* Actions Toolbar - Disabled when empty */}
+				<CampaignActionsToolbar disabled={isEmpty} />
 
-				{/* Campaign List */}
-				{viewMode === "table" ? (
-					<CampaignListTable campaigns={campaigns} />
-				) : (
-					<CampaignListCalendar campaigns={campaigns} />
+				{/* Campaign List - Only show if NOT empty */}
+				{!isEmpty && (
+					viewMode === "table" ? (
+						<CampaignListTable campaigns={campaigns} />
+					) : (
+						<CampaignListCalendar campaigns={campaigns} />
+					)
 				)}
 
-				{/* Empty State */}
-				{campaigns.length === 0 && !loading && (
+			{/* Empty State */}
+				{isEmpty && (
 					<Box
+						display="flex"
+						flexDirection="column"
+						alignItems="center"
+						justifyContent="center"
+						minHeight="60vh"
 						textAlign="center"
-						py={8}
 					>
+						<Box
+							mb={2}
+							display="flex"
+							justifyContent="center"
+							alignItems="center"
+							sx={{
+								width: 64,
+								height: 64,
+								borderRadius: "50%",
+								bgcolor: "grey.100",
+								color: "primary.main",
+								mb: 3
+							}}
+						>
+							<Add fontSize="large" />
+						</Box>
 						<Typography
 							variant="h6"
-							color="text.secondary"
-							mb={2}
+							sx={{ fontWeight: 600, mb: 1 }}
 						>
-							No campaigns found
+							You have not created any email campaigns
+						</Typography>
+						<Typography
+							variant="body1"
+							color="text.secondary"
+							sx={{ mb: 3 }}
+						>
+							Click on "Create campaign" and start designing your first email campaign.
 						</Typography>
 						<Button
 							variant="outlined"
-							onClick={handleCreateCampaign}
+							startIcon={<Add />}
+							onClick={() => navigate("/campaigns/new")}
+							sx={{ borderRadius: 20, px: 3 }}
 						>
-							Create your first campaign
+							Create campaign
 						</Button>
 					</Box>
 				)}
 			</Stack>
-
-			{/* Create Campaign Drawer */}
-			<CampaignFormDrawer
-				open={createDrawerOpen}
-				onClose={handleCloseDrawer}
-				mode="create"
-			/>
 		</Box>
 	);
 }

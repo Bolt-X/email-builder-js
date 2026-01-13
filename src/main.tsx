@@ -20,6 +20,14 @@ import LoginPage from "./App/LoginPage";
 import PrivateRoute from "./components/PrivateRoute";
 import NotFoundPage from "./App/NotFoundPage";
 
+import DashboardPage from "./modules/dashboard/components/DashboardPage";
+import TemplatesPage from "./modules/templates/components/TemplatesPage";
+import MediaPage from "./modules/media/components/MediaPage";
+import SettingsPage from "./modules/settings/components/SettingsPage";
+import CampaignsLayout from "./modules/campaigns/components/CampaignsLayout";
+import CampaignCreatePage from "./modules/campaigns/components/CampaignCreatePage/CampaignCreatePage";
+
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
 	<React.StrictMode>
 		<BrowserRouter>
@@ -32,12 +40,30 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 							path="/"
 							element={<DashboardLayout />}
 						>
-							{/* Campaign routes */}
+							<Route
+								index
+								element={<DashboardPage />}
+							/>
+							
+             <Route
+  path="templates"
+  element={<TemplatesPage />}
+             />
+
+							<Route
+								path="media"
+								element={<MediaPage />}
+							/>
+
+							{/* Campaign routes wrapper with Tabs */}
 							<Route
 								path="campaigns"
 								element={<CampaignListPage />}
 							/>
-							{/* Campaign Edit Page */}
+ <Route
+                  path="campaigns/new"
+                  element={<CampaignCreatePage />}
+                 />
 							<Route
 								path="campaigns/:id"
 								element={<CampaignEditPage />}
@@ -47,6 +73,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 								path="campaigns/:campaignId/templates/:templateId"
 								element={<TemplateDetailPage />}
 							/>
+						
 							{/* Contacts routes */}
 							<Route
 								path="contacts"
@@ -56,20 +83,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 								path="contacts/lists/:id"
 								element={<ContactListDetailPage />}
 							/>
+							<Route
+								path="settings"
+								element={<SettingsPage />}
+							/>
 							{/* Analytics route */}
 							<Route
 								path="analytics"
 								element={<AnalyticsDashboard />}
-							/>
-							{/* Default redirect to campaigns */}
-							<Route
-								index
-								element={
-									<Navigate
-										to="/campaigns"
-										replace
-									/>
-								}
 							/>
 						</Route>
 
