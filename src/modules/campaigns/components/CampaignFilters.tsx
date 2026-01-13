@@ -1,34 +1,36 @@
-import React from "react";
 import {
-	Box,
-	TextField,
-	FormControl,
-	InputLabel,
-	Select,
-	MenuItem,
-	Chip,
-	Stack,
-	Button,
-	ToggleButton,
-	ToggleButtonGroup,
-	Paper,
-	Typography,
-} from "@mui/material";
-import {
-	FilterList,
-	ViewList,
 	CalendarMonth,
+	Search,
+	ViewList,
+	ViewColumn,
+	Settings,
+	FilterAlt,
 } from "@mui/icons-material";
 import {
-	useCampaignFilters,
-	useCampaignViewMode,
+	Box,
+	FormControl,
+	InputAdornment,
+	InputLabel,
+	MenuItem,
+	Select,
+	Stack,
+	TextField,
+	ToggleButton,
+	ToggleButtonGroup,
+	IconButton,
+	Button,
+	Popover,
+} from "@mui/material";
+import { useState } from "react";
+import {
 	setSearchQuery,
 	setStatusFilter,
 	setContactListFilter,
 	setTagsFilter,
 	setDateRangeFilter,
 	setViewMode,
-	clearFilters,
+	useCampaignFilters,
+	useCampaignViewMode,
 } from "../store";
 import { CampaignStatus } from "../types";
 
@@ -40,86 +42,122 @@ const statusOptions: CampaignStatus[] = [
 	"cancelled",
 ];
 
+// Mock options for demonstration
+const contactOptions = [
+	{ id: 1, name: "Newsletter Members" },
+	{ id: 2, name: "VIP Customers" },
+	{ id: 3, name: "Product Launch List" },
+];
+
+const tagOptions = [
+	"Promotion",
+	"Product",
+	"Newsletter",
+	"Announcement",
+	"Support",
+];
+
 export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 	const filters = useCampaignFilters();
 	const viewMode = useCampaignViewMode();
 
-	return (
-		<Paper sx={{ p: 2 }}>
-			<Stack spacing={2}>
-				<Stack
-					direction="row"
-					justifyContent="space-between"
-					alignItems="center"
-				>
-					<Stack
-						direction="row"
-						alignItems="center"
-						spacing={1}
-					>
-						<FilterList />
-						<Typography variant="h6">Filters</Typography>
-					</Stack>
-					<ToggleButtonGroup
-						value={viewMode}
-						exclusive
-						onChange={(_, newMode) => {
-							if (newMode) setViewMode(newMode);
-						}}
-						size="small"
-						disabled={disabled}
-					>
-						<ToggleButton value="table">
-							<ViewList sx={{ mr: 1 }} />
-							Table
-						</ToggleButton>
-						<ToggleButton value="calendar">
-							<CalendarMonth sx={{ mr: 1 }} />
-							Calendar
-						</ToggleButton>
-					</ToggleButtonGroup>
-				</Stack>
+	// Support for date range popover
+	const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
+	const handleDateClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+		setAnchorEl(event.currentTarget);
+	};
+
+	const handleDateClose = () => {
+		setAnchorEl(null);
+	};
+
+	const openDate = Boolean(anchorEl);
+
+	const commonSx = {
+		borderRadius: "6px",
+		backgroundColor: "background.paper",
+		"& .MuiOutlinedInput-root": {
+			borderRadius: "6px",
+		},
+		"& fieldset": {
+			borderColor: "rgba(0, 0, 0, 0.12)",
+		},
+	};
+
+	return (
+		<Box sx={{ mb: 3 }}>
+			<Stack
+				direction="row"
+				justifyContent="space-between"
+				alignItems="flex-start"
+				spacing={2}
+			>
+				{/* Left Side: Search & Filters */}
 				<Stack
 					direction="row"
-					spacing={2}
+					spacing={1.5}
+					alignItems="center"
+					flexGrow={1}
 					flexWrap="wrap"
+					useFlexGap
 				>
 					{/* Search */}
-					<TextField
-						label="Search"
+					<FormControl
 						variant="outlined"
 						size="small"
-						value={filters.searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-						sx={{ minWidth: 200 }}
-						disabled={disabled}
-					/>
+					>
+						<TextField
+							placeholder="Search campaigns..."
+							size="small"
+							value={filters.searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							disabled={disabled}
+							InputProps={{
+								startAdornment: (
+									<InputAdornment position="start">
+										<Search
+											fontSize="small"
+											color="action"
+										/>
+									</InputAdornment>
+								),
+								sx: {
+									minWidth: 240,
+								},
+							}}
+							sx={commonSx}
+						/>
+					</FormControl>
 
 					{/* Status Filter */}
 					<FormControl
 						size="small"
-						sx={{ minWidth: 150 }}
-						disabled={disabled}
+						sx={{ minWidth: 120, ...commonSx }}
 					>
-						<InputLabel>Status</InputLabel>
+						{!filters.statusFilter?.length && (
+							<InputLabel
+								id="status-label"
+								shrink={false}
+								sx={{ fontSize: "0.875rem" }}
+							>
+								Status
+							</InputLabel>
+						)}
 						<Select
+							labelId="status-label"
 							multiple
-							value={filters.statusFilter}
+							displayEmpty
+							value={filters.statusFilter || []}
 							onChange={(e) =>
 								setStatusFilter(e.target.value as CampaignStatus[])
 							}
-							renderValue={(selected) => (
-								<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-									{selected.map((value) => (
-										<Chip
-											key={value}
-											label={value}
-											size="small"
-										/>
-									))}
-								</Box>
-							)}
+							disabled={disabled}
+							renderValue={(selected) => {
+								if (!selected || selected.length === 0) return "";
+								return selected.join(", ");
+							}}
+							sx={{ fontSize: "0.875rem" }}
 						>
 							{statusOptions.map((status) => (
 								<MenuItem
@@ -132,79 +170,206 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						</Select>
 					</FormControl>
 
-					{/* Date Range - simplified for now */}
-					<TextField
-						label="Start Date"
-						type="date"
+					{/* Contacts Filter */}
+					<FormControl
 						size="small"
-						value={filters.dateRangeFilter?.start || ""}
-						onChange={(e) =>
-							setDateRangeFilter({
-								start: e.target.value,
-								end: filters.dateRangeFilter?.end || e.target.value,
-							})
-						}
-						InputLabelProps={{ shrink: true }}
-						sx={{ minWidth: 150 }}
-						disabled={disabled}
-					/>
-					<TextField
-						label="End Date"
-						type="date"
+						sx={{ minWidth: 140, ...commonSx }}
+					>
+						{!filters.contactListFilter && (
+							<InputLabel
+								id="contacts-label"
+								shrink={false}
+								sx={{ fontSize: "0.875rem" }}
+							>
+								Contacts
+							</InputLabel>
+						)}
+						<Select
+							labelId="contacts-label"
+							displayEmpty
+							value={filters.contactListFilter || ""}
+							onChange={(e) => setContactListFilter(e.target.value)}
+							disabled={disabled}
+							renderValue={(selected) => {
+								if (!selected) return "";
+								const contact = contactOptions.find((c) => c.id === selected);
+								return contact ? contact.name : "";
+							}}
+							sx={{ fontSize: "0.875rem" }}
+						>
+							<MenuItem value="">
+								<em>None</em>
+							</MenuItem>
+							{contactOptions.map((option) => (
+								<MenuItem
+									key={option.id}
+									value={option.id}
+								>
+									{option.name}
+								</MenuItem>
+							))}
+						</Select>
+					</FormControl>
+
+					{/* Tags Filter */}
+					<FormControl
 						size="small"
-						value={filters.dateRangeFilter?.end || ""}
-						onChange={(e) =>
-							setDateRangeFilter({
-								start: filters.dateRangeFilter?.start || e.target.value,
-								end: e.target.value,
-							})
-						}
-						InputLabelProps={{ shrink: true }}
-						sx={{ minWidth: 150 }}
+						sx={{ minWidth: 120, ...commonSx }}
+					>
+						{!filters.tagsFilter?.length && (
+							<InputLabel
+								id="tags-label"
+								shrink={false}
+								sx={{ fontSize: "0.875rem" }}
+							>
+								Tags
+							</InputLabel>
+						)}
+						<Select
+							labelId="tags-label"
+							multiple
+							displayEmpty
+							value={filters.tagsFilter || []}
+							onChange={(e) => setTagsFilter(e.target.value as string[])}
+							disabled={disabled}
+							renderValue={(selected) => {
+								if (!selected || selected.length === 0) return "";
+								return selected.join(", ");
+							}}
+							sx={{ fontSize: "0.875rem" }}
+						>
+							{tagOptions.map((tag) => (
+								<MenuItem
+									key={tag}
+									value={tag}
+								>
+									{tag}
+								</MenuItem>
+							))}
+						</Select>
+					</FormControl>
+
+					{/* Date Created Filter - Refined as a button that opens a popover */}
+					<Button
+						size="small"
+						variant="outlined"
+						onClick={handleDateClick}
 						disabled={disabled}
-					/>
+						sx={{
+							...commonSx,
+							textTransform: "none",
+							color: "text.primary",
+							borderColor: "rgba(0,0,0,0.12)",
+							px: 2,
+							minHeight: 40,
+							justifyContent: "flex-start",
+							minWidth: 140,
+							fontWeight: 400,
+							fontSize: "0.875rem",
+						}}
+					>
+						Date created
+					</Button>
+					<Popover
+						open={openDate}
+						anchorEl={anchorEl}
+						onClose={handleDateClose}
+						anchorOrigin={{
+							vertical: "bottom",
+							horizontal: "left",
+						}}
+					>
+						<Stack
+							p={2}
+							spacing={2}
+						>
+							<TextField
+								label="From"
+								type="date"
+								size="small"
+								InputLabelProps={{ shrink: true }}
+								value={filters.dateRangeFilter?.start || ""}
+								onChange={(e) =>
+									setDateRangeFilter({
+										start: e.target.value,
+										end: filters.dateRangeFilter?.end || "",
+									})
+								}
+							/>
+							<TextField
+								label="To"
+								type="date"
+								size="small"
+								InputLabelProps={{ shrink: true }}
+								value={filters.dateRangeFilter?.end || ""}
+								onChange={(e) =>
+									setDateRangeFilter({
+										start: filters.dateRangeFilter?.start || "",
+										end: e.target.value,
+									})
+								}
+							/>
+						</Stack>
+					</Popover>
 				</Stack>
 
-				{/* Active Filters */}
-				{(filters.statusFilter.length > 0 ||
-					filters.tagsFilter.length > 0 ||
-					filters.dateRangeFilter ||
-					filters.searchQuery) && (
-					<Stack
-						direction="row"
-						spacing={1}
-						alignItems="center"
-						flexWrap="wrap"
+				{/* Right Side: Columns & View Toggle */}
+				<Stack
+					direction="row"
+					spacing={1}
+					alignItems="center"
+				>
+					<Button
+						variant="outlined"
+						size="small"
+						startIcon={<ViewColumn fontSize="small" />}
+						disabled={disabled}
+						sx={{
+							...commonSx,
+							textTransform: "none",
+							color: "text.primary",
+							px: 1.5,
+							minHeight: 40,
+						}}
 					>
-						<Typography variant="body2">Active filters:</Typography>
-						{filters.searchQuery && (
-							<Chip
-								label={`Search: ${filters.searchQuery}`}
-								onDelete={() => setSearchQuery("")}
-								size="small"
-							/>
-						)}
-						{filters.statusFilter.map((status) => (
-							<Chip
-								key={status}
-								label={`Status: ${status}`}
-								onDelete={() =>
-									setStatusFilter(
-										filters.statusFilter.filter((s) => s !== status)
-									)
-								}
-								size="small"
-							/>
-						))}
-						<Button
+						Columns
+					</Button>
+
+					<ToggleButtonGroup
+						value={viewMode}
+						exclusive
+						onChange={(_, newMode) => {
+							if (newMode) setViewMode(newMode);
+						}}
+						size="small"
+						disabled={disabled}
+						sx={{
+							backgroundColor: "background.paper",
+							borderRadius: "6px",
+							"& .MuiToggleButton-root": {
+								borderRadius: "6px",
+								border: "1px solid rgba(0,0,0,0.12) !important",
+								ml: "-1px !important",
+								minHeight: 40,
+								px: 1.5,
+							},
+						}}
+					>
+						<ToggleButton
+							value="table"
 							size="small"
-							onClick={clearFilters}
 						>
-							Clear all
-						</Button>
-					</Stack>
-				)}
+							<ViewList fontSize="small" />
+						</ToggleButton>
+						<ToggleButton
+							value="calendar"
+							size="small"
+						>
+							<CalendarMonth fontSize="small" />
+						</ToggleButton>
+					</ToggleButtonGroup>
+				</Stack>
 			</Stack>
-		</Paper>
+		</Box>
 	);
 }

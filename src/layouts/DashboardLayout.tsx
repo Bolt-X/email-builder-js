@@ -331,17 +331,17 @@ export default function DashboardLayout() {
 													<ListItemButton
 														key={child.label}
 														sx={{
-															pl: 6, // Increased from 9 for more indentation
+															pl: 6, 
 															ml: 3.5,
 															mr: 1.5,
 															borderRadius: 2,
 															mb: 0.5,
 															"&.Mui-selected": {
-																bgcolor: "primary.main", // Changed from light to main for better contrast with white text
-																color: "primary.contrastText", // Changed to white
+																bgcolor: "primary.main", 
+																color: "primary.contrastText", 
 																fontWeight: "bold",
 																"&:hover": {
-																	backgroundColor: "primary.dark", // Darker on hover
+																	backgroundColor: "primary.dark", 
 																},
 															},
 														}}
