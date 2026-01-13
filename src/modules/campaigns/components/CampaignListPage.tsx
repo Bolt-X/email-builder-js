@@ -101,7 +101,7 @@ export default function CampaignListPage() {
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				mb={3}
+				sx={{ px: 3, py: "20px", bgcolor: "white" }}
 			>
 				<Typography variant="h4">Campaigns</Typography>
 				<Button
@@ -145,6 +145,7 @@ export default function CampaignListPage() {
 							border: "1px solid",
 							borderColor: "divider",
 						}}
+						mt={[0, "0rem !important"]}
 					>
 						<Typography
 							variant="h6"
@@ -182,6 +183,7 @@ export default function CampaignListPage() {
 						justifyContent="center"
 						minHeight="60vh"
 						textAlign="center"
+						mt={[0, "0rem !important"]}
 					>
 						<Box
 							mb={2}
@@ -196,6 +198,7 @@ export default function CampaignListPage() {
 								color: "primary.main",
 								mb: 3,
 							}}
+							mt={[0, "0rem !important"]}
 						>
 							<Add fontSize="large" />
 						</Box>

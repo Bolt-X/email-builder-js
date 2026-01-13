@@ -413,12 +413,12 @@ export default function DashboardLayout() {
 				component="main"
 				sx={{
 					flexGrow: 1,
-					p:
-						location.pathname.includes("/templates/") ||
-						(location.pathname.includes("/campaigns/") &&
-							location.pathname.includes("/templates/"))
-							? 0
-							: 3,
+					// p:
+					// 	location.pathname.includes("/templates/") ||
+					// 	(location.pathname.includes("/campaigns/") &&
+					// 		location.pathname.includes("/templates/"))
+					// 		? 0
+					// 		: 3,
 					width: {
 						md: `calc(100% - ${open ? DRAWER_WIDTH : COLLAPSED_WIDTH}px)`,
 					},

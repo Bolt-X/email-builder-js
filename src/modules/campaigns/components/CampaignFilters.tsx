@@ -143,12 +143,13 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 	};
 
 	return (
-		<Box sx={{ mb: 3 }}>
+		<Box sx={{borderBottom: "1px solid #e0e0e0", pb: 2, bgcolor: "white"}} mt={[0, "0rem !important"]}>
 			<Stack
 				direction="row"
 				justifyContent="space-between"
 				alignItems="flex-start"
 				spacing={2}
+				px={3}
 			>
 				{/* Left Side: Search & Filters */}
 				<Stack
@@ -452,7 +453,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							horizontal: "right",
 						}}
 					>
-						<Box sx={{ p: 2, minWidth: 200 }}>
+						<Box sx={{ p: 2, minWidth: 200 }} mt={[0, "0rem !important"]}>
 							<Stack spacing={1}>
 								<FormControlLabel
 									control={
