@@ -1,0 +1,103 @@
+[
+  {
+    "id": "default-list",
+    "name": "Default List",
+    "description": "This is the default list for you",
+    "isDefault": true,
+    "isEnabled": true,
+    "contactCount": 1,
+    "contactIds": [
+      "contact-1"
+    ],
+    "createdAt": "2025-10-25T00:00:00Z",
+    "updatedAt": "2025-10-25T00:00:00Z"
+  },
+  {
+    "id": "apex-marketing",
+    "name": "Apex Marketing Solutions",
+    "description": "We aim to uplift and inspire our users through our services.",
+    "isDefault": false,
+    "isEnabled": true,
+    "contactCount": 12314,
+    "contactIds": [],
+    "createdAt": "2025-10-25T00:00:00Z",
+    "updatedAt": "2025-10-25T00:00:00Z"
+  },
+  {
+    "id": "beacon-hr",
+    "name": "Beacon HR Group",
+    "description": "Our clients consistently impress us with their creativity and vision.",
+    "isDefault": false,
+    "isEnabled": true,
+    "contactCount": 12314,
+    "contactIds": [],
+    "createdAt": "2025-10-25T00:00:00Z",
+    "updatedAt": "2025-10-25T00:00:00Z"
+  },
+  {
+    "id": "catalyst-lead",
+    "name": "Catalyst Lead Gen",
+    "description": "Our customers are truly remarkable, inspiring us every day.",
+    "isDefault": false,
+    "isEnabled": true,
+    "contactCount": 12314,
+    "contactIds": [],
+    "createdAt": "2025-10-25T00:00:00Z",
+    "updatedAt": "2025-10-25T00:00:00Z"
+  },
+  {
+    "id": "dovetail-rec",
+    "name": "Dovetail Recruitment",
+    "description": "Join us for an exciting journey filled with new experiences!",
+    "isDefault": false,
+    "isEnabled": true,
+    "contactCount": 12314,
+    "contactIds": [],
+    "createdAt": "2025-10-25T00:00:00Z",
+    "updatedAt": "2025-10-25T00:00:00Z"
+  },
+  {
+    "id": "evergreen-services",
+    "name": "Evergreen Employee Services",
+    "description": "Our innovative solutions cater to clever minds looking for efficiency.",
+    "isDefault": false,
+    "isEnabled": true,
+    "contactCount": 12314,
+    "contactIds": [],
+    "createdAt": "2025-10-25T00:00:00Z",
+    "updatedAt": "2025-10-25T00:00:00Z"
+  },
+  {
+    "id": "foresight-talent",
+    "name": "Foresight Talent Acquisition",
+    "description": "Welcome to our community of enthusiastic users and supporters!",
+    "isDefault": false,
+    "isEnabled": true,
+    "contactCount": 12314,
+    "contactIds": [],
+    "createdAt": "2025-10-25T00:00:00Z",
+    "updatedAt": "2025-10-25T00:00:00Z"
+  },
+  {
+    "id": "goldfinch-marketing",
+    "name": "Goldfinch Marketing Inc.",
+    "description": "Our offerings are produced with the highest diligence to meet diverse needs.",
+    "isDefault": false,
+    "isEnabled": true,
+    "contactCount": 12314,
+    "contactIds": [],
+    "createdAt": "2025-10-25T00:00:00Z",
+    "updatedAt": "2025-10-25T00:00:00Z"
+  },
+  {
+    "id": "harbor-hr",
+    "name": "Harbor HR Innovations",
+    "description": "Our customer segment includes tech-savvy individuals who seek innovati...",
+    "isDefault": false,
+    "isEnabled": true,
+    "contactCount": 12314,
+    "contactIds": [],
+    "createdAt": "2025-10-25T00:00:00Z",
+    "updatedAt": "2025-10-25T00:00:00Z"
+  }
+]

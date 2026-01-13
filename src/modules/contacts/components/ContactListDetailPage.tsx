@@ -3,26 +3,22 @@ import {
 	Box,
 	Typography,
 	Stack,
-	Paper,
-	Tabs,
-	Tab,
 	Button,
-	Chip,
 	IconButton,
 	TextField,
 	InputAdornment,
-	Menu,
-	MenuItem,
+	Popover,
+	Checkbox,
+	FormControlLabel,
+	FormGroup,
 } from "@mui/material";
 import {
-	ArrowBack,
-	Edit,
-	Delete,
+	ArrowBackIosNew,
 	Search,
 	Add,
-	People,
-	Email,
-	Tag,
+	FileUploadOutlined,
+	ViewColumnOutlined,
+	Settings,
 } from "@mui/icons-material";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -31,293 +27,409 @@ import {
 	fetchContacts,
 	useContacts,
 } from "../store";
-import { Contact, ContactList } from "../types";
 import ContactTable from "./ContactTable";
-import ContactListFormDrawer from "./ContactListFormDrawer";
-
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-	const { children, value, index, ...other } = props;
-
-	return (
-		<div
-			role="tabpanel"
-			hidden={value !== index}
-			id={`contact-tabpanel-${index}`}
-			aria-labelledby={`contact-tab-${index}`}
-			{...other}
-		>
-			{value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-		</div>
-	);
-}
+import ImportContactsModal from "./ImportContactsModal";
+import CreateContactModal from "./CreateContactModal";
 
 export default function ContactListDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const contactLists = useContactLists();
 	const contacts = useContacts();
-	const [tabValue, setTabValue] = useState(0);
-	const [searchQuery, setSearchQuery] = useState("");
-	const [editDrawerOpen, setEditDrawerOpen] = useState(false);
 
-	const contactList = contactLists.find((list) => list.id === id);
-	const listContacts = contacts.filter((contact) =>
-		contactList?.contactIds?.includes(contact.id)
+	const [searchQuery, setSearchQuery] = useState("");
+	const [page, setPage] = useState(0);
+	const [rowsPerPage, setRowsPerPage] = useState(25);
+	const [selectedContacts, setSelectedContacts] = useState<(string | number)[]>(
+		[]
+	);
+	const [dateAnchorEl, setDateAnchorEl] = useState<null | HTMLElement>(null);
+	const [columnsAnchorEl, setColumnsAnchorEl] = useState<null | HTMLElement>(
+		null
+	);
+	const [importModalOpen, setImportModalOpen] = useState(false);
+	const [createModalOpen, setCreateModalOpen] = useState(false);
+
+	const [visibleColumns, setVisibleColumns] = useState<string[]>([
+		"email",
+		"firstName",
+		"lastName",
+		"address",
+		"status",
+		"tags",
+		"createdAt",
+		"action",
+	]);
+
+	const availableColumns = [
+		{ key: "email", label: "Mail address" },
+		{ key: "firstName", label: "First name" },
+		{ key: "lastName", label: "Last name" },
+		{ key: "address", label: "Address" },
+		{ key: "status", label: "Status" },
+		{ key: "tags", label: "Tags" },
+		{ key: "createdAt", label: "Date created" },
+		{ key: "action", label: "Action" },
+	];
+
+	const handleColumnToggle = (columnKey: string) => {
+		setVisibleColumns((prev) =>
+			prev.includes(columnKey)
+				? prev.filter((key) => key !== columnKey)
+				: [...prev, columnKey]
+		);
+	};
+
+	const contactList = contactLists.find(
+		(list) => String(list.id) === String(id)
 	);
 
-	// Filter contacts by search query
-	const filteredContacts = listContacts.filter((contact) => {
+	const filteredContacts = contacts.filter((contact) => {
+		// Mock: Show all contacts for now regardless of membership
 		if (!searchQuery) return true;
 		const query = searchQuery.toLowerCase();
 		return (
 			contact.email.toLowerCase().includes(query) ||
-			contact.name?.toLowerCase().includes(query) ||
-			contact.tags.some((tag) => tag.toLowerCase().includes(query))
+			contact.firstName?.toLowerCase().includes(query) ||
+			contact.lastName?.toLowerCase().includes(query)
 		);
 	});
+
+	// Pagination logic
+	const totalContacts = filteredContacts.length;
+	const totalPages = Math.ceil(totalContacts / rowsPerPage);
+	const paginatedContacts = filteredContacts.slice(
+		page * rowsPerPage,
+		(page + 1) * rowsPerPage
+	);
+
+	useEffect(() => {
+		setPage(0);
+	}, [searchQuery]);
 
 	useEffect(() => {
 		fetchContactLists();
 		fetchContacts();
 	}, []);
 
-	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-		setTabValue(newValue);
-	};
-
 	const handleBack = () => {
 		navigate("/contacts");
 	};
 
-	const handleEdit = () => {
-		setEditDrawerOpen(true);
+	const handleSelectOne = (id: string | number) => {
+		setSelectedContacts((prev) =>
+			prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+		);
 	};
 
-	const handleDelete = () => {
-		if (
-			window.confirm(
-				"Are you sure you want to delete this contact list? This action cannot be undone."
-			)
-		) {
-			// TODO: Implement delete
-			console.log("Delete contact list:", id);
-		}
+	const handleSelectAll = () => {
+		setSelectedContacts(filteredContacts.map((c) => c.id));
+	};
+
+	const handleClearSelection = () => {
+		setSelectedContacts([]);
 	};
 
 	if (!contactList) {
 		return (
-			<Box>
-				<Button
-					startIcon={<ArrowBack />}
-					onClick={handleBack}
-					sx={{ mb: 2 }}
-				>
-					Back to Contact Lists
-				</Button>
+			<Box sx={{ p: 4, textAlign: "center" }}>
 				<Typography variant="h6">Contact list not found</Typography>
+				<Button
+					onClick={handleBack}
+					sx={{ mt: 2 }}
+				>
+					Back to contacts
+				</Button>
 			</Box>
 		);
 	}
 
 	return (
-		<Box>
-			{/* Header */}
+		<Box sx={{ p: 0 }}>
+			{/* Title and Action Buttons */}
 			<Stack
 				direction="row"
 				justifyContent="space-between"
-				alignItems="flex-start"
-				mb={3}
+				alignItems="center"
+				mb={4}
+				mt={2}
 			>
-				<Stack spacing={1}>
-					<Button
-						startIcon={<ArrowBack />}
-						onClick={handleBack}
-						size="small"
-					>
-						Back to Contact Lists
-					</Button>
-					<Stack
-						direction="row"
-						alignItems="center"
-						spacing={2}
-					>
-						<People fontSize="large" color="primary" />
-						<Box>
-							<Typography variant="h4">{contactList.name}</Typography>
-							{contactList.description && (
-								<Typography
-									variant="body2"
-									color="text.secondary"
-									mt={0.5}
-								>
-									{contactList.description}
-								</Typography>
-							)}
-						</Box>
-					</Stack>
-					<Stack
-						direction="row"
-						spacing={1}
-						mt={1}
-					>
-						<Chip
-							icon={<People />}
-							label={`${listContacts.length} contacts`}
-							size="small"
-							color="primary"
-							variant="outlined"
-						/>
-						{contactList.createdAt && (
-							<Chip
-								label={`Created ${new Date(contactList.createdAt).toLocaleDateString()}`}
-								size="small"
-								variant="outlined"
-							/>
-						)}
-					</Stack>
-				</Stack>
 				<Stack
 					direction="row"
-					spacing={1}
+					spacing={2}
+					alignItems="center"
+				>
+					<IconButton
+						onClick={handleBack}
+						size="small"
+						sx={{ color: "text.primary" }}
+					>
+						<ArrowBackIosNew sx={{ fontSize: 18 }} />
+					</IconButton>
+					<Typography
+						variant="h5"
+						sx={{ fontWeight: 700 }}
+					>
+						{contactList.name}
+					</Typography>
+				</Stack>
+
+				<Stack
+					direction="row"
+					spacing={1.5}
 				>
 					<Button
 						variant="outlined"
-						startIcon={<Edit />}
-						onClick={handleEdit}
+						startIcon={<Add />}
+						onClick={() => setCreateModalOpen(true)}
+						sx={{
+							textTransform: "none",
+							fontWeight: 600,
+							borderRadius: "8px",
+							px: 2.5,
+							height: 40,
+							borderColor: "#E5E7EB",
+							color: "text.primary",
+							"&:hover": { bgcolor: "#F9FAFB", borderColor: "#D1D5DB" },
+						}}
 					>
-						Edit
+						Create a contact
 					</Button>
-					<IconButton
-						color="error"
-						onClick={handleDelete}
+					<Button
+						variant="contained"
+						startIcon={<FileUploadOutlined />}
+						onClick={() => setImportModalOpen(true)}
+						sx={{
+							textTransform: "none",
+							fontWeight: 600,
+							borderRadius: "8px",
+							px: 2.5,
+							height: 40,
+							boxShadow: "none",
+							"&:hover": { boxShadow: "none" },
+						}}
 					>
-						<Delete />
-					</IconButton>
+						Import contacts
+					</Button>
 				</Stack>
 			</Stack>
 
-			{/* Tabs */}
-			<Paper sx={{ mb: 3 }}>
-				<Tabs
-					value={tabValue}
-					onChange={handleTabChange}
-					aria-label="contact list tabs"
+			{/* Filters Toolbar */}
+			<Stack
+				direction="row"
+				justifyContent="space-between"
+				alignItems="center"
+				mb={3}
+			>
+				<Stack
+					direction="row"
+					spacing={1.5}
 				>
-					<Tab
-						icon={<People />}
-						iconPosition="start"
-						label="Contacts"
+					<TextField
+						size="small"
+						placeholder="Search"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						InputProps={{
+							startAdornment: (
+								<InputAdornment position="start">
+									<Search sx={{ color: "text.secondary", fontSize: 20 }} />
+								</InputAdornment>
+							),
+						}}
+						sx={{
+							width: 300,
+							"& .MuiOutlinedInput-root": {
+								borderRadius: "6px",
+								bgcolor: "white",
+								height: 40,
+								"& fieldset": { borderColor: "rgba(0, 0, 0, 0.12)" },
+							},
+						}}
 					/>
-					<Tab
-						icon={<Tag />}
-						iconPosition="start"
-						label="Tags"
-					/>
-					<Tab
-						icon={<Email />}
-						iconPosition="start"
-						label="Email Status"
-					/>
-				</Tabs>
-			</Paper>
 
-			{/* Contacts Tab */}
-			<TabPanel value={tabValue} index={0}>
-				<Stack spacing={2}>
-					{/* Search and Actions */}
-					<Stack
-						direction="row"
-						spacing={2}
-						justifyContent="space-between"
-						alignItems="center"
-					>
-						<TextField
-							placeholder="Search contacts..."
-							size="small"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							InputProps={{
-								startAdornment: (
-									<InputAdornment position="start">
-										<Search />
-									</InputAdornment>
-								),
-							}}
-							sx={{ minWidth: 300 }}
-						/>
+					{["Segment", "Status", "Tag"].map((filter) => (
 						<Button
-							variant="contained"
-							startIcon={<Add />}
-							onClick={() => {
-								// TODO: Open add contacts dialog
-								console.log("Add contacts to list");
+							key={filter}
+							variant="outlined"
+							size="small"
+							sx={{
+								height: 40,
+								textTransform: "none",
+								color: "text.primary",
+								borderColor: "rgba(0,0, 0, 0.12)",
+								borderRadius: "6px",
+								px: 2,
+								minWidth: 100,
+								fontWeight: 400,
+								fontSize: "0.875rem",
+								justifyContent: "space-between",
 							}}
 						>
-							Add Contacts
+							{filter}
+							<Typography sx={{ fontSize: 10, ml: 1, fontWeight: 900 }}>
+								▼
+							</Typography>
 						</Button>
-					</Stack>
+					))}
 
-					{/* Contacts Table */}
-					<ContactTable contacts={filteredContacts} />
+					{/* Date Filter */}
+					<Button
+						variant="outlined"
+						size="small"
+						onClick={(e) => setDateAnchorEl(e.currentTarget)}
+						sx={{
+							height: 40,
+							textTransform: "none",
+							color: "text.primary",
+							borderColor: "rgba(0, 0, 0, 0.12)",
+							borderRadius: "6px",
+							px: 2,
+							minWidth: 140,
+							fontWeight: 400,
+							fontSize: "0.875rem",
+							justifyContent: "space-between",
+						}}
+					>
+						Date created
+						<Typography sx={{ fontSize: 10, ml: 1, fontWeight: 900 }}>
+							▼
+						</Typography>
+					</Button>
 				</Stack>
-			</TabPanel>
 
-			{/* Tags Tab */}
-			<TabPanel value={tabValue} index={1}>
-				<Box>
-					<Typography variant="h6" gutterBottom>
-						Tags in this list
-					</Typography>
+				<Button
+					variant="outlined"
+					startIcon={<Settings />}
+					onClick={(e) => setColumnsAnchorEl(e.currentTarget)}
+					sx={{
+						borderRadius: 10,
+						textTransform: "none",
+						color: "text.secondary",
+						borderColor: "divider",
+						px: 2,
+						height: 40,
+						fontWeight: 700,
+						"&:hover": { bgcolor: "#F9FAFB", borderColor: "#D1D5DB" },
+					}}
+				>
+					Columns
+				</Button>
+			</Stack>
+
+			{/* Table area */}
+			<ContactTable
+				contacts={paginatedContacts}
+				selectedContacts={selectedContacts}
+				onSelectOne={handleSelectOne}
+				onSelectAll={handleSelectAll}
+				onClearSelection={handleClearSelection}
+				visibleColumns={visibleColumns}
+				total={totalContacts}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={(p) => setPage(p)}
+				onRowsPerPageChange={(r) => {
+					setRowsPerPage(r);
+					setPage(0);
+				}}
+			/>
+
+			{/* Date Popover */}
+			<Popover
+				open={Boolean(dateAnchorEl)}
+				anchorEl={dateAnchorEl}
+				onClose={() => setDateAnchorEl(null)}
+				anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+				transformOrigin={{ vertical: "top", horizontal: "left" }}
+			>
+				<Box sx={{ p: 2, width: 280 }}>
 					<Typography
-						variant="body2"
-						color="text.secondary"
-						mb={3}
+						variant="subtitle2"
+						sx={{ mb: 2, fontWeight: 700 }}
 					>
-						View and manage tags used by contacts in this list
+						Filter by Date Created
 					</Typography>
-					{/* TODO: Implement tags view */}
-					<Paper sx={{ p: 3, textAlign: "center" }}>
-						<Typography color="text.secondary">
-							Tags management coming soon
-						</Typography>
-					</Paper>
+					<Stack spacing={2}>
+						<TextField
+							label="From"
+							type="date"
+							size="small"
+							fullWidth
+							InputLabelProps={{ shrink: true }}
+						/>
+						<TextField
+							label="To"
+							type="date"
+							size="small"
+							fullWidth
+							InputLabelProps={{ shrink: true }}
+						/>
+						<Stack
+							direction="row"
+							spacing={1}
+							justifyContent="flex-end"
+							sx={{ mt: 1 }}
+						>
+							<Button
+								size="small"
+								onClick={() => setDateAnchorEl(null)}
+							>
+								Clear
+							</Button>
+							<Button
+								size="small"
+								variant="contained"
+								onClick={() => setDateAnchorEl(null)}
+							>
+								Apply
+							</Button>
+						</Stack>
+					</Stack>
 				</Box>
-			</TabPanel>
+			</Popover>
 
-			{/* Email Status Tab */}
-			<TabPanel value={tabValue} index={2}>
-				<Box>
-					<Typography variant="h6" gutterBottom>
-						Email Status
-					</Typography>
+			{/* Columns Popover */}
+			<Popover
+				open={Boolean(columnsAnchorEl)}
+				anchorEl={columnsAnchorEl}
+				onClose={() => setColumnsAnchorEl(null)}
+				anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+				transformOrigin={{ vertical: "top", horizontal: "right" }}
+			>
+				<Box sx={{ p: 2, minWidth: 200 }}>
 					<Typography
-						variant="body2"
-						color="text.secondary"
-						mb={3}
+						variant="subtitle2"
+						sx={{ mb: 1.5, fontWeight: 700 }}
 					>
-						View subscription status of contacts in this list
+						Column Visibility
 					</Typography>
-					{/* TODO: Implement email status view */}
-					<Paper sx={{ p: 3, textAlign: "center" }}>
-						<Typography color="text.secondary">
-							Email status view coming soon
-						</Typography>
-					</Paper>
+					<FormGroup>
+						{availableColumns.map((col) => (
+							<FormControlLabel
+								key={col.key}
+								control={
+									<Checkbox
+										checked={visibleColumns.includes(col.key)}
+										onChange={() => handleColumnToggle(col.key)}
+										size="small"
+									/>
+								}
+								label={<Typography variant="body2">{col.label}</Typography>}
+							/>
+						))}
+					</FormGroup>
 				</Box>
-			</TabPanel>
+			</Popover>
 
-			{/* Edit Drawer */}
-			<ContactListFormDrawer
-				open={editDrawerOpen}
-				onClose={() => setEditDrawerOpen(false)}
-				contactListId={id}
-				mode="edit"
+			<ImportContactsModal
+				open={importModalOpen}
+				onClose={() => setImportModalOpen(false)}
+			/>
+
+			<CreateContactModal
+				open={createModalOpen}
+				onClose={() => setCreateModalOpen(false)}
 			/>
 		</Box>
 	);

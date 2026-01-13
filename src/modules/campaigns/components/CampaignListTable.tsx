@@ -202,7 +202,10 @@ export default function CampaignListTable({
 									sx={{ cursor: "pointer" }}
 									onClick={() => navigate(`/campaigns/${campaign.id}`)}
 								>
-									<TableCell padding="checkbox">
+									<TableCell
+										padding="checkbox"
+										onClick={(e) => e.stopPropagation()}
+									>
 										<Checkbox
 											checked={isSelected}
 											onChange={(e) => handleSelectRow(e, campaign.id)}

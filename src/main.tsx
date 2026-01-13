@@ -77,13 +77,19 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 							/>
 
 							{/* Contacts routes */}
+							<Route path="contacts">
+								<Route
+									index
+									element={<ContactListPage tab="contacts" />}
+								/>
+								<Route
+									path=":id"
+									element={<ContactListDetailPage />}
+								/>
+							</Route>
 							<Route
-								path="contacts"
-								element={<ContactListPage />}
-							/>
-							<Route
-								path="contacts/lists/:id"
-								element={<ContactListDetailPage />}
+								path="segments"
+								element={<ContactListPage tab="segments" />}
 							/>
 							<Route
 								path="settings"

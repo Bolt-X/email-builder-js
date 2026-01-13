@@ -8,35 +8,173 @@ import {
 import { directusClientWithRest } from "../../services/directus";
 import { Contact, ContactList, Segment } from "./types";
 
+import contactListsData from "./data/contact-lists.json";
+
 export async function getAllContacts(): Promise<Contact[]> {
-	try {
-		const res = await directusClientWithRest.request(
-			readItems("contacts", {
-				fields: ["*"],
-				sort: ["email"],
-			})
-		);
-		return (res as any[]).map((item) => ({
-			id: item.id,
-			email: item.email,
-			firstName: item.first_name,
-			lastName: item.last_name,
-			name: item.name || `${item.first_name || ""} ${item.last_name || ""}`.trim(),
-			tags: item.tags ? JSON.parse(item.tags) : [],
-			status: item.status || "subscribed",
-			createdAt: item.date_created,
-		}));
-	} catch (error) {
-		console.error("Error fetching contacts:", error);
-		return [];
-	}
+	// Mock contacts for now
+	return [
+		{
+			id: "contact-1",
+			email: "info@example.com",
+			firstName: "Linh",
+			lastName: "Cao Thai",
+			address: "456 Lac Long Quan, Hanoi",
+			tags: ["insight", "marketing", "vip"],
+			status: "subscribed",
+			createdAt: "2025-10-25T00:00:00Z",
+		},
+		{
+			id: "contact-2",
+			email: "reach@horizon.solutions",
+			firstName: "Thanh",
+			lastName: "Dinh Van",
+			address: "321 Tran Phu, Da Nang",
+			tags: ["sales", "support"],
+			status: "unsubscribed",
+			createdAt: "2025-10-25T10:00:00Z",
+		},
+		{
+			id: "contact-3",
+			email: "connect@apex.tech",
+			firstName: "Nam",
+			lastName: "Ly Thi",
+			address: "789 Le Loi, HCM",
+			tags: ["analysis", "marketing"],
+			status: "subscribed",
+			createdAt: "2025-10-25T11:00:00Z",
+		},
+		{
+			id: "contact-4",
+			email: "sales@globex.org",
+			firstName: "Huy",
+			lastName: "Vu Van",
+			address: "101 Ly Thuong Kiet, Hanoi",
+			tags: ["sales", "vip"],
+			status: "non-subscribed",
+			createdAt: "2025-10-25T12:00:00Z",
+		},
+		{
+			id: "contact-5",
+			email: "engage@summit.plus",
+			firstName: "Quang",
+			lastName: "Thai Tu",
+			address: "234 Nguyen Trai, HCM",
+			tags: ["insight", "support"],
+			status: "subscribed",
+			createdAt: "2025-10-25T13:00:00Z",
+		},
+		{
+			id: "contact-6",
+			email: "hella@pinnacle.co",
+			firstName: "Duc",
+			lastName: "Ho Cong",
+			address: "567 Hai Ba Trung, Da Nang",
+			tags: ["marketing"],
+			status: "unsubscribed",
+			createdAt: "2025-10-25T14:00:00Z",
+		},
+		{
+			id: "contact-7",
+			email: "team@vanguard.biz",
+			firstName: "Thao",
+			lastName: "Huynh The",
+			address: "890 Ba Trieu, Hanoi",
+			tags: ["analysis", "vip"],
+			status: "unsubscribed",
+			createdAt: "2025-10-25T15:00:00Z",
+		},
+		{
+			id: "contact-8",
+			email: "contact@innovate.io",
+			firstName: "Tuan",
+			lastName: "Truong Dinh",
+			address: "123 Dien Bien Phu, HCM",
+			tags: ["insight", "sales"],
+			status: "non-subscribed",
+			createdAt: "2025-10-25T16:00:00Z",
+		},
+		{
+			id: "contact-9",
+			email: "support@company.net",
+			firstName: "Lan",
+			lastName: "Pham Thi",
+			address: "456 Hung Vuong, Da Nang",
+			tags: ["support"],
+			status: "non-subscribed",
+			createdAt: "2025-10-25T17:00:00Z",
+		},
+		{
+			id: "contact-10",
+			email: "ceo@startup.vn",
+			firstName: "Minh",
+			lastName: "Nguyen Van",
+			address: "12 Hoang Dieu, Hanoi",
+			tags: ["vip", "insight"],
+			status: "subscribed",
+			createdAt: "2025-10-26T09:00:00Z",
+		},
+		{
+			id: "contact-11",
+			email: "hr@globalcorp.com",
+			firstName: "Anh",
+			lastName: "Tran Thi",
+			address: "99 Nguyen Hue, HCM",
+			tags: ["recruitment", "hr"],
+			status: "subscribed",
+			createdAt: "2025-10-26T10:30:00Z",
+		},
+		{
+			id: "contact-12",
+			email: "dev@techstack.io",
+			firstName: "Binh",
+			lastName: "Le Van",
+			address: "55 Duy Tan, Hanoi",
+			tags: ["developer", "tech"],
+			status: "subscribed",
+			createdAt: "2025-10-26T11:45:00Z",
+		},
+		{
+			id: "contact-13",
+			email: "marketing@brand.co",
+			firstName: "Phuong",
+			lastName: "Hoang Thi",
+			address: "88 Le Thanh Ton, HCM",
+			tags: ["marketing", "creative"],
+			status: "bounced",
+			createdAt: "2025-10-26T14:20:00Z",
+		},
+		{
+			id: "contact-14",
+			email: "hello@freelancer.com",
+			firstName: "Dung",
+			lastName: "Nguyen Duc",
+			address: "77 Vo Van Kiet, Da Nang",
+			tags: ["freelance"],
+			status: "subscribed",
+			createdAt: "2025-10-27T08:15:00Z",
+		},
+		{
+			id: "contact-15",
+			email: "partner@enterprise.com",
+			firstName: "Khanh",
+			lastName: "Vu Thi",
+			address: "22 Phan Chu Trinh, Hanoi",
+			tags: ["partner", "corporate"],
+			status: "unsubscribed",
+			createdAt: "2025-10-27T09:40:00Z",
+		},
+	];
 }
 
 /**
  * Transform Directus format to ContactList model
  */
 function transformContactListFromDirectus(item: any): ContactList {
-	const contactIds = item.contact_ids ? JSON.parse(item.contact_ids) : [];
+	const contactIds = item.contact_ids
+		? typeof item.contact_ids === "string"
+			? JSON.parse(item.contact_ids)
+			: item.contact_ids
+		: [];
 	return {
 		id: item.id,
 		name: item.name,
@@ -45,12 +183,17 @@ function transformContactListFromDirectus(item: any): ContactList {
 		isEnabled: item.is_enabled !== false, // Default to true
 		contactCount: item.contact_count || contactIds.length,
 		contactIds,
-		tags: item.tags ? JSON.parse(item.tags) : [],
+		tags: item.tags
+			? typeof item.tags === "string"
+				? JSON.parse(item.tags)
+				: item.tags
+			: [],
 		createdAt: item.date_created,
 		updatedAt: item.date_updated,
 	};
 }
 
+// ... existing transform functions ...
 /**
  * Transform ContactList model to Directus format
  */
@@ -71,6 +214,7 @@ function transformContactListToDirectus(
 
 export async function getAllContactLists(): Promise<ContactList[]> {
 	try {
+		// Try Directus first
 		const res = await directusClientWithRest.request(
 			readItems("contact_lists", {
 				fields: ["*"],
@@ -79,8 +223,8 @@ export async function getAllContactLists(): Promise<ContactList[]> {
 		);
 		return (res as any[]).map(transformContactListFromDirectus);
 	} catch (error) {
-		console.error("Error fetching contact lists:", error);
-		return [];
+		console.warn("Directus failed, using mock data for contact lists");
+		return (contactListsData as any[]).map(transformContactListFromDirectus);
 	}
 }
 
@@ -93,8 +237,8 @@ export async function getContactListById(
 		);
 		return transformContactListFromDirectus(res as any);
 	} catch (error) {
-		console.error("Error fetching contact list:", error);
-		return null;
+		const mock = contactListsData.find((l) => l.id === id);
+		return mock ? transformContactListFromDirectus(mock) : null;
 	}
 }
 
@@ -194,9 +338,7 @@ function transformSegmentFromDirectus(item: any): Segment {
 	};
 }
 
-function transformSegmentToDirectus(
-	segment: Partial<Segment>
-): Partial<any> {
+function transformSegmentToDirectus(segment: Partial<Segment>): Partial<any> {
 	const directusSegment: any = {};
 	if (segment.name !== undefined) directusSegment.name = segment.name;
 	if (segment.description !== undefined)
@@ -270,17 +412,15 @@ export async function calculateSegmentCount(
 		// TODO: Implement actual segment count calculation
 		// This should evaluate the segment conditions against all contacts
 		// For now, return a placeholder
-		const res = await directusClientWithRest.request(
-			readItem("segments", id)
-		);
+		const res = await directusClientWithRest.request(readItem("segments", id));
 		const segment = transformSegmentFromDirectus(res as any);
-		
+
 		// Placeholder: In production, this would:
 		// 1. Fetch all contacts
 		// 2. Apply segment conditions
 		// 3. Count matching contacts
 		// 4. Return count
-		
+
 		return segment.estimatedCount || 0;
 	} catch (error) {
 		console.error("Error calculating segment count:", error);

@@ -24,6 +24,9 @@ import {
 	Typography,
 	TablePagination,
 	Tooltip,
+	Popover,
+	FormControlLabel,
+	Divider,
 } from "@mui/material";
 import {
 	Add,
@@ -36,6 +39,8 @@ import {
 	VolumeUp,
 	Settings,
 	ContentCopy,
+	Campaign,
+	PostAdd,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -59,7 +64,25 @@ import { duplicateContactList } from "../../service";
 import { ContactList } from "../../types";
 import ContactListFormDrawer from "../ContactListFormDrawer";
 
-export default function ContactListTable() {
+interface ContactListTableProps {
+	formDrawerOpen: boolean;
+	setFormDrawerOpen: (open: boolean) => void;
+	formMode: "create" | "edit";
+	setFormMode: (mode: "create" | "edit") => void;
+	editingList: ContactList | null;
+	setEditingList: (list: ContactList | null) => void;
+	onEdit: (list: ContactList) => void;
+}
+
+export default function ContactListTable({
+	formDrawerOpen,
+	setFormDrawerOpen,
+	formMode,
+	setFormMode,
+	editingList,
+	setEditingList,
+	onEdit,
+}: ContactListTableProps) {
 	const navigate = useNavigate();
 	const { filtered, total, page, rowsPerPage } = useFilteredContactLists();
 	const { searchQuery, sortBy, sortOrder } = useContactListFilters();
@@ -69,9 +92,6 @@ export default function ContactListTable() {
 
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | number | null>(null);
-	const [formDrawerOpen, setFormDrawerOpen] = useState(false);
-	const [formMode, setFormMode] = useState<"create" | "edit">("create");
-	const [editingList, setEditingList] = useState<ContactList | null>(null);
 
 	const handleMenuOpen = (
 		event: React.MouseEvent<HTMLElement>,
@@ -94,19 +114,11 @@ export default function ContactListTable() {
 		setSort(newSortBy);
 	};
 
-	const handleCreate = () => {
-		setFormMode("create");
-		setEditingList(null);
-		setFormDrawerOpen(true);
-	};
-
-	const handleEdit = () => {
+	const handleEditAction = () => {
 		if (selectedId) {
 			const list = filtered.find((l) => l.id === selectedId);
 			if (list) {
-				setFormMode("edit");
-				setEditingList(list);
-				setFormDrawerOpen(true);
+				onEdit(list);
 			}
 		}
 		handleMenuClose();
@@ -133,9 +145,8 @@ export default function ContactListTable() {
 				return;
 			}
 			if (
-				window.confirm(
-					"Are you sure you want to delete this contact list?"
-			)) {
+				window.confirm("Are you sure you want to delete this contact list?")
+			) {
 				try {
 					await deleteContactListAction(selectedId);
 				} catch (error) {
@@ -174,81 +185,288 @@ export default function ContactListTable() {
 	const isIndeterminate =
 		selectedIds.length > 0 && selectedIds.length < filtered.length;
 
+	// Column visibility logic (similar to campaign store/filters)
+	const visibleColumns = ["status", "contacts", "tags", "timestamps", "stats"]; // Placeholder for now, store already has visibleColumns
+	const [columnAnchorEl, setColumnAnchorEl] = useState<null | HTMLElement>(
+		null
+	);
+
+	// Support for date range popover
+	const [dateAnchorEl, setDateAnchorEl] = useState<HTMLButtonElement | null>(
+		null
+	);
+	const [startDate, setStartDate] = useState("");
+	const [endDate, setEndDate] = useState("");
+
+	const isBatchMode = selectedIds.length > 0;
+
 	return (
 		<>
-			{/* Toolbar */}
-			<Paper sx={{ mb: 2 }}>
-				<Toolbar>
+			{/* Toolbar / Batch Action Bar */}
+			<Paper
+				elevation={0}
+				sx={{
+					mb: 2,
+					bgcolor: isBatchMode ? "primary.main" : "transparent",
+					borderRadius: 2,
+					overflow: "hidden",
+					height: 60,
+					display: "flex",
+					alignItems: "center",
+					transition: "all 0.3s ease",
+				}}
+			>
+				{isBatchMode ? (
 					<Stack
 						direction="row"
-						spacing={2}
 						alignItems="center"
-						flex={1}
+						sx={{ width: "100%", px: 3, color: "white" }}
+						justifyContent="space-between"
 					>
-						{/* Search */}
-						<TextField
-							size="small"
-							placeholder="Search"
-							value={searchQuery}
-							onChange={handleSearchChange}
-							InputProps={{
-								startAdornment: (
-									<InputAdornment position="start">
-										<Search fontSize="small" />
-									</InputAdornment>
-								),
-							}}
-							sx={{ width: 300 }}
-						/>
-
-						{/* Sort */}
-						<FormControl
-							size="small"
-							sx={{ minWidth: 150 }}
+						<Stack
+							direction="row"
+							spacing={3}
+							alignItems="center"
 						>
-							<InputLabel>Sort by</InputLabel>
-							<Select
-								value={sortBy}
-								label="Sort by"
-								onChange={(e) =>
-									handleSortChange(
-										e.target.value as typeof sortBy
-									)
-								}
+							<Typography
+								variant="body2"
+								sx={{ fontWeight: 600 }}
 							>
-								<MenuItem value="date_created">Date created</MenuItem>
-								<MenuItem value="name">Name</MenuItem>
-								<MenuItem value="contact_count">Number of contacts</MenuItem>
-								<MenuItem value="last_updated">Last updated</MenuItem>
-							</Select>
-						</FormControl>
-					</Stack>
+								{selectedIds.length} item{selectedIds.length > 1 ? "s" : ""}{" "}
+								selected
+							</Typography>
+							<Typography
+								variant="body2"
+								sx={{
+									cursor: "pointer",
+									textDecoration: "underline",
+									fontWeight: 600,
+								}}
+								onClick={selectAllContactLists}
+							>
+								Select all
+							</Typography>
+						</Stack>
 
-					<Stack
-						direction="row"
-						spacing={1}
-					>
-						<Button
-							variant="contained"
-							startIcon={<Add />}
-							onClick={handleCreate}
+						<Stack
+							direction="row"
+							spacing={2}
+							alignItems="center"
 						>
-							Create list
-						</Button>
-						<Button
-							variant="outlined"
-							startIcon={<Settings />}
-						>
-							Columns
-						</Button>
+							<Button
+								variant="text"
+								color="inherit"
+								startIcon={<Campaign />}
+								sx={{ textTransform: "none", fontWeight: 600 }}
+							>
+								Send campaigns
+							</Button>
+							<Button
+								variant="text"
+								color="inherit"
+								startIcon={<ContentCopy />}
+								sx={{ textTransform: "none", fontWeight: 600 }}
+							>
+								Duplicate
+							</Button>
+							<Button
+								variant="text"
+								color="inherit"
+								startIcon={<GetApp />}
+								sx={{ textTransform: "none", fontWeight: 600 }}
+							>
+								Download
+							</Button>
+							<Button
+								variant="text"
+								color="inherit"
+								startIcon={<Delete />}
+								sx={{ textTransform: "none", fontWeight: 600 }}
+							>
+								Delete
+							</Button>
+							<Divider
+								orientation="vertical"
+								flexItem
+								sx={{ borderColor: "rgba(255,255,255,0.3)", my: 2, mx: 1 }}
+							/>
+							<Typography
+								variant="body2"
+								sx={{ cursor: "pointer", fontWeight: 600 }}
+								onClick={clearSelection}
+							>
+								Cancel
+							</Typography>
+						</Stack>
 					</Stack>
-				</Toolbar>
+				) : (
+					<Toolbar
+						sx={{
+							px: "0 !important",
+							width: "100%",
+							justifyContent: "space-between",
+						}}
+					>
+						<Stack
+							direction="row"
+							spacing={2}
+							alignItems="center"
+						>
+							{/* Search */}
+							<TextField
+								size="small"
+								placeholder="Search"
+								value={searchQuery}
+								onChange={handleSearchChange}
+								InputProps={{
+									startAdornment: (
+										<InputAdornment position="start">
+											<Search sx={{ color: "text.secondary", fontSize: 20 }} />
+										</InputAdornment>
+									),
+								}}
+								sx={{
+									width: 320,
+									"& .MuiOutlinedInput-root": {
+										borderRadius: "6px",
+										bgcolor: "white",
+										height: 40,
+										"& fieldset": {
+											borderColor: "rgba(0, 0, 0, 0.12)",
+										},
+									},
+								}}
+							/>
+
+							{/* Date Created Filter Popover */}
+							<Button
+								variant="outlined"
+								size="small"
+								onClick={(e) => setDateAnchorEl(e.currentTarget)}
+								sx={{
+									height: 40,
+									textTransform: "none",
+									color: "text.primary",
+									borderColor: "rgba(0, 0, 0, 0.12)",
+									bgcolor: "white",
+									borderRadius: "6px",
+									px: 2,
+									minWidth: 140,
+									fontWeight: 400,
+									fontSize: "0.875rem",
+									justifyContent: "space-between",
+									"&:hover": {
+										borderColor: "rgba(0, 0, 0, 0.24)",
+										bgcolor: "rgba(0, 0, 0, 0.04)",
+									},
+								}}
+							>
+								Date created
+								<Typography
+									sx={{
+										fontSize: 10,
+										ml: 1,
+										color: "text.primary",
+										fontWeight: 900,
+									}}
+								>
+									▼
+								</Typography>
+							</Button>
+							<Popover
+								open={Boolean(dateAnchorEl)}
+								anchorEl={dateAnchorEl}
+								onClose={() => setDateAnchorEl(null)}
+								anchorOrigin={{
+									vertical: "bottom",
+									horizontal: "left",
+								}}
+								PaperProps={{ sx: { p: 2, width: 300 } }}
+							>
+								<Typography
+									variant="subtitle2"
+									sx={{ mb: 2, fontWeight: 700 }}
+								>
+									Filter by date created
+								</Typography>
+								<Stack spacing={2}>
+									<TextField
+										label="From"
+										type="date"
+										size="small"
+										fullWidth
+										InputLabelProps={{ shrink: true }}
+										value={startDate}
+										onChange={(e) => setStartDate(e.target.value)}
+									/>
+									<TextField
+										label="To"
+										type="date"
+										size="small"
+										fullWidth
+										InputLabelProps={{ shrink: true }}
+										value={endDate}
+										onChange={(e) => setEndDate(e.target.value)}
+									/>
+									<Stack
+										direction="row"
+										spacing={1}
+										justifyContent="flex-end"
+									>
+										<Button
+											size="small"
+											onClick={() => {
+												setStartDate("");
+												setEndDate("");
+											}}
+										>
+											Clear
+										</Button>
+										<Button
+											size="small"
+											variant="contained"
+											onClick={() => setDateAnchorEl(null)}
+										>
+											Apply
+										</Button>
+									</Stack>
+								</Stack>
+							</Popover>
+						</Stack>
+
+						<Stack
+							direction="row"
+							spacing={1}
+						>
+							<Button
+								variant="outlined"
+								startIcon={<Settings />}
+								onClick={(e) => setColumnAnchorEl(e.currentTarget)}
+								sx={{
+									borderRadius: 10,
+									textTransform: "none",
+									color: "text.secondary",
+									borderColor: "divider",
+									px: 2,
+									height: 40,
+									fontWeight: 700,
+								}}
+							>
+								Columns
+							</Button>
+						</Stack>
+					</Toolbar>
+				)}
 			</Paper>
 
 			{/* Table */}
-			<TableContainer component={Paper}>
+			<TableContainer
+				component={Paper}
+				elevation={0}
+				sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
+			>
 				<Table>
-					<TableHead>
+					<TableHead sx={{ bgcolor: "#F9FAFB" }}>
 						<TableRow>
 							<TableCell padding="checkbox">
 								<Checkbox
@@ -261,26 +479,62 @@ export default function ContactListTable() {
 											clearSelection();
 										}
 									}}
+									sx={{
+										color: isBatchMode ? "primary.main" : "text.disabled",
+										"&.Mui-checked, &.MuiCheckbox-indeterminate": {
+											color: "primary.main",
+										},
+									}}
 								/>
 							</TableCell>
-							<TableCell>
+							<TableCell
+								sx={{
+									fontWeight: 700,
+									color: "text.secondary",
+									cursor: "pointer",
+									"&:hover": { color: "primary.main" },
+								}}
+								onClick={() => handleSortChange("name")}
+							>
 								<Stack
 									direction="row"
 									alignItems="center"
-									spacing={1}
+									spacing={0.5}
 								>
 									Name
-									{sortBy === "name" && (
-										<Typography variant="caption">
-											{sortOrder === "asc" ? "↑" : "↓"}
+									<IconButton
+										size="small"
+										sx={{
+											p: 0.5,
+											color:
+												sortBy === "name" ? "primary.main" : "text.disabled",
+										}}
+									>
+										<Typography sx={{ fontSize: 12, fontWeight: 900 }}>
+											{sortBy === "name"
+												? sortOrder === "asc"
+													? "↑"
+													: "↓"
+												: "↕"}
 										</Typography>
-									)}
+									</IconButton>
 								</Stack>
 							</TableCell>
-							<TableCell>Description</TableCell>
-							<TableCell>Number of contacts</TableCell>
-							<TableCell>Date created</TableCell>
-							<TableCell align="right">Action</TableCell>
+							<TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+								Description
+							</TableCell>
+							<TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+								Number of contacts
+							</TableCell>
+							<TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
+								Date created
+							</TableCell>
+							<TableCell
+								sx={{ fontWeight: 700, color: "text.secondary" }}
+								align="right"
+							>
+								Action
+							</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -297,7 +551,7 @@ export default function ContactListTable() {
 											backgroundColor: "action.hover",
 										},
 									}}
-									onClick={() => navigate(`/contacts/lists/${list.id}`)}
+									onClick={() => navigate(`/contacts/${list.id}`)}
 								>
 									<TableCell
 										padding="checkbox"
@@ -314,14 +568,32 @@ export default function ContactListTable() {
 											alignItems="center"
 											spacing={1}
 										>
-											<Typography variant="body1">{list.name}</Typography>
+											<Typography
+												variant="body2"
+												sx={{
+													fontWeight: 700,
+													color: "primary.main",
+													textTransform: "uppercase",
+													letterSpacing: "0.02em",
+												}}
+											>
+												{list.name}
+											</Typography>
 											{list.isDefault && (
-												<Chip
-													label="Default"
-													size="small"
-													color="primary"
-													variant="outlined"
-												/>
+												<Box
+													sx={{
+														bgcolor: "#F0F7FF",
+														color: "#0070E0",
+														px: 1.2,
+														py: 0.4,
+														borderRadius: "6px",
+														fontSize: "0.75rem",
+														fontWeight: 600,
+														lineHeight: 1,
+													}}
+												>
+													Default
+												</Box>
 											)}
 										</Stack>
 									</TableCell>
@@ -329,20 +601,34 @@ export default function ContactListTable() {
 										<Typography
 											variant="body2"
 											color="text.secondary"
+											sx={{
+												maxWidth: 300,
+												whiteSpace: "nowrap",
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+											}}
 										>
-											{list.description || "-"}
+											{list.description}
 										</Typography>
 									</TableCell>
-									<TableCell>{list.contactCount}</TableCell>
 									<TableCell>
-										{list.createdAt
-											? new Date(list.createdAt).toLocaleDateString("en-GB", {
-													weekday: "short",
-													day: "2-digit",
-													month: "2-digit",
-													year: "numeric",
-												})
-											: "-"}
+										<Typography variant="body2">
+											{list.contactCount.toLocaleString()}
+										</Typography>
+									</TableCell>
+									<TableCell>
+										<Typography
+											variant="body2"
+											color="text.secondary"
+										>
+											{list.createdAt
+												? new Date(list.createdAt).toLocaleDateString("en-GB", {
+														day: "2-digit",
+														month: "2-digit",
+														year: "numeric",
+													})
+												: "25/10/2025"}
+										</Typography>
 									</TableCell>
 									<TableCell
 										align="right"
@@ -350,50 +636,29 @@ export default function ContactListTable() {
 									>
 										<Stack
 											direction="row"
-											spacing={0.5}
+											spacing={1}
 											justifyContent="flex-end"
 										>
-											<Tooltip
-												title={
-													list.isEnabled
-														? "Disable sending"
-														: "Enable sending"
-												}
-											>
+											<Tooltip title="Campaign">
 												<IconButton
 													size="small"
-													onClick={(e) => {
-														e.stopPropagation();
-														setSelectedId(list.id);
-														handleToggleEnabled();
-													}}
-													disabled={list.isDefault}
+													sx={{ color: "#666" }}
 												>
-													{list.isEnabled ? (
-														<VolumeUp fontSize="small" />
-													) : (
-														<VolumeOff
-															fontSize="small"
-															color="disabled"
-														/>
-													)}
+													<Campaign fontSize="small" />
 												</IconButton>
 											</Tooltip>
-											<Tooltip title="Export contacts">
+											<Tooltip title="Add content">
 												<IconButton
 													size="small"
-													onClick={(e) => {
-														e.stopPropagation();
-														setSelectedId(list.id);
-														handleExport();
-													}}
+													sx={{ color: "#666" }}
 												>
-													<GetApp fontSize="small" />
+													<PostAdd fontSize="small" />
 												</IconButton>
 											</Tooltip>
 											<IconButton
 												size="small"
 												onClick={(e) => handleMenuOpen(e, list.id)}
+												sx={{ color: "#666" }}
 											>
 												<MoreVert fontSize="small" />
 											</IconButton>
@@ -404,21 +669,18 @@ export default function ContactListTable() {
 						})}
 					</TableBody>
 				</Table>
+				<TablePagination
+					rowsPerPageOptions={[10, 25, 50, 100]}
+					component="div"
+					count={total}
+					rowsPerPage={currentRowsPerPage}
+					page={currentPage}
+					onPageChange={(_, p) => setPage(p)}
+					onRowsPerPageChange={(e) =>
+						setRowsPerPage(parseInt(e.target.value, 10))
+					}
+				/>
 			</TableContainer>
-
-			{/* Pagination */}
-			<TablePagination
-				component="div"
-				count={total}
-				page={currentPage}
-				onPageChange={(_, newPage) => setPage(newPage)}
-				rowsPerPage={currentRowsPerPage}
-				onRowsPerPageChange={(e) =>
-					setRowsPerPage(parseInt(e.target.value, 10))
-				}
-				rowsPerPageOptions={[10, 25, 50, 100]}
-				labelRowsPerPage="Rows per page:"
-			/>
 
 			{/* Action Menu */}
 			<Menu
@@ -426,7 +688,7 @@ export default function ContactListTable() {
 				open={Boolean(anchorEl)}
 				onClose={handleMenuClose}
 			>
-				<MenuItem onClick={handleEdit}>
+				<MenuItem onClick={handleEditAction}>
 					<Edit sx={{ mr: 1 }} />
 					Edit list
 				</MenuItem>
@@ -444,16 +706,42 @@ export default function ContactListTable() {
 				</MenuItem>
 			</Menu>
 
-			{/* Form Drawer */}
-			<ContactListFormDrawer
-				open={formDrawerOpen}
-				onClose={() => {
-					setFormDrawerOpen(false);
-					setEditingList(null);
+			{/* Column Config Popover (Placeholder) */}
+			<Popover
+				open={Boolean(columnAnchorEl)}
+				anchorEl={columnAnchorEl}
+				onClose={() => setColumnAnchorEl(null)}
+				anchorOrigin={{
+					vertical: "bottom",
+					horizontal: "right",
 				}}
-				mode={formMode}
-				list={editingList || undefined}
-			/>
+				transformOrigin={{
+					vertical: "top",
+					horizontal: "right",
+				}}
+				PaperProps={{ sx: { p: 2, width: 200 } }}
+			>
+				<Typography
+					variant="subtitle2"
+					sx={{ mb: 1, fontWeight: 700 }}
+				>
+					Visible Columns
+				</Typography>
+				{["Name", "Description", "Contacts", "Date Created", "Action"].map(
+					(col) => (
+						<FormControlLabel
+							key={col}
+							control={
+								<Checkbox
+									size="small"
+									defaultChecked
+								/>
+							}
+							label={<Typography variant="body2">{col}</Typography>}
+						/>
+					)
+				)}
+			</Popover>
 		</>
 	);
 }

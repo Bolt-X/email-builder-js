@@ -161,7 +161,10 @@ export default function TemplateListTable({
 									sx={{ cursor: "pointer" }}
 									onClick={() => navigate(`/templates/${template.id}`)}
 								>
-									<TableCell padding="checkbox">
+									<TableCell
+										padding="checkbox"
+										onClick={(e) => e.stopPropagation()}
+									>
 										<Checkbox
 											checked={isSelected}
 											onChange={(e) => handleSelectRow(e, template.id)}

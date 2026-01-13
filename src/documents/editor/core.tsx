@@ -121,6 +121,7 @@ const EDITOR_DICTIONARY = buildBlockConfigurationDictionary({
 		),
 	},
 });
+export const BLOCK_TYPE_KEYS = Object.keys(EDITOR_DICTIONARY);
 
 export const EditorBlock = buildBlockComponent(EDITOR_DICTIONARY);
 export const EditorBlockSchema =

@@ -1,10 +1,15 @@
-export type ContactStatus = "subscribed" | "unsubscribed" | "bounced";
+export type ContactStatus =
+	| "subscribed"
+	| "unsubscribed"
+	| "non-subscribed"
+	| "bounced";
 
 export interface Contact {
 	id: string | number;
 	email: string;
 	firstName?: string;
 	lastName?: string;
+	address?: string;
 	tags: string[];
 	status: ContactStatus;
 	createdAt?: string;
@@ -24,9 +29,23 @@ export interface ContactList {
 }
 
 // Segment types
-export type SegmentConditionOperator = "equals" | "not_equals" | "contains" | "not_contains" | "in" | "not_in" | "greater_than" | "less_than" | "after" | "before";
+export type SegmentConditionOperator =
+	| "equals"
+	| "not_equals"
+	| "contains"
+	| "not_contains"
+	| "in"
+	| "not_in"
+	| "greater_than"
+	| "less_than"
+	| "after"
+	| "before";
 
-export type SegmentConditionField = "tag" | "status" | "joined_date" | "in_list";
+export type SegmentConditionField =
+	| "tag"
+	| "status"
+	| "joined_date"
+	| "in_list";
 
 export interface SegmentCondition {
 	id: string;

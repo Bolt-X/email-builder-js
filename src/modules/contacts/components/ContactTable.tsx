@@ -12,36 +12,67 @@ import {
 	Menu,
 	MenuItem,
 	Checkbox,
+	Typography,
+	Box,
+	Stack,
+	Tooltip,
+	TablePagination,
 } from "@mui/material";
-import {
-	MoreVert,
-	Edit,
-	Delete,
-	Email,
-} from "@mui/icons-material";
+import { MoreVert, Edit, Delete, PostAdd, Campaign } from "@mui/icons-material";
 import { Contact, ContactStatus } from "../types";
 
 interface ContactTableProps {
 	contacts: Contact[];
-	onSelect?: (contactIds: (string | number)[]) => void;
-	selectable?: boolean;
+	selectedContacts: (string | number)[];
+	onSelectOne: (id: string | number) => void;
+	onSelectAll: () => void;
+	onClearSelection: () => void;
+	visibleColumns?: string[];
+	total?: number;
+	page?: number;
+	rowsPerPage?: number;
+	onPageChange?: (page: number) => void;
+	onRowsPerPageChange?: (rows: number) => void;
 }
 
-const statusColors: Record<ContactStatus, "default" | "success" | "error"> = {
-	subscribed: "success",
-	unsubscribed: "error",
+const statusStyles: Record<
+	ContactStatus,
+	{ bgcolor: string; color: string; label: string }
+> = {
+	subscribed: { bgcolor: "#2E7D32", color: "white", label: "Subscribed" },
+	unsubscribed: { bgcolor: "#D32F2F", color: "white", label: "Unsubscribed" },
+	"non-subscribed": {
+		bgcolor: "#757575",
+		color: "white",
+		label: "Non-subscribed",
+	},
+	bounced: { bgcolor: "#000000", color: "white", label: "Bounced" },
 };
 
 export default function ContactTable({
 	contacts,
-	onSelect,
-	selectable = false,
+	selectedContacts,
+	onSelectOne,
+	onSelectAll,
+	onClearSelection,
+	visibleColumns = [
+		"email",
+		"firstName",
+		"lastName",
+		"address",
+		"status",
+		"tags",
+		"createdAt",
+		"action",
+	],
+	total = 0,
+	page = 0,
+	rowsPerPage = 25,
+	onPageChange,
+	onRowsPerPageChange,
 }: ContactTableProps) {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | number | null>(null);
-	const [selectedContacts, setSelectedContacts] = useState<
-		(string | number)[]
-	>([]);
 
 	const handleMenuOpen = (
 		event: React.MouseEvent<HTMLElement>,
@@ -56,57 +87,28 @@ export default function ContactTable({
 		setSelectedId(null);
 	};
 
-	const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
-		if (event.target.checked) {
-			const allIds = contacts.map((c) => c.id);
-			setSelectedContacts(allIds);
-			onSelect?.(allIds);
-		} else {
-			setSelectedContacts([]);
-			onSelect?.([]);
-		}
-	};
-
-	const handleSelectOne = (
-		event: React.ChangeEvent<HTMLInputElement>,
-		id: string | number
-	) => {
-		if (event.target.checked) {
-			const newSelected = [...selectedContacts, id];
-			setSelectedContacts(newSelected);
-			onSelect?.(newSelected);
-		} else {
-			const newSelected = selectedContacts.filter((cId) => cId !== id);
-			setSelectedContacts(newSelected);
-			onSelect?.(newSelected);
-		}
-	};
-
-	const handleEdit = () => {
-		// TODO: Open edit dialog
-		handleMenuClose();
-	};
-
-	const handleDelete = () => {
-		if (selectedId) {
-			if (
-				window.confirm(
-					"Are you sure you want to delete this contact? This action cannot be undone."
-				)
-			) {
-				// TODO: Implement delete
-				console.log("Delete contact:", selectedId);
-			}
-			handleMenuClose();
-		}
-	};
+	const isAllSelected =
+		contacts.length > 0 && selectedContacts.length === contacts.length;
+	const isIndeterminate =
+		selectedContacts.length > 0 && selectedContacts.length < contacts.length;
 
 	if (contacts.length === 0) {
 		return (
-			<Paper sx={{ p: 4, textAlign: "center" }}>
-				<Email sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
-				<Typography variant="h6" color="text.secondary">
-					No contacts in this list
+			<Paper
+				sx={{
+					p: 4,
+					textAlign: "center",
+					border: "1px solid",
+					borderColor: "divider",
+					borderRadius: 2,
+				}}
+				elevation={0}
+			>
+				<Typography
+					variant="h6"
+					color="text.secondary"
+				>
+					No contacts found
 				</Typography>
 			</Paper>
 		);
@@ -114,90 +116,304 @@ export default function ContactTable({
 
 	return (
 		<>
-			<TableContainer component={Paper}>
+			<TableContainer
+				component={Paper}
+				elevation={0}
+				sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
+			>
 				<Table>
-					<TableHead>
+					<TableHead sx={{ bgcolor: "#F9FAFB" }}>
 						<TableRow>
-							{selectable && (
-								<TableCell padding="checkbox">
-									<Checkbox
-										indeterminate={
-											selectedContacts.length > 0 &&
-											selectedContacts.length < contacts.length
-										}
-										checked={
-											contacts.length > 0 &&
-											selectedContacts.length === contacts.length
-										}
-										onChange={handleSelectAll}
-									/>
+							<TableCell
+								padding="checkbox"
+								sx={{ borderBottom: "1px solid #E5E7EB" }}
+							>
+								<Checkbox
+									indeterminate={isIndeterminate}
+									checked={isAllSelected}
+									onChange={(e) => {
+										if (e.target.checked) onSelectAll();
+										else onClearSelection();
+									}}
+								/>
+							</TableCell>
+							{visibleColumns.includes("email") && (
+								<TableCell
+									sx={{
+										fontWeight: 700,
+										color: "text.secondary",
+										borderBottom: "1px solid #E5E7EB",
+									}}
+								>
+									Mail address
 								</TableCell>
 							)}
-							<TableCell>Email</TableCell>
-							<TableCell>Name</TableCell>
-							<TableCell>Tags</TableCell>
-							<TableCell>Status</TableCell>
-							<TableCell align="right">Actions</TableCell>
+							{visibleColumns.includes("firstName") && (
+								<TableCell
+									sx={{
+										fontWeight: 700,
+										color: "text.secondary",
+										borderBottom: "1px solid #E5E7EB",
+									}}
+								>
+									First name
+								</TableCell>
+							)}
+							{visibleColumns.includes("lastName") && (
+								<TableCell
+									sx={{
+										fontWeight: 700,
+										color: "text.secondary",
+										borderBottom: "1px solid #E5E7EB",
+									}}
+								>
+									Last name
+								</TableCell>
+							)}
+							{visibleColumns.includes("address") && (
+								<TableCell
+									sx={{
+										fontWeight: 700,
+										color: "text.secondary",
+										borderBottom: "1px solid #E5E7EB",
+									}}
+								>
+									Address
+								</TableCell>
+							)}
+							{visibleColumns.includes("status") && (
+								<TableCell
+									sx={{
+										fontWeight: 700,
+										color: "text.secondary",
+										borderBottom: "1px solid #E5E7EB",
+									}}
+								>
+									Status
+								</TableCell>
+							)}
+							{visibleColumns.includes("tags") && (
+								<TableCell
+									sx={{
+										fontWeight: 700,
+										color: "text.secondary",
+										borderBottom: "1px solid #E5E7EB",
+									}}
+								>
+									Tags
+								</TableCell>
+							)}
+							{visibleColumns.includes("createdAt") && (
+								<TableCell
+									sx={{
+										fontWeight: 700,
+										color: "text.secondary",
+										borderBottom: "1px solid #E5E7EB",
+									}}
+								>
+									Date created
+								</TableCell>
+							)}
+							{visibleColumns.includes("action") && (
+								<TableCell
+									sx={{
+										fontWeight: 700,
+										color: "text.secondary",
+										borderBottom: "1px solid #E5E7EB",
+									}}
+									align="right"
+								>
+									Action
+								</TableCell>
+							)}
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{contacts.map((contact) => (
-							<TableRow
-								key={contact.id}
-								hover
-							>
-								{selectable && (
+						{contacts.map((contact) => {
+							const isSelected = selectedContacts.includes(contact.id);
+							const style =
+								statusStyles[contact.status] || statusStyles.subscribed;
+
+							return (
+								<TableRow
+									key={contact.id}
+									hover
+									selected={isSelected}
+								>
 									<TableCell padding="checkbox">
 										<Checkbox
-											checked={selectedContacts.includes(contact.id)}
-											onChange={(e) => handleSelectOne(e, contact.id)}
+											checked={isSelected}
+											onChange={() => onSelectOne(contact.id)}
 										/>
 									</TableCell>
-								)}
-								<TableCell>{contact.email}</TableCell>
-								<TableCell>{contact.name || "-"}</TableCell>
-								<TableCell>
-									{contact.tags && contact.tags.length > 0 ? (
-										<Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-											{contact.tags.slice(0, 2).map((tag) => (
-												<Chip
-													key={tag}
-													label={tag}
-													size="small"
-													variant="outlined"
-												/>
-											))}
-											{contact.tags.length > 2 && (
-												<Chip
-													label={`+${contact.tags.length - 2}`}
-													size="small"
-													variant="outlined"
-												/>
-											)}
-										</Box>
-									) : (
-										"-"
+									{visibleColumns.includes("email") && (
+										<TableCell>
+											<Typography
+												variant="body2"
+												sx={{
+													color: "primary.main",
+													fontWeight: 600,
+													cursor: "pointer",
+													"&:hover": { textDecoration: "underline" },
+												}}
+											>
+												{contact.email}
+											</Typography>
+										</TableCell>
 									)}
-								</TableCell>
-								<TableCell>
-									<Chip
-										label={contact.status}
-										color={statusColors[contact.status]}
-										size="small"
-									/>
-								</TableCell>
-								<TableCell align="right">
-									<IconButton
-										size="small"
-										onClick={(e) => handleMenuOpen(e, contact.id)}
-									>
-										<MoreVert />
-									</IconButton>
-								</TableCell>
-							</TableRow>
-						))}
+									{visibleColumns.includes("firstName") && (
+										<TableCell>
+											<Typography variant="body2">
+												{contact.firstName || "-"}
+											</Typography>
+										</TableCell>
+									)}
+									{visibleColumns.includes("lastName") && (
+										<TableCell>
+											<Typography variant="body2">
+												{contact.lastName || "-"}
+											</Typography>
+										</TableCell>
+									)}
+									{visibleColumns.includes("address") && (
+										<TableCell>
+											<Typography
+												variant="body2"
+												color="text.secondary"
+												noWrap
+												sx={{
+													maxWidth: 200,
+													display: "block",
+													overflow: "hidden",
+													textOverflow: "ellipsis",
+												}}
+											>
+												{contact.address || "-"}
+											</Typography>
+										</TableCell>
+									)}
+									{visibleColumns.includes("status") && (
+										<TableCell>
+											<Chip
+												label={style.label}
+												size="small"
+												sx={{
+													bgcolor: style.bgcolor,
+													color: style.color,
+													fontWeight: 600,
+													borderRadius: "4px",
+													fontSize: "0.75rem",
+													height: 24,
+												}}
+											/>
+										</TableCell>
+									)}
+									{visibleColumns.includes("tags") && (
+										<TableCell>
+											<Stack
+												direction="row"
+												spacing={0.5}
+											>
+												{contact.tags.slice(0, 2).map((tag) => (
+													<Chip
+														key={tag}
+														label={tag}
+														size="small"
+														sx={{
+															bgcolor: "#F3F4F6",
+															color: "#374151",
+															fontWeight: 500,
+															borderRadius: "4px",
+															fontSize: "0.75rem",
+															height: 24,
+														}}
+													/>
+												))}
+												{contact.tags.length > 2 && (
+													<Chip
+														label={`+${contact.tags.length - 2}`}
+														size="small"
+														sx={{
+															bgcolor: "#F3F4F6",
+															color: "#374151",
+															fontWeight: 500,
+															borderRadius: "4px",
+															fontSize: "0.75rem",
+															height: 24,
+														}}
+													/>
+												)}
+											</Stack>
+										</TableCell>
+									)}
+									{visibleColumns.includes("createdAt") && (
+										<TableCell>
+											<Typography
+												variant="body2"
+												color="text.secondary"
+											>
+												{contact.createdAt
+													? new Date(contact.createdAt).toLocaleDateString(
+															"en-GB",
+															{
+																day: "2-digit",
+																month: "2-digit",
+																year: "numeric",
+															}
+														)
+													: "-"}
+											</Typography>
+										</TableCell>
+									)}
+									{visibleColumns.includes("action") && (
+										<TableCell align="right">
+											<Stack
+												direction="row"
+												spacing={0.5}
+												justifyContent="flex-end"
+											>
+												<Tooltip title="Edit">
+													<IconButton
+														size="small"
+														sx={{ color: "#666" }}
+													>
+														<Edit fontSize="small" />
+													</IconButton>
+												</Tooltip>
+												<Tooltip title="Add content">
+													<IconButton
+														size="small"
+														sx={{ color: "#666" }}
+													>
+														<PostAdd fontSize="small" />
+													</IconButton>
+												</Tooltip>
+												<IconButton
+													size="small"
+													onClick={(e) => handleMenuOpen(e, contact.id)}
+													sx={{ color: "#666" }}
+												>
+													<MoreVert fontSize="small" />
+												</IconButton>
+											</Stack>
+										</TableCell>
+									)}
+								</TableRow>
+							);
+						})}
 					</TableBody>
 				</Table>
+				<TablePagination
+					rowsPerPageOptions={[10, 25, 50, 100]}
+					component="div"
+					count={total}
+					rowsPerPage={rowsPerPage}
+					page={page}
+					onPageChange={(_, p) => onPageChange?.(p)}
+					onRowsPerPageChange={(e) =>
+						onRowsPerPageChange?.(parseInt(e.target.value, 10))
+					}
+				/>
 			</TableContainer>
 
 			{/* Action Menu */}
@@ -206,16 +422,16 @@ export default function ContactTable({
 				open={Boolean(anchorEl)}
 				onClose={handleMenuClose}
 			>
-				<MenuItem onClick={handleEdit}>
-					<Edit sx={{ mr: 1 }} />
-					Edit
+				<MenuItem onClick={handleMenuClose}>
+					<Edit sx={{ mr: 1, fontSize: 20 }} />
+					Edit contact
 				</MenuItem>
 				<MenuItem
-					onClick={handleDelete}
+					onClick={handleMenuClose}
 					sx={{ color: "error.main" }}
 				>
-					<Delete sx={{ mr: 1 }} />
-					Delete
+					<Delete sx={{ mr: 1, fontSize: 20 }} />
+					Delete contact
 				</MenuItem>
 			</Menu>
 		</>

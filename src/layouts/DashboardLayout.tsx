@@ -102,6 +102,16 @@ const navigationItems = [
 		label: "Contacts",
 		icon: <PeopleAltOutlined />,
 		path: "/contacts",
+		children: [
+			{
+				label: "All contacts",
+				path: "/contacts",
+			},
+			{
+				label: "Segments",
+				path: "/segments",
+			},
+		],
 	},
 	{
 		label: "Settings",
@@ -118,6 +128,7 @@ export default function DashboardLayout() {
 	// State to track open menus (e.g. Campaigns)
 	const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
 		Campaigns: true, // Default open or closed? Let's default open for visibility
+		Contacts: true,
 	});
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -312,20 +323,13 @@ export default function DashboardLayout() {
 													(child.path !== "/" &&
 														location.pathname.startsWith(child.path) &&
 														child.path !== "/campaigns");
-												// Refined active check:
-												// If child.path is /campaigns, only active if exactly /campaigns or /campaigns/new etc?
-												// Note: /campaigns is also parent path.
-												// Let's use simple startsWith but careful with overlaps.
-												const isSelected =
+												// Refined active check for sub-items
+												const isDeepActive =
 													location.pathname === child.path ||
-													(location.pathname.startsWith(child.path) &&
-														child.path !== "/campaigns" &&
-														child.path !== "/");
-
-												// Special override for "All Campaigns" (/campaigns) vs "Templates" (/templates)
-												const isDeepActive = location.pathname.startsWith(
-													child.path
-												);
+													(child.path !== "/campaigns" &&
+														child.path !== "/contacts" &&
+														child.path !== "/" &&
+														location.pathname.startsWith(child.path));
 
 												return (
 													<ListItemButton

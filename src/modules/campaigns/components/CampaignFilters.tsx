@@ -251,13 +251,15 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						<Select
 							labelId="contacts-label"
 							displayEmpty
-							value={(localContacts as string) || ""}
-							onChange={(e) => setLocalContacts(e.target.value as string)}
+							value={(localContacts ?? "") as any}
+							onChange={(e) =>
+								setLocalContacts(e.target.value as string | number | null)
+							}
 							disabled={disabled}
 							renderValue={(selected) => {
 								if (!selected) return "";
 								const contact = contactOptions.find(
-									(c) => String(c.id) === selected
+									(c) => String(c.id) === String(selected)
 								);
 								return contact ? contact.name : "";
 							}}
