@@ -331,17 +331,17 @@ export default function DashboardLayout() {
 													<ListItemButton
 														key={child.label}
 														sx={{
-															pl: 6, 
+															pl: 6,
 															ml: 3.5,
 															mr: 1.5,
 															borderRadius: 2,
 															mb: 0.5,
 															"&.Mui-selected": {
-																bgcolor: "primary.main", 
-																color: "primary.contrastText", 
+																bgcolor: "primary.main",
+																color: "primary.contrastText",
 																fontWeight: "bold",
 																"&:hover": {
-																	backgroundColor: "primary.dark", 
+																	backgroundColor: "primary.dark",
 																},
 															},
 														}}
@@ -409,11 +409,19 @@ export default function DashboardLayout() {
 				component="main"
 				sx={{
 					flexGrow: 1,
-					p: 3,
+					p:
+						location.pathname.includes("/templates/") ||
+						(location.pathname.includes("/campaigns/") &&
+							location.pathname.includes("/templates/"))
+							? 0
+							: 3,
 					width: {
 						md: `calc(100% - ${open ? DRAWER_WIDTH : COLLAPSED_WIDTH}px)`,
 					},
+					height: "100vh",
 					overflow: "auto",
+					display: "flex",
+					flexDirection: "column",
 					transition: theme.transitions.create("width", {
 						easing: theme.transitions.easing.sharp,
 						duration: theme.transitions.duration.enteringScreen,

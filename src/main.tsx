@@ -27,7 +27,6 @@ import SettingsPage from "./modules/settings/components/SettingsPage";
 import CampaignsLayout from "./modules/campaigns/components/CampaignsLayout";
 import CampaignCreatePage from "./modules/campaigns/components/CampaignCreatePage/CampaignCreatePage";
 
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
 	<React.StrictMode>
 		<BrowserRouter>
@@ -44,11 +43,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 								index
 								element={<DashboardPage />}
 							/>
-							
-             <Route
-  path="templates"
-  element={<TemplatesPage />}
-             />
 
 							<Route
 								path="media"
@@ -60,20 +54,28 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 								path="campaigns"
 								element={<CampaignListPage />}
 							/>
- <Route
-                  path="campaigns/new"
-                  element={<CampaignCreatePage />}
-                 />
+							<Route
+								path="campaigns/new"
+								element={<CampaignCreatePage />}
+							/>
 							<Route
 								path="campaigns/:id"
 								element={<CampaignEditPage />}
+							/>
+							<Route
+								path="templates"
+								element={<TemplatesPage />}
+							/>
+							<Route
+								path="templates/:id"
+								element={<TemplateDetailPage />}
 							/>
 							{/* Template editing from campaign context */}
 							<Route
 								path="campaigns/:campaignId/templates/:templateId"
 								element={<TemplateDetailPage />}
 							/>
-						
+
 							{/* Contacts routes */}
 							<Route
 								path="contacts"
@@ -94,18 +96,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 							/>
 						</Route>
 
-						{/* Legacy template routes - keep for backward compatibility */}
+						{/* MainLayout routes can be kept for other purposes or removed if not needed */}
 						<Route
-							path="/legacy"
+							path="/editor-only"
 							element={<MainLayout />}
 						>
 							<Route
 								index
 								element={<App />}
-							/>
-							<Route
-								path="templates/:id"
-								element={<TemplateDetailPage />}
 							/>
 						</Route>
 					</Route>

@@ -1,8 +1,8 @@
 export type CampaignStatus =
 	| "draft"
 	| "scheduled"
-	| "sending"
-	| "completed"
+	| "running"
+	| "finished"
 	| "cancelled";
 
 export type SendTimeOption = "now" | "schedule";
@@ -43,11 +43,14 @@ export interface Campaign {
 		opened: number;
 		clicked: number;
 		bounced: number;
+		total: number; // Total target recipients
 	};
 	// Timestamps
 	createdAt?: string;
 	updatedAt?: string;
 	lastEditedAt?: string; // Last edit time for display
+	startedAt?: string; // When the campaign started sending
+	endedAt?: string; // When the campaign finished
 }
 
 // Directus format (for API compatibility)
@@ -69,9 +72,12 @@ export interface DirectusCampaign {
 	stats_opened?: number;
 	stats_clicked?: number;
 	stats_bounced?: number;
+	stats_total?: number;
 	date_created?: string;
 	date_updated?: string;
 	last_edited_at?: string;
+	started_at?: string;
+	ended_at?: string;
 }
 
 // Filter types

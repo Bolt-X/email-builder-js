@@ -1,16 +1,13 @@
 import { create } from "zustand";
 import { shallow } from "zustand/shallow";
-import {
-	Campaign,
-	CampaignFilters,
-	CampaignStatus,
-} from "../types";
+import { Campaign, CampaignFilters, CampaignStatus } from "../types";
 import {
 	createCampaign,
 	deleteCampaign,
 	getCampaignById,
 	getCampaigns,
 	updateCampaign,
+	duplicateCampaign,
 } from "../service";
 
 /**
@@ -55,7 +52,8 @@ const campaignMetadataStore = create<CampaignMetadataState>(() => ({
 
 // --- Selectors ---
 export const useCampaigns = () => campaignMetadataStore((s) => s.campaigns);
-export const useCampaignsLoading = () => campaignMetadataStore((s) => s.loading);
+export const useCampaignsLoading = () =>
+	campaignMetadataStore((s) => s.loading);
 export const useCampaignsError = () => campaignMetadataStore((s) => s.error);
 export const useCurrentCampaign = () =>
 	campaignMetadataStore((s) => s.currentCampaign);
@@ -70,7 +68,8 @@ export const useCampaignFilters = () =>
 		}),
 		shallow
 	);
-export const useCampaignViewMode = () => campaignMetadataStore((s) => s.viewMode);
+export const useCampaignViewMode = () =>
+	campaignMetadataStore((s) => s.viewMode);
 export const useAutosaveState = () =>
 	campaignMetadataStore((s) => ({
 		enabled: s.autosaveEnabled,
@@ -229,6 +228,27 @@ export const deleteCampaignAction = async (
 				state.currentCampaign?.id === id ? null : state.currentCampaign,
 			loading: false,
 		}));
+	} catch (err: any) {
+		campaignMetadataStore.setState({
+			error: err.message,
+			loading: false,
+		});
+		throw err;
+	}
+};
+
+export const duplicateCampaignAction = async (
+	id: string | number,
+	newName?: string
+): Promise<Campaign> => {
+	try {
+		campaignMetadataStore.setState({ loading: true, error: null });
+		const newCampaign = await duplicateCampaign(id, newName);
+		campaignMetadataStore.setState((state) => ({
+			campaigns: [newCampaign, ...state.campaigns],
+			loading: false,
+		}));
+		return newCampaign;
 	} catch (err: any) {
 		campaignMetadataStore.setState({
 			error: err.message,

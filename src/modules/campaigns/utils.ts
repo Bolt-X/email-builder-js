@@ -2,13 +2,13 @@ import { CampaignStatus } from "./types";
 
 export const statusColors: Record<
 	CampaignStatus,
-	"default" | "primary" | "success" | "warning" | "error"
+	"default" | "primary" | "success" | "warning" | "error" | "info"
 > = {
 	draft: "default",
-	scheduled: "primary",
-	sending: "warning",
-	completed: "success",
-	cancelled: "error",
+	scheduled: "warning", // Orange in Figma
+	running: "info", // Blue/Light blue in Figma
+	finished: "success", // Green in Figma
+	cancelled: "error", // Red in Figma
 };
 
 export const getRecipientCount = (recipients: any[]): number => {

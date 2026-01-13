@@ -37,8 +37,8 @@ import { CampaignStatus } from "../types";
 const statusOptions: CampaignStatus[] = [
 	"draft",
 	"scheduled",
-	"sending",
-	"completed",
+	"running",
+	"finished",
 	"cancelled",
 ];
 
@@ -187,12 +187,14 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						<Select
 							labelId="contacts-label"
 							displayEmpty
-							value={filters.contactListFilter || ""}
-							onChange={(e) => setContactListFilter(e.target.value)}
+							value={(filters.contactListFilter as string) || ""}
+							onChange={(e) => setContactListFilter(e.target.value as string)}
 							disabled={disabled}
 							renderValue={(selected) => {
 								if (!selected) return "";
-								const contact = contactOptions.find((c) => c.id === selected);
+								const contact = contactOptions.find(
+									(c) => String(c.id) === selected
+								);
 								return contact ? contact.name : "";
 							}}
 							sx={{ fontSize: "0.875rem" }}

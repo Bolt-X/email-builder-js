@@ -2,11 +2,12 @@
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "target": "es2015",
+    "target": "es2020",
     "module": "esnext",
     "outDir": "dist",
     "jsx": "react-jsx",
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "baseUrl": "/",
     "paths": {
       "@/*": [

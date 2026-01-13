@@ -6,7 +6,34 @@ import {
 	updateItem,
 } from "@directus/sdk";
 import { directusClientWithRest } from "../../services/directus";
-import { Campaign, CampaignFilters, DirectusCampaign, Recipient } from "./types";
+import {
+	Campaign,
+	CampaignFilters,
+	DirectusCampaign,
+	Recipient,
+} from "./types";
+import mockCampaigns from "./data/campaigns.json";
+
+// Simulation of a local file/database using localStorage
+const MOCK_STORAGE_KEY = "boltx_mock_campaigns";
+
+function getMockCampaigns(): Campaign[] {
+	const stored = localStorage.getItem(MOCK_STORAGE_KEY);
+	if (stored) {
+		try {
+			return JSON.parse(stored);
+		} catch (e) {
+			console.error("Failed to parse mock campaigns from localStorage", e);
+		}
+	}
+	// Initial dummy data from JSON file
+	return mockCampaigns as Campaign[];
+}
+
+function saveMockCampaigns(campaigns: Campaign[]) {
+	localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(campaigns));
+	console.log("Mock data saved to simulated JSON storage (localStorage)");
+}
 
 /**
  * Transform Directus format to Campaign model
@@ -33,8 +60,10 @@ function transformFromDirectus(directusCampaign: DirectusCampaign): Campaign {
 	}
 
 	// Handle sendTime and scheduledAt
-	const scheduleAt = directusCampaign.scheduled_at || directusCampaign.schedule_at;
-	const sendTime = directusCampaign.send_time || (scheduleAt ? "schedule" : "now");
+	const scheduleAt =
+		directusCampaign.scheduled_at || directusCampaign.schedule_at;
+	const sendTime =
+		directusCampaign.send_time || (scheduleAt ? "schedule" : "now");
 
 	return {
 		id: directusCampaign.id,
@@ -46,9 +75,7 @@ function transformFromDirectus(directusCampaign: DirectusCampaign): Campaign {
 		fromAddress: directusCampaign.from_address || "",
 		recipients,
 		contactListId: directusCampaign.contact_list_id, // Legacy support
-		tags: directusCampaign.tags
-			? JSON.parse(directusCampaign.tags)
-			: [],
+		tags: directusCampaign.tags ? JSON.parse(directusCampaign.tags) : [],
 		sendTime: sendTime as "now" | "schedule",
 		scheduledAt: scheduleAt,
 		scheduleAt, // Legacy support
@@ -57,10 +84,14 @@ function transformFromDirectus(directusCampaign: DirectusCampaign): Campaign {
 			opened: directusCampaign.stats_opened || 0,
 			clicked: directusCampaign.stats_clicked || 0,
 			bounced: directusCampaign.stats_bounced || 0,
+			total: directusCampaign.stats_total || 0,
 		},
 		createdAt: directusCampaign.date_created,
 		updatedAt: directusCampaign.date_updated,
-		lastEditedAt: directusCampaign.last_edited_at || directusCampaign.date_updated,
+		lastEditedAt:
+			directusCampaign.last_edited_at || directusCampaign.date_updated,
+		startedAt: directusCampaign.started_at,
+		endedAt: directusCampaign.ended_at,
 	};
 }
 
@@ -75,8 +106,7 @@ function transformToDirectus(
 	if (campaign.name !== undefined) directusCampaign.name = campaign.name;
 	if (campaign.description !== undefined)
 		directusCampaign.description = campaign.description;
-	if (campaign.status !== undefined)
-		directusCampaign.status = campaign.status;
+	if (campaign.status !== undefined) directusCampaign.status = campaign.status;
 	if (campaign.templateId !== undefined)
 		directusCampaign.template_id = campaign.templateId;
 	if (campaign.subject !== undefined)
@@ -104,7 +134,12 @@ function transformToDirectus(
 		directusCampaign.stats_opened = campaign.stats.opened;
 		directusCampaign.stats_clicked = campaign.stats.clicked;
 		directusCampaign.stats_bounced = campaign.stats.bounced;
+		directusCampaign.stats_total = campaign.stats.total;
 	}
+	if (campaign.startedAt !== undefined)
+		directusCampaign.started_at = campaign.startedAt;
+	if (campaign.endedAt !== undefined)
+		directusCampaign.ended_at = campaign.endedAt;
 	// Update lastEditedAt on any update
 	directusCampaign.last_edited_at = new Date().toISOString();
 
@@ -155,6 +190,21 @@ export async function getCampaigns(
 	filters?: CampaignFilters
 ): Promise<Campaign[]> {
 	try {
+		// For development: Use mock data
+		const mockData = getMockCampaigns();
+
+		if (filters?.searchQuery) {
+			const query = filters.searchQuery.toLowerCase();
+			return mockData.filter(
+				(c) =>
+					c.name.toLowerCase().includes(query) ||
+					c.subject.toLowerCase().includes(query)
+			);
+		}
+
+		return mockData;
+
+		/* Later: API implementation
 		const query: any = {
 			fields: ["*"],
 			sort: ["-date_created"],
@@ -171,9 +221,10 @@ export async function getCampaigns(
 			readItems("campaigns", query)
 		);
 		return (res as DirectusCampaign[]).map(transformFromDirectus);
+        */
 	} catch (error) {
 		console.error("Error fetching campaigns:", error);
-		return [];
+		return getMockCampaigns();
 	}
 }
 
@@ -184,10 +235,15 @@ export async function getCampaignById(
 	id: string | number
 ): Promise<Campaign | null> {
 	try {
+		const mockData = getMockCampaigns();
+		return mockData.find((c) => c.id.toString() === id.toString()) || null;
+
+		/* Later: API implementation
 		const res = await directusClientWithRest.request(
 			readItem("campaigns", id)
 		);
 		return transformFromDirectus(res as DirectusCampaign);
+        */
 	} catch (error) {
 		console.error("Error fetching campaign:", error);
 		return null;
@@ -201,11 +257,26 @@ export async function createCampaign(
 	campaign: Omit<Campaign, "id" | "createdAt" | "updatedAt">
 ): Promise<Campaign> {
 	try {
+		const mockData = getMockCampaigns();
+		const newCampaign: Campaign = {
+			...campaign,
+			id: `mock-${Date.now()}`,
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+		};
+
+		const updatedData = [newCampaign, ...mockData];
+		saveMockCampaigns(updatedData);
+
+		return newCampaign;
+
+		/* Later: API implementation
 		const payload = transformToDirectus(campaign);
 		const res = await directusClientWithRest.request(
 			createItem("campaigns", payload)
 		);
 		return transformFromDirectus(res as DirectusCampaign);
+        */
 	} catch (error) {
 		console.error("Error creating campaign:", error);
 		throw error;
@@ -255,9 +326,13 @@ export async function startCampaign(
 		throw new Error("Campaign not found");
 	}
 
-	// If scheduled for later, set status to 'scheduled', otherwise 'sending'
-	const status = sendNow || campaign.sendTime === "now" ? "sending" : "scheduled";
-	return updateCampaign(id, { status });
+	// If scheduled for later, set status to 'scheduled', otherwise 'running'
+	const status =
+		sendNow || campaign.sendTime === "now" ? "running" : "scheduled";
+	return updateCampaign(id, {
+		status,
+		startedAt: status === "running" ? new Date().toISOString() : undefined,
+	});
 }
 
 /**
