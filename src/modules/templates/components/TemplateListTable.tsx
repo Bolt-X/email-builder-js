@@ -44,6 +44,11 @@ export default function TemplateListTable({
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 
+	// Reset page when templates list changes (filters applied)
+	React.useEffect(() => {
+		setPage(0);
+	}, [templates]);
+
 	const handleMenuOpen = (
 		event: React.MouseEvent<HTMLElement>,
 		id: string | number

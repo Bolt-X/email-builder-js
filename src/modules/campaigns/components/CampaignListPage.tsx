@@ -21,7 +21,6 @@ import CampaignFilters from "./CampaignFilters";
 import CampaignActionsToolbar from "./CampaignActionsToolbar";
 import CampaignFormDrawer from "./CampaignFormDrawer";
 
-
 export default function CampaignListPage() {
 	const navigate = useNavigate();
 	const campaigns = useCampaigns();
@@ -48,7 +47,13 @@ export default function CampaignListPage() {
 		if (tagsFilter.length > 0) filter.tags = tagsFilter;
 		if (dateRangeFilter) filter.dateRange = dateRangeFilter;
 		return Object.keys(filter).length > 0 ? filter : undefined;
-	}, [searchQuery, statusFilter, contactListFilter, tagsFilter, dateRangeFilter]);
+	}, [
+		searchQuery,
+		statusFilter,
+		contactListFilter,
+		tagsFilter,
+		dateRangeFilter,
+	]);
 
 	useEffect(() => {
 		fetchCampaigns(filterObject);
@@ -77,11 +82,18 @@ export default function CampaignListPage() {
 		);
 	}
 
-	const isEmpty = campaigns.length === 0 && !loading;
+	const hasFilters = Boolean(
+		searchQuery ||
+			statusFilter.length > 0 ||
+			contactListFilter ||
+			tagsFilter.length > 0 ||
+			dateRangeFilter
+	);
 
+	const isTrulyEmpty = campaigns.length === 0 && !loading && !hasFilters;
+	const isFilteredEmpty = campaigns.length === 0 && !loading && hasFilters;
 
-
-// ... existing imports
+	// ... existing imports
 
 	return (
 		<Box>
@@ -102,23 +114,67 @@ export default function CampaignListPage() {
 			</Stack>
 
 			<Stack spacing={2}>
-				{/* Filters - Disabled when empty */}
-				<CampaignFilters disabled={isEmpty} />
+				{/* Filters - Always show if NOT truly empty */}
+				{!isTrulyEmpty && <CampaignFilters />}
 
-				{/* Actions Toolbar - Disabled when empty */}
-				<CampaignActionsToolbar disabled={isEmpty} />
+				{/* Actions Toolbar - Hide if empty or filtered empty */}
+				{!isTrulyEmpty && !isFilteredEmpty && <CampaignActionsToolbar />}
 
 				{/* Campaign List - Only show if NOT empty */}
-				{!isEmpty && (
-					viewMode === "table" ? (
+				{!isTrulyEmpty &&
+					!isFilteredEmpty &&
+					(viewMode === "table" ? (
 						<CampaignListTable campaigns={campaigns} />
 					) : (
 						<CampaignListCalendar campaigns={campaigns} />
-					)
+					))}
+
+				{/* No Results Found (Filtered Empty) */}
+				{isFilteredEmpty && (
+					<Box
+						display="flex"
+						flexDirection="column"
+						alignItems="center"
+						justifyContent="center"
+						minHeight="40vh"
+						textAlign="center"
+						sx={{
+							bgcolor: "background.paper",
+							borderRadius: 2,
+							p: 4,
+							border: "1px solid",
+							borderColor: "divider",
+						}}
+					>
+						<Typography
+							variant="h6"
+							sx={{ fontWeight: 600, mb: 1 }}
+						>
+							No campaigns found
+						</Typography>
+						<Typography
+							variant="body2"
+							color="text.secondary"
+							sx={{ mb: 3 }}
+						>
+							Try adjusting your search or filters to find what you're looking
+							for.
+						</Typography>
+						<Button
+							variant="outlined"
+							onClick={() =>
+								import("../stores/campaign.metadata.store").then((m) =>
+									m.clearFilters()
+								)
+							}
+						>
+							Clear all filters
+						</Button>
+					</Box>
 				)}
 
-			{/* Empty State */}
-				{isEmpty && (
+				{/* Truly Empty State (No campaigns at all) */}
+				{isTrulyEmpty && (
 					<Box
 						display="flex"
 						flexDirection="column"
@@ -138,7 +194,7 @@ export default function CampaignListPage() {
 								borderRadius: "50%",
 								bgcolor: "grey.100",
 								color: "primary.main",
-								mb: 3
+								mb: 3,
 							}}
 						>
 							<Add fontSize="large" />
@@ -154,7 +210,8 @@ export default function CampaignListPage() {
 							color="text.secondary"
 							sx={{ mb: 3 }}
 						>
-							Click on "Create campaign" and start designing your first email campaign.
+							Click on "Create campaign" and start designing your first email
+							campaign.
 						</Typography>
 						<Button
 							variant="outlined"

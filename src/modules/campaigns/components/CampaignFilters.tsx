@@ -20,8 +20,11 @@ import {
 	IconButton,
 	Button,
 	Popover,
+	Checkbox,
+	FormControlLabel,
+	Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
 	setSearchQuery,
 	setStatusFilter,
@@ -29,9 +32,12 @@ import {
 	setTagsFilter,
 	setDateRangeFilter,
 	setViewMode,
+	setVisibleColumns,
+	clearFilters,
 	useCampaignFilters,
 	useCampaignViewMode,
-} from "../store";
+	useVisibleColumns,
+} from "../stores/campaign.metadata.store";
 import { CampaignStatus } from "../types";
 
 const statusOptions: CampaignStatus[] = [
@@ -60,9 +66,60 @@ const tagOptions = [
 export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 	const filters = useCampaignFilters();
 	const viewMode = useCampaignViewMode();
+	const visibleColumns = useVisibleColumns();
 
 	// Support for date range popover
 	const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+	// Column config popover
+	const [columnAnchorEl, setColumnAnchorEl] =
+		useState<HTMLButtonElement | null>(null);
+
+	const handleColumnToggle = (column: string) => {
+		const newColumns = visibleColumns.includes(column)
+			? visibleColumns.filter((c) => c !== column)
+			: [...visibleColumns, column];
+		setVisibleColumns(newColumns);
+	};
+
+	// Local state for filters to support "Apply on Click"
+	const [localSearch, setLocalSearch] = useState(filters.searchQuery);
+	const [localStatus, setLocalStatus] = useState<CampaignStatus[]>(
+		filters.statusFilter
+	);
+	const [localContacts, setLocalContacts] = useState<string | number | null>(
+		filters.contactListFilter
+	);
+	const [localTags, setLocalTags] = useState<string[]>(filters.tagsFilter);
+	const [localDate, setLocalDate] = useState<{
+		start: string;
+		end: string;
+	} | null>(filters.dateRangeFilter);
+
+	const handleSearch = () => {
+		setSearchQuery(localSearch);
+		setStatusFilter(localStatus);
+		setContactListFilter(localContacts);
+		setTagsFilter(localTags);
+		setDateRangeFilter(localDate);
+	};
+
+	const handleClear = () => {
+		clearFilters();
+		setLocalSearch("");
+		setLocalStatus([]);
+		setLocalContacts(null);
+		setLocalTags([]);
+		setLocalDate(null);
+	};
+
+	// Sync local state when store is cleared or changed externally
+	useEffect(() => {
+		setLocalSearch(filters.searchQuery);
+		setLocalStatus(filters.statusFilter || []);
+		setLocalContacts(filters.contactListFilter);
+		setLocalTags(filters.tagsFilter || []);
+		setLocalDate(filters.dateRangeFilter);
+	}, [filters]);
 
 	const handleDateClick = (event: React.MouseEvent<HTMLButtonElement>) => {
 		setAnchorEl(event.currentTarget);
@@ -110,8 +167,13 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						<TextField
 							placeholder="Search campaigns..."
 							size="small"
-							value={filters.searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
+							value={localSearch}
+							onChange={(e) => setLocalSearch(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") {
+									handleSearch();
+								}
+							}}
 							disabled={disabled}
 							InputProps={{
 								startAdornment: (
@@ -135,22 +197,23 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						size="small"
 						sx={{ minWidth: 120, ...commonSx }}
 					>
-						{!filters.statusFilter?.length && (
-							<InputLabel
-								id="status-label"
-								shrink={false}
-								sx={{ fontSize: "0.875rem" }}
-							>
-								Status
-							</InputLabel>
-						)}
+						<InputLabel
+							id="status-label"
+							shrink={false}
+							sx={{
+								fontSize: "0.875rem",
+								display: localStatus.length > 0 ? "none" : "block",
+							}}
+						>
+							Status
+						</InputLabel>
 						<Select
 							labelId="status-label"
 							multiple
 							displayEmpty
-							value={filters.statusFilter || []}
+							value={localStatus}
 							onChange={(e) =>
-								setStatusFilter(e.target.value as CampaignStatus[])
+								setLocalStatus(e.target.value as CampaignStatus[])
 							}
 							disabled={disabled}
 							renderValue={(selected) => {
@@ -175,20 +238,21 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						size="small"
 						sx={{ minWidth: 140, ...commonSx }}
 					>
-						{!filters.contactListFilter && (
-							<InputLabel
-								id="contacts-label"
-								shrink={false}
-								sx={{ fontSize: "0.875rem" }}
-							>
-								Contacts
-							</InputLabel>
-						)}
+						<InputLabel
+							id="contacts-label"
+							shrink={false}
+							sx={{
+								fontSize: "0.875rem",
+								display: localContacts ? "none" : "block",
+							}}
+						>
+							Contacts
+						</InputLabel>
 						<Select
 							labelId="contacts-label"
 							displayEmpty
-							value={(filters.contactListFilter as string) || ""}
-							onChange={(e) => setContactListFilter(e.target.value as string)}
+							value={(localContacts as string) || ""}
+							onChange={(e) => setLocalContacts(e.target.value as string)}
 							disabled={disabled}
 							renderValue={(selected) => {
 								if (!selected) return "";
@@ -218,21 +282,22 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						size="small"
 						sx={{ minWidth: 120, ...commonSx }}
 					>
-						{!filters.tagsFilter?.length && (
-							<InputLabel
-								id="tags-label"
-								shrink={false}
-								sx={{ fontSize: "0.875rem" }}
-							>
-								Tags
-							</InputLabel>
-						)}
+						<InputLabel
+							id="tags-label"
+							shrink={false}
+							sx={{
+								fontSize: "0.875rem",
+								display: localTags.length > 0 ? "none" : "block",
+							}}
+						>
+							Tags
+						</InputLabel>
 						<Select
 							labelId="tags-label"
 							multiple
 							displayEmpty
-							value={filters.tagsFilter || []}
-							onChange={(e) => setTagsFilter(e.target.value as string[])}
+							value={localTags}
+							onChange={(e) => setLocalTags(e.target.value as string[])}
 							disabled={disabled}
 							renderValue={(selected) => {
 								if (!selected || selected.length === 0) return "";
@@ -272,6 +337,35 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 					>
 						Date created
 					</Button>
+
+					<Stack
+						direction="row"
+						spacing={1}
+					>
+						<Button
+							variant="contained"
+							size="small"
+							onClick={handleSearch}
+							sx={{ height: 40, px: 2, borderRadius: "6px" }}
+						>
+							Search
+						</Button>
+
+						<Button
+							variant="text"
+							size="small"
+							color="inherit"
+							onClick={handleClear}
+							sx={{
+								height: 40,
+								textTransform: "none",
+								color: "text.secondary",
+							}}
+						>
+							Clear
+						</Button>
+					</Stack>
+
 					<Popover
 						open={openDate}
 						anchorEl={anchorEl}
@@ -290,11 +384,11 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 								type="date"
 								size="small"
 								InputLabelProps={{ shrink: true }}
-								value={filters.dateRangeFilter?.start || ""}
+								value={localDate?.start || ""}
 								onChange={(e) =>
-									setDateRangeFilter({
+									setLocalDate({
 										start: e.target.value,
-										end: filters.dateRangeFilter?.end || "",
+										end: localDate?.end || "",
 									})
 								}
 							/>
@@ -303,10 +397,10 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 								type="date"
 								size="small"
 								InputLabelProps={{ shrink: true }}
-								value={filters.dateRangeFilter?.end || ""}
+								value={localDate?.end || ""}
 								onChange={(e) =>
-									setDateRangeFilter({
-										start: filters.dateRangeFilter?.start || "",
+									setLocalDate({
+										start: localDate?.start || "",
 										end: e.target.value,
 									})
 								}
@@ -324,18 +418,113 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 					<Button
 						variant="outlined"
 						size="small"
-						startIcon={<ViewColumn fontSize="small" />}
+						startIcon={<Settings fontSize="small" />}
 						disabled={disabled}
+						onClick={(e) => setColumnAnchorEl(e.currentTarget)}
 						sx={{
-							...commonSx,
+							borderRadius: 20,
 							textTransform: "none",
-							color: "text.primary",
-							px: 1.5,
-							minHeight: 40,
+							color: "#555",
+							borderColor: "#e0e0e0",
+							px: 2,
+							height: 40,
+							fontWeight: 600,
+							"&:hover": {
+								borderColor: "#ccc",
+								backgroundColor: "rgba(0,0,0,0.02)",
+							},
 						}}
 					>
 						Columns
 					</Button>
+					<Popover
+						open={Boolean(columnAnchorEl)}
+						anchorEl={columnAnchorEl}
+						onClose={() => setColumnAnchorEl(null)}
+						anchorOrigin={{
+							vertical: "bottom",
+							horizontal: "right",
+						}}
+						transformOrigin={{
+							vertical: "top",
+							horizontal: "right",
+						}}
+					>
+						<Box sx={{ p: 2, minWidth: 200 }}>
+							<Stack spacing={1}>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked
+											disabled
+											size="small"
+										/>
+									}
+									label={<Typography variant="body2">Name</Typography>}
+								/>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={visibleColumns.includes("status")}
+											onChange={() => handleColumnToggle("status")}
+											size="small"
+										/>
+									}
+									label={<Typography variant="body2">Status</Typography>}
+								/>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={visibleColumns.includes("contacts")}
+											onChange={() => handleColumnToggle("contacts")}
+											size="small"
+										/>
+									}
+									label={<Typography variant="body2">Contacts</Typography>}
+								/>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={visibleColumns.includes("tags")}
+											onChange={() => handleColumnToggle("tags")}
+											size="small"
+										/>
+									}
+									label={<Typography variant="body2">Tags</Typography>}
+								/>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={visibleColumns.includes("timestamps")}
+											onChange={() => handleColumnToggle("timestamps")}
+											size="small"
+										/>
+									}
+									label={<Typography variant="body2">Timestamps</Typography>}
+								/>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={visibleColumns.includes("stats")}
+											onChange={() => handleColumnToggle("stats")}
+											size="small"
+										/>
+									}
+									label={<Typography variant="body2">Stats</Typography>}
+								/>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked
+											disabled
+											size="small"
+										/>
+									}
+									label={<Typography variant="body2">Actions</Typography>}
+								/>
+							</Stack>
+						</Box>
+					</Popover>
 
 					<ToggleButtonGroup
 						value={viewMode}
@@ -346,14 +535,28 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						size="small"
 						disabled={disabled}
 						sx={{
-							backgroundColor: "background.paper",
-							borderRadius: "6px",
+							backgroundColor: "white",
+							borderRadius: 20,
+							border: "1px solid #e0e0e0",
 							"& .MuiToggleButton-root": {
-								borderRadius: "6px",
-								border: "1px solid rgba(0,0,0,0.12) !important",
-								ml: "-1px !important",
-								minHeight: 40,
-								px: 1.5,
+								borderRadius: 20,
+								border: "none",
+								height: 40,
+								width: 50,
+								color: "#555",
+								"&.Mui-selected": {
+									backgroundColor: "#f2f2f2",
+									color: "#000",
+								},
+								"&:first-of-type": {
+									borderTopRightRadius: 0,
+									borderBottomRightRadius: 0,
+								},
+								"&:last-of-type": {
+									borderTopLeftRadius: 0,
+									borderBottomLeftRadius: 0,
+									borderLeft: "1px solid #e0e0e0",
+								},
 							},
 						}}
 					>

@@ -32,6 +32,15 @@ type CampaignMetadataState = {
 	autosaveEnabled: boolean;
 	lastSavedAt: string | null;
 	isDirty: boolean;
+	// Column visibility
+	visibleColumns: string[];
+};
+
+const DEFAULT_COLUMNS = ["status", "contacts", "tags", "timestamps", "stats"];
+
+const getStoredColumns = (): string[] => {
+	const stored = localStorage.getItem("campaign_list_columns");
+	return stored ? JSON.parse(stored) : DEFAULT_COLUMNS;
 };
 
 const campaignMetadataStore = create<CampaignMetadataState>(() => ({
@@ -48,6 +57,7 @@ const campaignMetadataStore = create<CampaignMetadataState>(() => ({
 	autosaveEnabled: true,
 	lastSavedAt: null,
 	isDirty: false,
+	visibleColumns: getStoredColumns(),
 }));
 
 // --- Selectors ---
@@ -76,6 +86,8 @@ export const useAutosaveState = () =>
 		lastSavedAt: s.lastSavedAt,
 		isDirty: s.isDirty,
 	}));
+export const useVisibleColumns = () =>
+	campaignMetadataStore((s) => s.visibleColumns);
 
 // --- Actions ---
 export const setCurrentCampaign = (campaign: Campaign | null) => {
@@ -106,6 +118,11 @@ export const setDateRangeFilter = (
 
 export const setViewMode = (mode: "table" | "calendar") => {
 	campaignMetadataStore.setState({ viewMode: mode });
+};
+
+export const setVisibleColumns = (columns: string[]) => {
+	campaignMetadataStore.setState({ visibleColumns: columns });
+	localStorage.setItem("campaign_list_columns", JSON.stringify(columns));
 };
 
 export const clearFilters = () => {

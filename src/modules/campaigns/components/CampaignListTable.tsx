@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import {
 	deleteCampaignAction,
 	duplicateCampaignAction,
+	useVisibleColumns,
 } from "../stores/campaign.metadata.store";
 import { startCampaign, stopCampaign } from "../service";
 
@@ -43,6 +44,7 @@ export default function CampaignListTable({
 	campaigns,
 }: CampaignListTableProps) {
 	const navigate = useNavigate();
+	const visibleColumns = useVisibleColumns();
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | number | null>(null);
 	const [selectedRows, setSelectedRows] = useState<(string | number)[]>([]);
@@ -50,6 +52,11 @@ export default function CampaignListTable({
 	// Pagination state
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
+
+	// Reset page when campaigns list changes (filters applied)
+	React.useEffect(() => {
+		setPage(0);
+	}, [campaigns]);
 
 	const handleMenuOpen = (
 		event: React.MouseEvent<HTMLElement>,
@@ -161,11 +168,21 @@ export default function CampaignListTable({
 								/>
 							</TableCell>
 							<TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Contacts</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Tags</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Timestamps</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Stats</TableCell>
+							{visibleColumns.includes("status") && (
+								<TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+							)}
+							{visibleColumns.includes("contacts") && (
+								<TableCell sx={{ fontWeight: 600 }}>Contacts</TableCell>
+							)}
+							{visibleColumns.includes("tags") && (
+								<TableCell sx={{ fontWeight: 600 }}>Tags</TableCell>
+							)}
+							{visibleColumns.includes("timestamps") && (
+								<TableCell sx={{ fontWeight: 600 }}>Timestamps</TableCell>
+							)}
+							{visibleColumns.includes("stats") && (
+								<TableCell sx={{ fontWeight: 600 }}>Stats</TableCell>
+							)}
 							<TableCell
 								sx={{ fontWeight: 600 }}
 								align="right"
@@ -209,86 +226,100 @@ export default function CampaignListTable({
 											</Typography>
 										</Box>
 									</TableCell>
-									<TableCell>
-										<Chip
-											label={
-												campaign.status.charAt(0).toUpperCase() +
-												campaign.status.slice(1)
-											}
-											size="small"
-											sx={{
-												...getStatusStyles(campaign.status),
-												fontWeight: 500,
-												borderRadius: "4px",
-											}}
-										/>
-									</TableCell>
-									<TableCell>
-										<Typography
-											variant="body2"
-											color="text.secondary"
-										>
-											{campaign.recipients?.[0]?.name || "N/A"}
-										</Typography>
-									</TableCell>
-									<TableCell>
-										<Stack
-											direction="row"
-											spacing={0.5}
-										>
-											{campaign.tags?.slice(0, 2).map((tag) => (
-												<Chip
-													key={tag}
-													label={tag}
-													size="small"
-													variant="outlined"
-													sx={{
-														borderRadius: "4px",
-														height: 20,
-														fontSize: "0.65rem",
-													}}
-												/>
-											))}
-											{campaign.tags && campaign.tags.length > 2 && (
-												<Typography
-													variant="caption"
-													color="text.secondary"
-												>
-													+{campaign.tags.length - 2}
-												</Typography>
-											)}
-										</Stack>
-									</TableCell>
-									<TableCell>
-										<Box sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
-											<Box>
-												Created:{" "}
-												{campaign.createdAt
-													? new Date(campaign.createdAt).toLocaleDateString()
-													: "-"}
-											</Box>
-											{campaign.startedAt && (
+									{visibleColumns.includes("status") && (
+										<TableCell>
+											<Chip
+												label={
+													campaign.status.charAt(0).toUpperCase() +
+													campaign.status.slice(1)
+												}
+												size="small"
+												sx={{
+													...getStatusStyles(campaign.status),
+													fontWeight: 500,
+													borderRadius: "4px",
+												}}
+											/>
+										</TableCell>
+									)}
+									{visibleColumns.includes("contacts") && (
+										<TableCell>
+											<Typography
+												variant="body2"
+												color="text.secondary"
+											>
+												{campaign.recipients?.[0]?.name || "N/A"}
+											</Typography>
+										</TableCell>
+									)}
+									{visibleColumns.includes("tags") && (
+										<TableCell>
+											<Stack
+												direction="row"
+												spacing={0.5}
+											>
+												{campaign.tags?.slice(0, 2).map((tag) => (
+													<Chip
+														key={tag}
+														label={tag}
+														size="small"
+														variant="outlined"
+														sx={{
+															borderRadius: "4px",
+															height: 20,
+															fontSize: "0.65rem",
+														}}
+													/>
+												))}
+												{campaign.tags && campaign.tags.length > 2 && (
+													<Typography
+														variant="caption"
+														color="text.secondary"
+													>
+														+{campaign.tags.length - 2}
+													</Typography>
+												)}
+											</Stack>
+										</TableCell>
+									)}
+									{visibleColumns.includes("timestamps") && (
+										<TableCell>
+											<Box
+												sx={{ fontSize: "0.75rem", color: "text.secondary" }}
+											>
 												<Box>
-													Started:{" "}
-													{new Date(campaign.startedAt).toLocaleDateString()}
+													Created:{" "}
+													{campaign.createdAt
+														? new Date(campaign.createdAt).toLocaleDateString()
+														: "-"}
 												</Box>
-											)}
-										</Box>
-									</TableCell>
-									<TableCell>
-										<Box sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
-											<Box>
-												Views: {campaign.stats?.opened.toLocaleString()}
+												{campaign.startedAt && (
+													<Box>
+														Started:{" "}
+														{new Date(campaign.startedAt).toLocaleDateString()}
+													</Box>
+												)}
 											</Box>
-											<Box>
-												Clicks: {campaign.stats?.clicked.toLocaleString()}
+										</TableCell>
+									)}
+									{visibleColumns.includes("stats") && (
+										<TableCell>
+											<Box
+												sx={{ fontSize: "0.75rem", color: "text.secondary" }}
+											>
+												<Box>
+													Views: {campaign.stats?.opened.toLocaleString()}
+												</Box>
+												<Box>
+													Clicks: {campaign.stats?.clicked.toLocaleString()}
+												</Box>
+												<Box>
+													Sent: {campaign.stats?.sent}/{campaign.stats?.total}
+												</Box>
+												<Box>Bounces: {campaign.stats?.bounced}</Box>
 											</Box>
-											<Box>
-												Sent: {campaign.stats?.sent}/{campaign.stats?.total}
-											</Box>
-											<Box>Bounces: {campaign.stats?.bounced}</Box>
-										</Box>
-									</TableCell>
+										</TableCell>
+									)}
 									<TableCell align="right">
 										<Stack
 											direction="row"

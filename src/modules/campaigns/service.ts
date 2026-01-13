@@ -191,18 +191,55 @@ export async function getCampaigns(
 ): Promise<Campaign[]> {
 	try {
 		// For development: Use mock data
-		const mockData = getMockCampaigns();
+		let filteredData = getMockCampaigns();
 
-		if (filters?.searchQuery) {
-			const query = filters.searchQuery.toLowerCase();
-			return mockData.filter(
-				(c) =>
-					c.name.toLowerCase().includes(query) ||
-					c.subject.toLowerCase().includes(query)
-			);
+		if (filters) {
+			const { searchQuery, status, contactListId, tags, dateRange } = filters;
+
+			// Filter by search query (name or subject)
+			if (searchQuery) {
+				const query = searchQuery.toLowerCase();
+				filteredData = filteredData.filter(
+					(c) =>
+						c.name.toLowerCase().includes(query) ||
+						c.subject.toLowerCase().includes(query)
+				);
+			}
+
+			// Filter by status (multiple)
+			if (status && status.length > 0) {
+				filteredData = filteredData.filter((c) => status.includes(c.status));
+			}
+
+			// Filter by contact list
+			if (contactListId) {
+				filteredData = filteredData.filter((c) =>
+					c.recipients?.some((r) => String(r.id) === String(contactListId))
+				);
+			}
+
+			// Filter by tags (any match)
+			if (tags && tags.length > 0) {
+				filteredData = filteredData.filter((c) =>
+					c.tags?.some((tag) => tags.includes(tag))
+				);
+			}
+
+			// Filter by date range (scheduleAt)
+			if (dateRange) {
+				const start = new Date(dateRange.start).getTime();
+				const end = new Date(dateRange.end || new Date()).getTime();
+				filteredData = filteredData.filter((c) => {
+					if (!c.scheduleAt && !c.scheduledAt) return false;
+					const campaignDate = new Date(
+						c.scheduleAt || c.scheduledAt!
+					).getTime();
+					return campaignDate >= start && campaignDate <= end;
+				});
+			}
 		}
 
-		return mockData;
+		return filteredData;
 
 		/* Later: API implementation
 		const query: any = {
