@@ -30,7 +30,9 @@ export default function TemplateFilters({
 	};
 
 	return (
-		<Box sx={{ mb: 3 }}>
+		<Box
+			sx={{ borderBottom: "1px solid #e0e0e0", py: 2, px: 3, bgcolor: "white" }}
+		>
 			<Stack
 				direction="row"
 				justifyContent="space-between"

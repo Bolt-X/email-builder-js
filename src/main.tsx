@@ -13,6 +13,7 @@ import TemplateDetailPage from "./App/TemplateDetailPage";
 import CampaignListPage from "./App/CampaignListPage";
 import CampaignEditPage from "./modules/campaigns/components/CampaignEditPage/CampaignEditPage";
 import ContactListPage from "./modules/contacts/components/ContactListPage/ContactListPage";
+import SegmentsTable from "./modules/contacts/components/ContactListPage/SegmentsTable";
 import ContactListDetailPage from "./modules/contacts/components/ContactListDetailPage";
 import AnalyticsDashboard from "./modules/analytics/components/AnalyticsDashboard";
 import AuthLayout from "./components/layouts/AuthLayout";
@@ -80,7 +81,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 							<Route path="contacts">
 								<Route
 									index
-									element={<ContactListPage tab="contacts" />}
+									element={<ContactListPage />}
 								/>
 								<Route
 									path=":id"
@@ -89,7 +90,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 							</Route>
 							<Route
 								path="segments"
-								element={<ContactListPage tab="segments" />}
+								element={<SegmentsTable />}
 							/>
 							<Route
 								path="settings"

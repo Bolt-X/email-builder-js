@@ -19,15 +19,8 @@ import SegmentsTable from "./SegmentsTable";
 import { Add } from "@mui/icons-material";
 import { ContactList } from "../../types";
 
-type TabValue = "contacts" | "segments";
-
-export default function ContactListPage({
-	tab = "contacts",
-}: {
-	tab?: TabValue;
-}) {
+export default function ContactListPage() {
 	const contactLists = useContactLists();
-	const segments = useSegments();
 
 	const [formDrawerOpen, setFormDrawerOpen] = useState(false);
 	const [formMode, setFormMode] = useState<"create" | "edit">("create");
@@ -57,47 +50,41 @@ export default function ContactListPage({
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				mb={3}
+				sx={{ px: 3, py: "20px", bgcolor: "white" }}
 			>
 				<Typography
-					variant="h5"
+					variant="h4"
 					sx={{ fontWeight: 800, color: "text.primary" }}
 				>
-					{tab === "contacts" ? "Contact list" : "Segments"}
+					Contact list
 				</Typography>
 
-				{tab === "contacts" && (
-					<Button
-						variant="contained"
-						startIcon={<Add />}
-						onClick={handleCreate}
-						sx={{
-							borderRadius: 10,
-							textTransform: "none",
-							px: 3,
-							height: 44,
-							fontWeight: 700,
-						}}
-					>
-						Create list
-					</Button>
-				)}
+				<Button
+					variant="contained"
+					startIcon={<Add />}
+					onClick={handleCreate}
+					sx={{
+						borderRadius: 10,
+						textTransform: "none",
+						px: 3,
+						height: 44,
+						fontWeight: 700,
+					}}
+				>
+					Create list
+				</Button>
 			</Stack>
 
 			{/* Content */}
-			{tab === "contacts" ? (
-				<ContactListTable
-					formDrawerOpen={formDrawerOpen}
-					setFormDrawerOpen={setFormDrawerOpen}
-					formMode={formMode}
-					setFormMode={setFormMode}
-					editingList={editingList}
-					setEditingList={setEditingList}
-					onEdit={handleEdit}
-				/>
-			) : (
-				<SegmentsTable />
-			)}
+			<ContactListTable
+				formDrawerOpen={formDrawerOpen}
+				setFormDrawerOpen={setFormDrawerOpen}
+				formMode={formMode}
+				setFormMode={setFormMode}
+				editingList={editingList}
+				setEditingList={setEditingList}
+				onEdit={handleEdit}
+			/>
 		</Box>
 	);
 }

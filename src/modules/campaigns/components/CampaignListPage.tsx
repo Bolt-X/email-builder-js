@@ -108,6 +108,13 @@ export default function CampaignListPage() {
 					variant="contained"
 					startIcon={<Add />}
 					onClick={() => navigate("/campaigns/new")}
+					sx={{
+						borderRadius: 10,
+						textTransform: "none",
+						px: 3,
+						height: 44,
+						fontWeight: 700,
+					}}
 				>
 					Create Campaign
 				</Button>

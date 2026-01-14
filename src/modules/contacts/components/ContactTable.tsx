@@ -126,7 +126,7 @@ export default function ContactTable({
 						<TableRow>
 							<TableCell
 								padding="checkbox"
-								sx={{ borderBottom: "1px solid #E5E7EB" }}
+								sx={{ borderBottom: "1px solid #E5E7EB", paddingX: 3 }}
 							>
 								<Checkbox
 									indeterminate={isIndeterminate}
@@ -220,6 +220,7 @@ export default function ContactTable({
 										fontWeight: 700,
 										color: "text.secondary",
 										borderBottom: "1px solid #E5E7EB",
+										paddingX: 3,
 									}}
 									align="right"
 								>
@@ -240,7 +241,10 @@ export default function ContactTable({
 									hover
 									selected={isSelected}
 								>
-									<TableCell padding="checkbox">
+									<TableCell
+										padding="checkbox"
+										sx={{ paddingX: 3 }}
+									>
 										<Checkbox
 											checked={isSelected}
 											onChange={() => onSelectOne(contact.id)}
@@ -366,7 +370,10 @@ export default function ContactTable({
 										</TableCell>
 									)}
 									{visibleColumns.includes("action") && (
-										<TableCell align="right">
+										<TableCell
+											align="right"
+											sx={{ paddingX: 3 }}
+										>
 											<Stack
 												direction="row"
 												spacing={0.5}
@@ -413,6 +420,7 @@ export default function ContactTable({
 					onRowsPerPageChange={(e) =>
 						onRowsPerPageChange?.(parseInt(e.target.value, 10))
 					}
+					sx={{ px: 3 }}
 				/>
 			</TableContainer>
 

@@ -302,7 +302,7 @@ export default function ContactListTable({
 				) : (
 					<Toolbar
 						sx={{
-							px: "0 !important",
+							px: 3,
 							width: "100%",
 							justifyContent: "space-between",
 						}}
@@ -468,7 +468,10 @@ export default function ContactListTable({
 				<Table>
 					<TableHead sx={{ bgcolor: "#F9FAFB" }}>
 						<TableRow>
-							<TableCell padding="checkbox">
+							<TableCell
+								padding="checkbox"
+								sx={{ paddingX: 3 }}
+							>
 								<Checkbox
 									indeterminate={isIndeterminate}
 									checked={isAllSelected}
@@ -530,7 +533,7 @@ export default function ContactListTable({
 								Date created
 							</TableCell>
 							<TableCell
-								sx={{ fontWeight: 700, color: "text.secondary" }}
+								sx={{ fontWeight: 700, color: "text.secondary", paddingX: 3 }}
 								align="right"
 							>
 								Action
@@ -556,6 +559,7 @@ export default function ContactListTable({
 									<TableCell
 										padding="checkbox"
 										onClick={(e) => e.stopPropagation()}
+										sx={{ paddingX: 3 }}
 									>
 										<Checkbox
 											checked={isSelected}
@@ -633,6 +637,7 @@ export default function ContactListTable({
 									<TableCell
 										align="right"
 										onClick={(e) => e.stopPropagation()}
+										sx={{ paddingX: 3 }}
 									>
 										<Stack
 											direction="row"
@@ -679,6 +684,7 @@ export default function ContactListTable({
 					onRowsPerPageChange={(e) =>
 						setRowsPerPage(parseInt(e.target.value, 10))
 					}
+					sx={{ px: 3 }}
 				/>
 			</TableContainer>
 

@@ -120,12 +120,15 @@ export default function TemplateListTable({
 			<TableContainer
 				component={Paper}
 				elevation={0}
-				sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1 }}
+				sx={{ border: "1px solid", borderColor: "divider", borderRadius: 0 }}
 			>
 				<Table>
 					<TableHead sx={{ bgcolor: "grey.50" }}>
 						<TableRow>
-							<TableCell padding="checkbox">
+							<TableCell
+								padding="checkbox"
+								sx={{ paddingX: 3 }}
+							>
 								<Checkbox
 									indeterminate={
 										selectedRows.length > 0 &&
@@ -143,7 +146,7 @@ export default function TemplateListTable({
 							<TableCell sx={{ fontWeight: 600 }}>Campaign ID</TableCell>
 							<TableCell sx={{ fontWeight: 600 }}>Timestamps</TableCell>
 							<TableCell
-								sx={{ fontWeight: 600 }}
+								sx={{ fontWeight: 600, paddingX: 3 }}
 								align="right"
 							>
 								Action
@@ -164,6 +167,7 @@ export default function TemplateListTable({
 									<TableCell
 										padding="checkbox"
 										onClick={(e) => e.stopPropagation()}
+										sx={{ paddingX: 3 }}
 									>
 										<Checkbox
 											checked={isSelected}
@@ -229,7 +233,10 @@ export default function TemplateListTable({
 											</Box>
 										</Box>
 									</TableCell>
-									<TableCell align="right">
+									<TableCell
+										align="right"
+										sx={{ paddingX: 3 }}
+									>
 										<Stack
 											direction="row"
 											spacing={0.5}
@@ -275,6 +282,7 @@ export default function TemplateListTable({
 					page={page}
 					onPageChange={handleChangePage}
 					onRowsPerPageChange={handleChangeRowsPerPage}
+					sx={{ px: 3 }}
 				/>
 			</TableContainer>
 

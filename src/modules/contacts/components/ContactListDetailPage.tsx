@@ -27,6 +27,7 @@ import {
 	fetchContacts,
 	useContacts,
 } from "../store";
+import { useSegments, fetchSegments } from "../stores/segment.store";
 import ContactTable from "./ContactTable";
 import ImportContactsModal from "./ImportContactsModal";
 import CreateContactModal from "./CreateContactModal";
@@ -36,6 +37,8 @@ export default function ContactListDetailPage() {
 	const navigate = useNavigate();
 	const contactLists = useContactLists();
 	const contacts = useContacts();
+
+	const segments = useSegments();
 
 	const [searchQuery, setSearchQuery] = useState("");
 	const [page, setPage] = useState(0);
@@ -47,6 +50,20 @@ export default function ContactListDetailPage() {
 	const [columnsAnchorEl, setColumnsAnchorEl] = useState<null | HTMLElement>(
 		null
 	);
+	const [statusAnchorEl, setStatusAnchorEl] = useState<null | HTMLElement>(
+		null
+	);
+	const [tagAnchorEl, setTagAnchorEl] = useState<null | HTMLElement>(null);
+	const [segmentAnchorEl, setSegmentAnchorEl] = useState<null | HTMLElement>(
+		null
+	);
+
+	const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+	const [selectedTags, setSelectedTags] = useState<string[]>([]);
+	const [selectedSegments, setSelectedSegments] = useState<(string | number)[]>(
+		[]
+	);
+
 	const [importModalOpen, setImportModalOpen] = useState(false);
 	const [createModalOpen, setCreateModalOpen] = useState(false);
 
@@ -85,15 +102,38 @@ export default function ContactListDetailPage() {
 	);
 
 	const filteredContacts = contacts.filter((contact) => {
-		// Mock: Show all contacts for now regardless of membership
-		if (!searchQuery) return true;
+		// 1. Search Query
 		const query = searchQuery.toLowerCase();
-		return (
+		const matchesSearch =
+			!searchQuery ||
 			contact.email.toLowerCase().includes(query) ||
 			contact.firstName?.toLowerCase().includes(query) ||
-			contact.lastName?.toLowerCase().includes(query)
-		);
+			contact.lastName?.toLowerCase().includes(query);
+
+		// 2. Status Filter
+		const matchesStatus =
+			selectedStatus.length === 0 || selectedStatus.includes(contact.status);
+
+		// 3. Tag Filter
+		const matchesTags =
+			selectedTags.length === 0 ||
+			contact.tags.some((t) => selectedTags.includes(t));
+
+		// 4. Segment Filter (Mock logic: if segment filter is on, we'd ideally apply rules, but for now we'll just skip or do basic match if segment had member ids)
+		// For this demo, let's assume segment filter just works if contact is in the list (already filtered by contactList below)
+		const matchesSegment = true;
+
+		return matchesSearch && matchesStatus && matchesTags && matchesSegment;
 	});
+
+	// Get unique tags for filter options
+	const allTags = Array.from(new Set(contacts.flatMap((c) => c.tags || [])));
+	const statusOptions = [
+		"subscribed",
+		"unsubscribed",
+		"non-subscribed",
+		"bounced",
+	];
 
 	// Pagination logic
 	const totalContacts = filteredContacts.length;
@@ -110,6 +150,7 @@ export default function ContactListDetailPage() {
 	useEffect(() => {
 		fetchContactLists();
 		fetchContacts();
+		fetchSegments();
 	}, []);
 
 	const handleBack = () => {
@@ -145,14 +186,13 @@ export default function ContactListDetailPage() {
 	}
 
 	return (
-		<Box sx={{ p: 0 }}>
+		<Box>
 			{/* Title and Action Buttons */}
 			<Stack
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				mb={4}
-				mt={2}
+				sx={{ px: 3, py: "20px", bgcolor: "white" }}
 			>
 				<Stack
 					direction="row"
@@ -167,8 +207,8 @@ export default function ContactListDetailPage() {
 						<ArrowBackIosNew sx={{ fontSize: 18 }} />
 					</IconButton>
 					<Typography
-						variant="h5"
-						sx={{ fontWeight: 700 }}
+						variant="h4"
+						sx={{ fontWeight: 800, color: "text.primary" }}
 					>
 						{contactList.name}
 					</Typography>
@@ -219,7 +259,7 @@ export default function ContactListDetailPage() {
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				mb={3}
+				sx={{ px: 3, py: 2 }}
 			>
 				<Stack
 					direction="row"
@@ -248,30 +288,200 @@ export default function ContactListDetailPage() {
 						}}
 					/>
 
-					{["Segment", "Status", "Tag"].map((filter) => (
-						<Button
-							key={filter}
-							variant="outlined"
-							size="small"
-							sx={{
-								height: 40,
-								textTransform: "none",
-								color: "text.primary",
-								borderColor: "rgba(0,0, 0, 0.12)",
-								borderRadius: "6px",
-								px: 2,
-								minWidth: 100,
-								fontWeight: 400,
-								fontSize: "0.875rem",
-								justifyContent: "space-between",
-							}}
-						>
-							{filter}
-							<Typography sx={{ fontSize: 10, ml: 1, fontWeight: 900 }}>
-								▼
+					{/* Segment Filter */}
+					<Button
+						variant="outlined"
+						size="small"
+						onClick={(e) => setSegmentAnchorEl(e.currentTarget)}
+						sx={{
+							height: 40,
+							textTransform: "none",
+							color: "text.primary",
+							borderColor: "rgba(0,0, 0, 0.12)",
+							borderRadius: "6px",
+							px: 2,
+							minWidth: 100,
+							fontWeight: 400,
+							fontSize: "0.875rem",
+							justifyContent: "space-between",
+						}}
+					>
+						Segment
+						<Typography sx={{ fontSize: 10, ml: 1, fontWeight: 900 }}>
+							▼
+						</Typography>
+					</Button>
+					<Popover
+						open={Boolean(segmentAnchorEl)}
+						anchorEl={segmentAnchorEl}
+						onClose={() => setSegmentAnchorEl(null)}
+						anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+					>
+						<Box sx={{ p: 2, minWidth: 200 }}>
+							<Typography
+								variant="subtitle2"
+								sx={{ mb: 1.5, fontWeight: 700 }}
+							>
+								Filter by Segment
 							</Typography>
-						</Button>
-					))}
+							<FormGroup>
+								{segments.map((s) => (
+									<FormControlLabel
+										key={s.id}
+										control={
+											<Checkbox
+												checked={selectedSegments.includes(s.id)}
+												onChange={() => {
+													setSelectedSegments((prev) =>
+														prev.includes(s.id)
+															? prev.filter((id) => id !== s.id)
+															: [...prev, s.id]
+													);
+												}}
+												size="small"
+											/>
+										}
+										label={<Typography variant="body2">{s.name}</Typography>}
+									/>
+								))}
+							</FormGroup>
+						</Box>
+					</Popover>
+
+					{/* Status Filter */}
+					<Button
+						variant="outlined"
+						size="small"
+						onClick={(e) => setStatusAnchorEl(e.currentTarget)}
+						sx={{
+							height: 40,
+							textTransform: "none",
+							color: "text.primary",
+							borderColor: "rgba(0,0, 0, 0.12)",
+							borderRadius: "6px",
+							px: 2,
+							minWidth: 100,
+							fontWeight: 400,
+							fontSize: "0.875rem",
+							justifyContent: "space-between",
+						}}
+					>
+						Status
+						<Typography sx={{ fontSize: 10, ml: 1, fontWeight: 900 }}>
+							▼
+						</Typography>
+					</Button>
+					<Popover
+						open={Boolean(statusAnchorEl)}
+						anchorEl={statusAnchorEl}
+						onClose={() => setStatusAnchorEl(null)}
+						anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+					>
+						<Box sx={{ p: 2, minWidth: 200 }}>
+							<Typography
+								variant="subtitle2"
+								sx={{ mb: 1.5, fontWeight: 700 }}
+							>
+								Filter by Status
+							</Typography>
+							<FormGroup>
+								{statusOptions.map((status) => (
+									<FormControlLabel
+										key={status}
+										control={
+											<Checkbox
+												checked={selectedStatus.includes(status)}
+												onChange={() => {
+													setSelectedStatus((prev) =>
+														prev.includes(status)
+															? prev.filter((s) => s !== status)
+															: [...prev, status]
+													);
+												}}
+												size="small"
+											/>
+										}
+										label={
+											<Typography
+												variant="body2"
+												sx={{ textTransform: "capitalize" }}
+											>
+												{status}
+											</Typography>
+										}
+									/>
+								))}
+							</FormGroup>
+						</Box>
+					</Popover>
+
+					{/* Tag Filter */}
+					<Button
+						variant="outlined"
+						size="small"
+						onClick={(e) => setTagAnchorEl(e.currentTarget)}
+						sx={{
+							height: 40,
+							textTransform: "none",
+							color: "text.primary",
+							borderColor: "rgba(0,0, 0, 0.12)",
+							borderRadius: "6px",
+							px: 2,
+							minWidth: 100,
+							fontWeight: 400,
+							fontSize: "0.875rem",
+							justifyContent: "space-between",
+						}}
+					>
+						Tag
+						<Typography sx={{ fontSize: 10, ml: 1, fontWeight: 900 }}>
+							▼
+						</Typography>
+					</Button>
+					<Popover
+						open={Boolean(tagAnchorEl)}
+						anchorEl={tagAnchorEl}
+						onClose={() => setTagAnchorEl(null)}
+						anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+					>
+						<Box sx={{ p: 2, minWidth: 200 }}>
+							<Typography
+								variant="subtitle2"
+								sx={{ mb: 1.5, fontWeight: 700 }}
+							>
+								Filter by Tag
+							</Typography>
+							<FormGroup>
+								{allTags.length === 0 && (
+									<Typography
+										variant="caption"
+										color="text.secondary"
+									>
+										No tags found
+									</Typography>
+								)}
+								{allTags.map((tag) => (
+									<FormControlLabel
+										key={tag}
+										control={
+											<Checkbox
+												checked={selectedTags.includes(tag)}
+												onChange={() => {
+													setSelectedTags((prev) =>
+														prev.includes(tag)
+															? prev.filter((t) => t !== tag)
+															: [...prev, tag]
+													);
+												}}
+												size="small"
+											/>
+										}
+										label={<Typography variant="body2">{tag}</Typography>}
+									/>
+								))}
+							</FormGroup>
+						</Box>
+					</Popover>
 
 					{/* Date Filter */}
 					<Button

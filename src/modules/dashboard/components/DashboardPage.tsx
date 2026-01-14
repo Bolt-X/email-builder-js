@@ -1,10 +1,22 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Stack } from "@mui/material";
 
 export default function DashboardPage() {
 	return (
 		<Box>
-			<Typography variant="h4">Dashboard</Typography>
+			<Stack
+				direction="row"
+				justifyContent="space-between"
+				alignItems="center"
+				sx={{ px: 3, py: "20px", bgcolor: "white", mb: 2 }}
+			>
+				<Typography
+					variant="h4"
+					sx={{ fontWeight: 800, color: "text.primary" }}
+				>
+					Dashboard
+				</Typography>
+			</Stack>
 		</Box>
 	);
 }

@@ -12,19 +12,34 @@ export default function SegmentsTable() {
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				mb={3}
+				sx={{ px: 3, py: "20px", bgcolor: "white", mb: 2 }}
 			>
-				<Typography variant="h6">Segments</Typography>
+				<Typography
+					variant="h4"
+					sx={{ fontWeight: 800, color: "text.primary" }}
+				>
+					Segments
+				</Typography>
 				<Button
 					variant="contained"
 					startIcon={<Add />}
+					sx={{
+						borderRadius: 10,
+						textTransform: "none",
+						px: 3,
+						height: 44,
+						fontWeight: 700,
+					}}
 				>
 					Create segment
 				</Button>
 			</Stack>
 
 			{/* TODO: Implement segments table */}
-			<Typography variant="body2" color="text.secondary">
+			<Typography
+				variant="body2"
+				color="text.secondary"
+			>
 				Segments feature coming soon. This will allow you to create dynamic
 				filters for contacts.
 			</Typography>

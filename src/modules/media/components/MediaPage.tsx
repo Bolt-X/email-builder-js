@@ -1,13 +1,28 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Stack } from "@mui/material";
 
 export default function MediaPage() {
 	return (
 		<Box>
-			<Typography variant="h4" sx={{ mb: 3 }}>Media Library</Typography>
-			<Box>
+			<Stack
+				direction="row"
+				justifyContent="space-between"
+				alignItems="center"
+				sx={{ px: 3, py: "20px", bgcolor: "white", mb: 2 }}
+			>
+				<Typography
+					variant="h4"
+					sx={{ fontWeight: 800, color: "text.primary" }}
+				>
+					Media Library
+				</Typography>
+			</Stack>
+
+			<Box sx={{ px: 3 }}>
 				{/* Media content placeholder */}
-				<Typography color="text.secondary">Media library coming soon...</Typography>
+				<Typography color="text.secondary">
+					Media library coming soon...
+				</Typography>
 			</Box>
 		</Box>
 	);

@@ -57,11 +57,11 @@ export default function TemplatesPage() {
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				mb={3}
+				sx={{ px: 3, py: "20px", bgcolor: "white" }}
 			>
 				<Typography
 					variant="h4"
-					fontWeight="bold"
+					sx={{ fontWeight: 800, color: "text.primary" }}
 				>
 					Templates
 				</Typography>
@@ -69,6 +69,13 @@ export default function TemplatesPage() {
 					variant="contained"
 					startIcon={<Add />}
 					onClick={handleCreateTemplate}
+					sx={{
+						borderRadius: 10,
+						textTransform: "none",
+						px: 3,
+						height: 44,
+						fontWeight: 700,
+					}}
 				>
 					Create Template
 				</Button>
