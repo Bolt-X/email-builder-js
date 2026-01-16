@@ -1,54 +1,136 @@
 import {
-	BarChartOutlined,
-	Block,
-	ContentCopy,
-	Delete,
-	Edit,
-	MoreHoriz,
-	RocketLaunchOutlined,
+  Block,
+  CloseOutlined,
+  ContentCopy,
+  DeleteOutlined,
+  EditOutlined,
+  LeaderboardOutlined,
+  MoreHoriz,
+  PreviewOutlined,
+  RefreshOutlined,
+  RocketLaunchOutlined,
 } from "@mui/icons-material";
 import {
-	Box,
-	Checkbox,
-	Chip,
-	IconButton,
-	Menu,
-	MenuItem,
-	Pagination,
-	Paper,
-	Select,
-	Stack,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
-	Tooltip,
-	Typography
+  Box,
+  Button,
+  Checkbox,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Menu,
+  MenuItem,
+  Pagination,
+  Paper,
+  Select,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { startCampaign, stopCampaign } from "../service";
 import {
-	deleteCampaignAction,
-	duplicateCampaignAction,
-	useVisibleColumns,
+  deleteCampaignAction,
+  duplicateCampaignAction,
+  useVisibleColumns,
 } from "../stores/campaign.metadata.store";
 import { Campaign } from "../types";
+import { updateCampaign } from "../../../services/campaign";
+import { useUpdateCampaign } from "../../../hooks/useCampain";
 
 interface CampaignListTableProps {
-  campaigns: Campaign[];
+  campaigns: any[];
+  loading: boolean;
 }
+
+const ModalRenameCampaign = ({
+  open,
+  onClose,
+  campaign,
+}: {
+  open: boolean;
+  onClose: () => void;
+  campaign: Campaign;
+}) => {
+  const [newName, setNewName] = useState("");
+  const { mutate: updateCampaignMutation } = useUpdateCampaign();
+  const handleRename = async() => {
+    updateCampaignMutation({ slug: campaign?.slug, payload: {...campaign, name: newName } });
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <Box
+        py={2}
+        pl={3}
+        pr={2}
+        display={"flex"}
+        flexDirection="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ borderBottom: "1px solid #E5E7EB" }}
+      >
+        <Typography variant="h6" fontWeight={600}>
+          Rename Campaign
+        </Typography>
+        <IconButton onClick={onClose}>
+          <CloseOutlined />
+        </IconButton>
+      </Box>
+
+      <DialogContent sx={{ px: 3, pt: 3 }}>
+        <TextField
+          label="Campaign name"
+          fullWidth
+          size="small"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+        />
+      </DialogContent>
+
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose} color="inherit">
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleRename}
+          disabled={!newName.trim()}
+        >
+          Rename
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 export default function CampaignListTable({
   campaigns,
+  loading,
 }: CampaignListTableProps) {
   const navigate = useNavigate();
   const visibleColumns = useVisibleColumns();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedId, setSelectedId] = useState<string | number | null>(null);
-  const [selectedRows, setSelectedRows] = useState<(string | number)[]>([]);
+  const [selectedRows, setSelectedRows] = useState<(string)[]>([]);
+  const [menuCampaign, setMenuCampaign] = useState<Campaign | null>(null);
+  //Modal action state
+  const [openModalRename, setOpenModalRename] = useState(false);
+  const [campaignToRename, setCampaignToRename] = useState<any | null>(
+    null
+  );
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -61,110 +143,297 @@ export default function CampaignListTable({
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
-    id: string | number
+    id: string | number,
+    campaign: Campaign
   ) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
     setSelectedId(id);
+    setMenuCampaign(campaign);
   };
 
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedId(null);
+    setMenuCampaign(null);
   };
 
   // Status Badge Styles
   const getStatusStyles = (status: string) => {
     switch (status) {
       case "running":
-        return { bgcolor: "#0091FF", color: "white" };
+        return { bgcolor: "brand.primary.info", color: "white" };
       case "draft":
-        return { bgcolor: "#F5F5F5", color: "rgba(0,0,0,0.87)" };
+        return { bgcolor: "neutral.black.5", color: "neutral.black.100" };
       case "finished":
-        return { bgcolor: "#2FB344", color: "white" };
+        return { bgcolor: "green.800", color: "white" };
       case "scheduled":
-        return { bgcolor: "#FF9100", color: "white" };
+        return { bgcolor: "orange.800", color: "white" };
       case "cancelled":
-        return { bgcolor: "#F44336", color: "white" };
+        return { bgcolor: "info.error", color: "white" };
       default:
-        return { bgcolor: "#757575", color: "white" };
+        return { bgcolor: "neutral.black.5", color: "neutral.black.100" };
     }
   };
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const visibleCampaignIds = visibleCampaigns.map((c) => c.slug);
     if (event.target.checked) {
-      setSelectedRows(campaigns.map((c) => c.id));
+      // Add all visible campaigns to selection (avoid duplicates)
+      setSelectedRows((prev) => {
+        const newSelection = [...prev];
+        visibleCampaignIds.forEach((slug) => {
+          if (!newSelection.includes(slug)) {
+            newSelection.push(slug);
+          }
+        });
+        return newSelection;
+      });
     } else {
-      setSelectedRows([]);
+      // Remove only visible campaigns from selection
+      setSelectedRows((prev) =>
+        prev.filter((slug) => !visibleCampaignIds.includes(slug))
+      );
+    }
+  };
+
+  const handleSelectAllButton = () => {
+    const visibleCampaignIds = visibleCampaigns.map((c) => c.slug);
+    const allVisibleSelected = visibleCampaignIds.every((slug) =>
+      selectedRows.includes(slug)
+    );
+
+    if (allVisibleSelected) {
+      // Deselect all visible campaigns
+      setSelectedRows((prev) =>
+        prev.filter((slug) => !visibleCampaignIds.includes(slug))
+      );
+    } else {
+      // Select all visible campaigns (avoid duplicates)
+      setSelectedRows((prev) => {
+        const newSelection = [...prev];
+        visibleCampaignIds.forEach((slug) => {
+          if (!newSelection.includes(slug)) {
+            newSelection.push(slug);
+          }
+        });
+        return newSelection;
+      });
     }
   };
 
   const handleSelectRow = (
     event: React.ChangeEvent<HTMLInputElement>,
-    id: string | number
+    slug: string
   ) => {
     event.stopPropagation();
     if (event.target.checked) {
-      setSelectedRows((prev) => [...prev, id]);
+      setSelectedRows((prev) => [...prev, slug]);
     } else {
-      setSelectedRows((prev) => prev.filter((rowId) => rowId !== id));
+      setSelectedRows((prev) => prev.filter((rowSlug) => rowSlug !== slug));
     }
+  };
+
+  const handleCancelSelection = () => {
+    setSelectedRows([]);
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      for (const slug of selectedRows) {
+        await deleteCampaignAction(slug);
+      }
+      setSelectedRows([]);
+    } catch (error) {
+      console.error("Failed to delete campaigns:", error);
+    }
+  };
+
+  const handleBulkRename = (campaign: Campaign) => {
+    setCampaignToRename(campaign);
+    setOpenModalRename(true);
   };
 
   const handleAction = async (
     e: React.MouseEvent,
     action: string,
-    id: string | number
+    slug: string
   ) => {
     e.stopPropagation();
     try {
-      if (action === "start") await startCampaign(id, true);
-      if (action === "stop") await stopCampaign(id);
-      if (action === "analytics") navigate(`/campaigns/${id}/analytics`);
-      // Refresh list (simplified for now)
+      if (action === "start") await startCampaign(slug, true);
+      if (action === "stop") await stopCampaign(slug);
+      if (action === "analytics") navigate(`/campaigns/${slug}/analytics`);
       window.location.reload();
     } catch (error) {
       console.error(`Failed to perform ${action}:`, error);
     }
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const paginatedCampaigns = campaigns.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
   const start = (page - 1) * rowsPerPage;
   const end = start + rowsPerPage;
 
   const visibleCampaigns = campaigns.slice(start, end);
 
+  // Calculate selection state for current page
+  const visibleCampaignIds = visibleCampaigns.map((c) => c.slug);
+  const selectedVisibleCount = visibleCampaignIds.filter((slug) =>
+    selectedRows.includes(slug)
+  ).length;
+  const allVisibleSelected =
+    visibleCampaigns.length > 0 &&
+    selectedVisibleCount === visibleCampaigns.length;
+  const someVisibleSelected =
+    selectedVisibleCount > 0 && selectedVisibleCount < visibleCampaigns.length;
+
+  // Refs for selection bar and pagination
+  const selectionBarRef = useRef<HTMLDivElement>(null);
+  const paginationRef = useRef<HTMLDivElement>(null);
+
   return (
-    <Box mt={[0, "0rem !important"]}>
-      <TableContainer component={Paper} elevation={0}>
-        <Table>
+    <Box
+      mt={[0, "0rem !important"]}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "calc(100vh - 159px)",
+        position: "relative",
+      }}
+    >
+      {/* Modal Rename Campaign */}
+      <ModalRenameCampaign
+        open={openModalRename}
+        onClose={() => setOpenModalRename(false)}
+        campaign={campaignToRename}
+      />
+      {/* Selection Bar */}
+      {selectedRows.length > 0 && (
+        <Box
+          ref={selectionBarRef}
+          sx={{
+            bgcolor: "brand.primary.600",
+            color: "white",
+            px: 3,
+            py: 1.5,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {selectedRows.length} item{selectedRows.length > 1 ? "s" : ""}{" "}
+              selected
+            </Typography>
+            <Button
+              size="small"
+              onClick={handleSelectAllButton}
+              sx={{
+                color: "white",
+                textTransform: "none",
+                fontWeight: 500,
+                "&:hover": {
+                  bgcolor: "brand.primary.100",
+                  color: "brand.primary.600",
+                },
+              }}
+            >
+              Select all
+            </Button>
+          </Stack>
+          <Stack direction="row" spacing={2} alignItems="center">
+            {selectedRows.length === 1 && (
+              <Button
+                size="small"
+                startIcon={<EditOutlined sx={{ fontSize: 18 }} />}
+                onClick={() =>
+                  handleBulkRename(
+                    campaigns.find((c) => c.slug === selectedRows[0]) || null
+                  )
+                }
+                sx={{
+                  color: "white",
+                  textTransform: "none",
+                  fontWeight: 500,
+                  "&:hover": {
+                    bgcolor: "brand.primary.100",
+                    color: "brand.primary.600",
+                  },
+                }}
+              >
+                Rename
+              </Button>
+            )}
+            <Button
+              size="small"
+              startIcon={<DeleteOutlined sx={{ fontSize: 18 }} />}
+              onClick={handleBulkDelete}
+              sx={{
+                color: "white",
+                textTransform: "none",
+                fontWeight: 500,
+                "&:hover": {
+                  bgcolor: "brand.primary.100",
+                  color: "brand.primary.600",
+                },
+              }}
+            >
+              Delete
+            </Button>
+            <Button
+              size="small"
+              onClick={handleCancelSelection}
+              sx={{
+                color: "white",
+                textTransform: "none",
+                fontWeight: 500,
+                "&:hover": {
+                  bgcolor: "brand.primary.100",
+                  color: "brand.primary.600",
+                },
+              }}
+            >
+              Cancel
+            </Button>
+          </Stack>
+        </Box>
+      )}
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{
+          flex: 1,
+          overflow: "auto",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          m: 0,
+          p: 0,
+
+          "&::-webkit-scrollbar-button": {
+            display: "none",
+          },
+          "&::-webkit-scrollbar": {
+            width: "8px",
+            height: "8px",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "transparent",
+          },
+        }}
+      >
+        <Table stickyHeader>
           <TableHead sx={{ bgcolor: "grey.50" }}>
             <TableRow>
               <TableCell padding="checkbox" sx={{ paddingX: 3 }}>
                 <Checkbox
-                  indeterminate={
-                    selectedRows.length > 0 &&
-                    selectedRows.length < campaigns.length
-                  }
-                  checked={
-                    campaigns.length > 0 &&
-                    selectedRows.length === campaigns.length
-                  }
+                  indeterminate={someVisibleSelected}
+                  checked={allVisibleSelected}
                   onChange={handleSelectAll}
                   size="small"
                 />
@@ -190,21 +459,46 @@ export default function CampaignListTable({
               </TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>
-            {visibleCampaigns.map((campaign) => {
-              const isSelected = selectedRows.includes(campaign.id);
+          <TableBody sx={{ opacity: loading ? 0.5 : 1 }}>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={visibleColumns.length + 1} sx={{ textAlign: "center" }}>
+                  <CircularProgress />
+                </TableCell>
+              </TableRow>
+            ) : (
+              visibleCampaigns.map((campaign) => {
+              const isSelected = selectedRows.includes(campaign.slug);
+              const isDisabledStart =
+                campaign.status === "running" || campaign.status === "finished";
+              const isDisabledStop =
+                campaign.status === "draft" ||
+                campaign.status === "finished" ||
+                campaign.status === "scheduled";
+              const isDisabledAnalytics =
+                campaign.status === "draft" ||
+                campaign.status === "running" ||
+                campaign.status === "scheduled";
+
               return (
                 <TableRow
-                  key={campaign.id}
+                  key={campaign.slug}
                   hover
                   selected={isSelected}
                   sx={{ cursor: "pointer" }}
-                  onClick={() => navigate(`/campaigns/${campaign.id}`)}
+                  onClick={(e) => {
+                    navigate(`/campaigns/${campaign.slug}`);
+                  }}
                 >
                   <TableCell padding="checkbox" sx={{ paddingX: 3 }}>
                     <Checkbox
                       checked={isSelected}
-                      onChange={(e) => handleSelectRow(e, campaign.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onChange={(e) => {
+                        handleSelectRow(e, campaign.slug);
+                      }}
                       size="small"
                     />
                   </TableCell>
@@ -212,14 +506,14 @@ export default function CampaignListTable({
                     <Box>
                       <Typography
                         variant="body2"
-                        sx={{ fontWeight: 600, color: "primary.main" }}
+                        sx={{ fontWeight: 600, color: "brand.primary.600" }}
                       >
                         {campaign.name}
                       </Typography>
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        sx={{ display: "block" }}
+                        sx={{ display: "block", color: "neutral.black.60" }}
                       >
                         {campaign.description}
                       </Typography>
@@ -229,8 +523,29 @@ export default function CampaignListTable({
                     <TableCell>
                       <Chip
                         label={
-                          campaign.status.charAt(0).toUpperCase() +
-                          campaign.status.slice(1)
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="center"
+                          >
+                            <Typography
+                              variant="body2"
+                              color={
+                                campaign.status === "draft"
+                                  ? "neutral.black.100"
+                                  : "white"
+                              }
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {campaign.status.charAt(0).toUpperCase()}
+                              {campaign.status.slice(1)}
+                            </Typography>
+                            {campaign.status === "running" && (
+                              <Typography variant="body2" color="white">
+                                <RefreshOutlined fontSize="small" />
+                              </Typography>
+                            )}
+                          </Stack>
                         }
                         size="small"
                         sx={{
@@ -243,7 +558,11 @@ export default function CampaignListTable({
                   )}
                   {visibleColumns.includes("contacts") && (
                     <TableCell>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography
+                        variant="body2"
+                        color="brand.primary.600"
+                        sx={{ fontWeight: 600, fontSize: "14px" }}
+                      >
                         {campaign.recipients?.[0]?.name || "N/A"}
                       </Typography>
                     </TableCell>
@@ -261,11 +580,17 @@ export default function CampaignListTable({
                               borderRadius: "4px",
                               height: 20,
                               fontSize: "0.65rem",
+                              backgroundColor: "neutral.black.10",
+                              color: "neutral.black.80",
+                              border: "none",
                             }}
                           />
                         ))}
                         {campaign.tags && campaign.tags.length > 2 && (
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography
+                            variant="caption"
+                            color="neutral.black.80"
+                          >
                             +{campaign.tags.length - 2}
                           </Typography>
                         )}
@@ -275,17 +600,17 @@ export default function CampaignListTable({
                   {visibleColumns.includes("timestamps") && (
                     <TableCell>
                       <Box
-                        sx={{ fontSize: "0.75rem", color: "text.secondary" }}
+                        sx={{ fontSize: "0.75rem", color: "neutral.black.60" }}
                       >
                         <Box>
-                          Created:{" "}
+                          Created{" "}
                           {campaign.createdAt
                             ? new Date(campaign.createdAt).toLocaleDateString()
                             : "-"}
                         </Box>
                         {campaign.startedAt && (
                           <Box>
-                            Started:{" "}
+                            Started{" "}
                             {new Date(campaign.startedAt).toLocaleDateString()}
                           </Box>
                         )}
@@ -295,18 +620,32 @@ export default function CampaignListTable({
                   {visibleColumns.includes("stats") && (
                     <TableCell>
                       <Box
-                        sx={{ fontSize: "0.75rem", color: "text.secondary" }}
+                        sx={{ fontSize: "0.75rem", color: "neutral.black.60" }}
                       >
-                        <Box>
-                          Views: {campaign.stats?.opened.toLocaleString()}
+                        <Box display="flex" flexDirection="row" gap={2}>
+                          Views{" "}
+                          <Typography variant="body2" color="neutral.black.80">
+                            {campaign.stats?.opened.toLocaleString()}
+                          </Typography>
                         </Box>
-                        <Box>
-                          Clicks: {campaign.stats?.clicked.toLocaleString()}
+                        <Box display="flex" flexDirection="row" gap={2}>
+                          Clicks{" "}
+                          <Typography variant="body2" color="neutral.black.80">
+                            {campaign.stats?.clicked.toLocaleString()}
+                          </Typography>
                         </Box>
-                        <Box>
-                          Sent: {campaign.stats?.sent}/{campaign.stats?.total}
+                        <Box display="flex" flexDirection="row" gap={2}>
+                          Sent{" "}
+                          <Typography variant="body2" color="neutral.black.80">
+                            {campaign.stats?.sent}/{campaign.stats?.total}
+                          </Typography>
                         </Box>
-                        <Box>Bounces: {campaign.stats?.bounced}</Box>
+                        <Box display="flex" flexDirection="row" gap={2}>
+                          Bounces{" "}
+                          <Typography variant="body2" color="neutral.black.80">
+                            {campaign.stats?.bounced}
+                          </Typography>
+                        </Box>
                       </Box>
                     </TableCell>
                   )}
@@ -315,54 +654,137 @@ export default function CampaignListTable({
                       direction="row"
                       spacing={0.5}
                       justifyContent="flex-end"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Tooltip title="Start">
                         <IconButton
                           size="small"
-                          onClick={(e) => handleAction(e, "start", campaign.id)}
+                          onClick={(e) => handleAction(e, "start", campaign.slug)}
+                          disabled={isDisabledStart}
                         >
                           <RocketLaunchOutlined
                             fontSize="small"
-                            color="primary"
+                            sx={{
+                              color: isDisabledStart
+                                ? "neutral.black.20"
+                                : "neutral.black.60",
+                              "&:hover": { color: "primary.main" },
+                            }}
                           />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Stop">
                         <IconButton
                           size="small"
-                          onClick={(e) => handleAction(e, "stop", campaign.id)}
+                          onClick={(e) => handleAction(e, "stop", campaign.slug)}
+                          disabled={isDisabledStop}
+                          sx={{ "&:hover": { backgroundColor: "error.50" } }}
                         >
                           <Block
                             fontSize="small"
-                            sx={{ color: "error.light" }}
+                            sx={{
+                              color: isDisabledStop
+                                ? "neutral.black.20"
+                                : "neutral.black.60",
+                              "&:hover": { color: "error.600" },
+                            }}
                           />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Analytics">
+                      <Tooltip title="Preview">
                         <IconButton
                           size="small"
                           onClick={(e) =>
-                            handleAction(e, "analytics", campaign.id)
+                            handleAction(e, "analytics", campaign.slug)
                           }
                         >
-                          <BarChartOutlined fontSize="small" />
+                          <PreviewOutlined fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <IconButton
                         size="small"
-                        onClick={(e) => handleMenuOpen(e, campaign.id)}
+                        onClick={(e) =>
+                          handleMenuOpen(e, campaign.slug, campaign)
+                        }
                       >
                         <MoreHoriz fontSize="small" />
                       </IconButton>
                     </Stack>
                   </TableCell>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleMenuClose}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MenuItem
+                      onClick={() => {
+                        selectedId && duplicateCampaignAction(selectedId);
+                        handleMenuClose();
+                      }}
+                    >
+                      <ContentCopy
+                        sx={{ mr: 1, fontSize: 20, color: "neutral.black.60" }}
+                      />{" "}
+                      Duplicate
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                          navigate(`/campaigns/${selectedId}`);
+                        handleMenuClose();
+                      }}
+                      sx={{
+                        color: isDisabledAnalytics
+                          ? "neutral.black.20"
+                          : "neutral.black.60",
+                      }}
+                      disabled={isDisabledAnalytics}
+                    >
+                      <LeaderboardOutlined
+                        sx={{
+                          mr: 1,
+                          fontSize: 20,
+                          color: isDisabledAnalytics
+                            ? "neutral.black.20"
+                            : "neutral.black.60",
+                        }}
+                      />{" "}
+                      Analytics
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        selectedId && deleteCampaignAction(selectedId);
+                        handleMenuClose();
+                      }}
+                      sx={{
+                        color:
+                          menuCampaign?.status === "running"
+                            ? "neutral.black.20"
+                            : "error.600",
+                      }}
+                      disabled={menuCampaign?.status === "running"}
+                    >
+                      <DeleteOutlined
+                        sx={{
+                          mr: 1,
+                          fontSize: 20,
+                          color:
+                            menuCampaign?.status === "running"
+                              ? "neutral.black.20"
+                              : "error.600",
+                        }}
+                      />{" "}
+                      Delete
+                    </MenuItem>
+                  </Menu>
                 </TableRow>
               );
-            })}
+            }))}
           </TableBody>
         </Table>
       </TableContainer>
       <Box
+        ref={paginationRef}
         display="flex"
         justifyContent="space-between"
         alignItems="center"
@@ -370,15 +792,16 @@ export default function CampaignListTable({
           backgroundColor: "white",
           paddingY: 1,
           paddingX: 3,
-          position: "sticky",
-          bottom: 0,
-		  boxShadow: "0 1px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 4px 0 rgba(0, 0, 0, 0.14), 0 3px 3px -2px rgba(0, 0, 0, 0.20)",
+          flexShrink: 0,
+          boxShadow:
+            "0 1px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 4px 0 rgba(0, 0, 0, 0.14), 0 3px 3px -2px rgba(0, 0, 0, 0.20)",
         }}
-		mt={[0, "0rem !important"]}
       >
         {/* Rows per page */}
         <Stack direction="row" alignItems="center">
-          <Typography variant="body2" sx={{ marginTop: 0 }}>Rows per page:</Typography>
+          <Typography variant="body2" sx={{ marginTop: 0 }}>
+            Rows per page:
+          </Typography>
           <Select
             size="small"
             value={rowsPerPage}
@@ -413,40 +836,9 @@ export default function CampaignListTable({
           page={page}
           onChange={(_, value) => setPage(value)}
           boundaryCount={2}
-		  sx={{ m: 0 }}
+          sx={{ m: 0 }}
         />
       </Box>
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem
-          onClick={() => {
-            navigate(`/campaigns/${selectedId}`);
-            handleMenuClose();
-          }}
-        >
-          <Edit sx={{ mr: 1, fontSize: 20 }} /> Edit
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            selectedId && duplicateCampaignAction(selectedId);
-            handleMenuClose();
-          }}
-        >
-          <ContentCopy sx={{ mr: 1, fontSize: 20 }} /> Duplicate
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            selectedId && deleteCampaignAction(selectedId);
-            handleMenuClose();
-          }}
-          sx={{ color: "error.main" }}
-        >
-          <Delete sx={{ mr: 1, fontSize: 20 }} /> Delete
-        </MenuItem>
-      </Menu>
     </Box>
   );
 }

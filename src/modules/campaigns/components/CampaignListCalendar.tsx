@@ -14,7 +14,7 @@ import { Campaign } from "../types";
 import { useNavigate } from "react-router-dom";
 
 interface CampaignListCalendarProps {
-	campaigns: Campaign[];
+	campaigns: any[];
 }
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

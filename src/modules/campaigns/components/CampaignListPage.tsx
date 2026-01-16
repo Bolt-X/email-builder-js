@@ -20,14 +20,18 @@ import CampaignListCalendar from "./CampaignListCalendar";
 import CampaignFilters from "./CampaignFilters";
 import CampaignActionsToolbar from "./CampaignActionsToolbar";
 import CampaignFormDrawer from "./CampaignFormDrawer";
+import { getAllCampaigns } from "../../../services/campaign";
+import { useGetAllCampaigns } from "../../../hooks/useCampain";
 
 export default function CampaignListPage() {
 	const navigate = useNavigate();
-	const campaigns = useCampaigns();
-	const loading = useCampaignsLoading();
+	// const campaigns = useCampaigns();
+	// const loading = useCampaignsLoading();
 	const filters = useCampaignFilters();
 	const viewMode = useCampaignViewMode();
 	const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+
+	const { data: campaigns, isLoading: loading } = useGetAllCampaigns();
 
 	// Build filter object from store state
 	// Destructure to get stable primitive values for dependencies
@@ -69,18 +73,18 @@ export default function CampaignListPage() {
 		fetchCampaigns(filterObject);
 	};
 
-	if (loading && campaigns.length === 0) {
-		return (
-			<Box
-				display="flex"
-				justifyContent="center"
-				alignItems="center"
-				minHeight="400px"
-			>
-				<CircularProgress />
-			</Box>
-		);
-	}
+	// if (loading && campaigns.length === 0) {
+	// 	return (
+	// 		<Box
+	// 			display="flex"
+	// 			justifyContent="center"
+	// 			alignItems="center"
+	// 			minHeight="400px"
+	// 		>
+	// 			<CircularProgress />
+	// 		</Box>
+	// 	);
+	// }
 
 	const hasFilters = Boolean(
 		searchQuery ||
@@ -90,8 +94,8 @@ export default function CampaignListPage() {
 			dateRangeFilter
 	);
 
-	const isTrulyEmpty = campaigns.length === 0 && !loading && !hasFilters;
-	const isFilteredEmpty = campaigns.length === 0 && !loading && hasFilters;
+	const isTrulyEmpty = campaigns?.length === 0 && !loading && !hasFilters;
+	const isFilteredEmpty = campaigns?.length === 0 && !loading && hasFilters;
 
 	// ... existing imports
 
@@ -131,9 +135,9 @@ export default function CampaignListPage() {
 				{!isTrulyEmpty &&
 					!isFilteredEmpty &&
 					(viewMode === "table" ? (
-						<CampaignListTable campaigns={campaigns} />
+						<CampaignListTable campaigns={campaigns ?? []} loading={loading} />
 					) : (
-						<CampaignListCalendar campaigns={campaigns} />
+						<CampaignListCalendar campaigns={campaigns ?? []} />
 					))}
 
 				{/* No Results Found (Filtered Empty) */}
