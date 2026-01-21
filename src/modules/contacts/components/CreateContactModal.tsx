@@ -30,28 +30,15 @@ export default function CreateContactModal({
 	const [formData, setFormData] = useState({
 		contacts: "default",
 		email: "",
-		status: "non-subscribed",
-		firstName: "",
-		lastName: "",
+		status: "enabled",
+		name: "",
 		address: "",
 		city: "Hà Nội",
 		district: "Phường Ô Chợ Dừa",
 		phone: "",
 		birthday: "2003-01-06",
 		company: "BoltX",
-		tags: [
-			"2025",
-			"customer",
-			"member",
-			"admin",
-			"guest",
-			"superuser",
-			"moderator",
-			"contributor",
-			"viewer",
-			"test-campaign",
-			"editor",
-		],
+		tags: [],
 	});
 
 	const [errors, setErrors] = useState<Record<string, string>>({});
@@ -64,8 +51,7 @@ export default function CreateContactModal({
 		else if (!/\S+@\S+\.\S+/.test(formData.email))
 			newErrors.email = "Invalid email format";
 
-		if (!formData.firstName) newErrors.firstName = "First name is required";
-		if (!formData.lastName) newErrors.lastName = "Last name is required";
+		if (!formData.name) newErrors.name = "Name is required";
 		if (!formData.address) newErrors.address = "Address is required";
 		if (!formData.contacts) newErrors.contacts = "Contact list is required";
 		if (!formData.status) newErrors.status = "Marketing status is required";
@@ -206,12 +192,6 @@ export default function CreateContactModal({
 								/>
 							</Box>
 							<Box sx={{ flex: 1 }}>
-								<Typography
-									variant="body2"
-									sx={{ mb: 1, fontWeight: 600 }}
-								>
-									Email marketing status <span style={{ color: "red" }}>*</span>
-								</Typography>
 								<Select
 									fullWidth
 									size="small"
@@ -220,8 +200,9 @@ export default function CreateContactModal({
 									error={!!errors.status}
 									sx={{ borderRadius: "8px" }}
 								>
-									<MenuItem value="non-subscribed">Non-subscribed</MenuItem>
-									<MenuItem value="subscribed">Subscribed</MenuItem>
+									<MenuItem value="enabled">Enabled</MenuItem>
+									<MenuItem value="blocklisted">Blocklisted</MenuItem>
+									<MenuItem value="duplicate">Duplicate</MenuItem>
 								</Select>
 								{errors.status && (
 									<Typography
@@ -234,49 +215,23 @@ export default function CreateContactModal({
 							</Box>
 						</Stack>
 
-						<Stack
-							direction="row"
-							spacing={3}
-						>
-							<Box sx={{ flex: 1 }}>
-								<Typography
-									variant="body2"
-									sx={{ mb: 1, fontWeight: 600 }}
-								>
-									First Name <span style={{ color: "red" }}>*</span>
-								</Typography>
-								<TextField
-									fullWidth
-									size="small"
-									value={formData.firstName}
-									onChange={(e) =>
-										handleFieldChange("firstName", e.target.value)
-									}
-									error={!!errors.firstName}
-									helperText={errors.firstName}
-									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-								/>
-							</Box>
-							<Box sx={{ flex: 1 }}>
-								<Typography
-									variant="body2"
-									sx={{ mb: 1, fontWeight: 600 }}
-								>
-									Last Name <span style={{ color: "red" }}>*</span>
-								</Typography>
-								<TextField
-									fullWidth
-									size="small"
-									value={formData.lastName}
-									onChange={(e) =>
-										handleFieldChange("lastName", e.target.value)
-									}
-									error={!!errors.lastName}
-									helperText={errors.lastName}
-									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-								/>
-							</Box>
-						</Stack>
+						<Box>
+							<Typography
+								variant="body2"
+								sx={{ mb: 1, fontWeight: 600 }}
+							>
+								Full Name <span style={{ color: "red" }}>*</span>
+							</Typography>
+							<TextField
+								fullWidth
+								size="small"
+								value={formData.name}
+								onChange={(e) => handleFieldChange("name", e.target.value)}
+								error={!!errors.name}
+								helperText={errors.name}
+								sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+							/>
+						</Box>
 
 						<Box>
 							<Typography

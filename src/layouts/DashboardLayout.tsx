@@ -16,6 +16,11 @@ import {
 	useMediaQuery,
 	Tooltip,
 	Collapse,
+	Avatar,
+	Divider,
+	Typography,
+	Stack,
+	CircularProgress,
 } from "@mui/material";
 import {
 	SpaceDashboardOutlined,
@@ -29,6 +34,13 @@ import {
 	Menu as MenuIcon,
 	ExpandLess,
 	ExpandMore,
+	Logout,
+	Dashboard,
+	Send,
+	Article,
+	Image,
+	People,
+	Settings,
 } from "@mui/icons-material";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 
@@ -76,12 +88,12 @@ const Drawer = styled(MuiDrawer, {
 const navigationItems = [
 	{
 		label: "Dashboard",
-		icon: <SpaceDashboardOutlined />,
+		icon: <Dashboard />,
 		path: "/",
 	},
 	{
 		label: "Campaigns",
-		icon: <SendOutlined />,
+		icon: <Send />,
 		path: "/campaigns",
 		children: [
 			{
@@ -100,7 +112,7 @@ const navigationItems = [
 	},
 	{
 		label: "Contacts",
-		icon: <PeopleAltOutlined />,
+		icon: <People />,
 		path: "/contacts",
 		children: [
 			{
@@ -115,7 +127,7 @@ const navigationItems = [
 	},
 	{
 		label: "Settings",
-		icon: <SettingsOutlined />,
+		icon: <Settings />,
 		path: "/settings",
 	},
 ];
@@ -125,6 +137,7 @@ export default function DashboardLayout() {
 	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const [open, setOpen] = useState(true);
 	const [mobileOpen, setMobileOpen] = useState(false);
+	const [loggingOut, setLoggingOut] = useState(false);
 	// State to track open menus (e.g. Campaigns)
 	const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
 		Campaigns: true, // Default open or closed? Let's default open for visibility
@@ -144,7 +157,7 @@ export default function DashboardLayout() {
 	const handleMenuClick = (
 		label: string,
 		path: string,
-		hasChildren: boolean
+		hasChildren: boolean,
 	) => {
 		if (hasChildren) {
 			// If collapsed, open sidebar first
@@ -170,7 +183,7 @@ export default function DashboardLayout() {
 	const isChildActive = (item: any) => {
 		if (item.children) {
 			return item.children.some((child: any) =>
-				location.pathname.startsWith(child.path)
+				location.pathname.startsWith(child.path),
 			);
 		}
 		return false;
@@ -363,6 +376,146 @@ export default function DashboardLayout() {
 						);
 					})}
 				</List>
+			</Box>
+
+			{/* User Profile Section */}
+			<Box sx={{ mt: "auto", borderTop: "1px solid", borderColor: "divider" }}>
+				<ListItem
+					disablePadding
+					sx={{ display: "block", px: 1.5, py: 1.5 }}
+				>
+					<Tooltip
+						title={!open ? "User Account" : ""}
+						placement="right"
+					>
+						<ListItemButton
+							onClick={() => {
+								// Toggle user menu or navigate to profile
+								if (!open) {
+									setOpen(true);
+								}
+							}}
+							sx={{
+								minHeight: 48,
+								justifyContent: open ? "initial" : "center",
+								px: 2,
+								borderRadius: 2,
+								"&:hover": {
+									bgcolor: "rgba(0, 0, 0, 0.04)",
+								},
+							}}
+						>
+							<Stack
+								direction="row"
+								spacing={1.5}
+								alignItems="center"
+								sx={{ width: "100%" }}
+							>
+								<Avatar
+									sx={{
+										width: 32,
+										height: 32,
+										bgcolor: "primary.main",
+										fontSize: "0.875rem",
+									}}
+								>
+									U
+								</Avatar>
+								{open && (
+									<Box sx={{ flexGrow: 1, minWidth: 0 }}>
+										<Typography
+											variant="body2"
+											sx={{
+												fontWeight: 600,
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+											}}
+										>
+											User Name
+										</Typography>
+										<Typography
+											variant="caption"
+											color="text.secondary"
+											sx={{
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+												display: "block",
+											}}
+										>
+											user@example.com
+										</Typography>
+									</Box>
+								)}
+							</Stack>
+						</ListItemButton>
+					</Tooltip>
+				</ListItem>
+
+				{/* Logout Button */}
+				{open && (
+					<ListItem
+						disablePadding
+						sx={{ px: 1.5, pb: 1.5 }}
+					>
+						<ListItemButton
+							onClick={async () => {
+								if (loggingOut) return;
+								setLoggingOut(true);
+								try {
+									// Use auth store logout
+									const { useAuthStore } = await import("../contexts/auth");
+									const logout = useAuthStore.getState().logout;
+									await logout();
+									window.location.href = "/auth/login";
+								} catch (error) {
+									console.error("Logout error:", error);
+									setLoggingOut(false);
+								}
+							}}
+							disabled={loggingOut}
+							sx={{
+								minHeight: 40,
+								px: 2,
+								borderRadius: 2,
+								color: "error.main",
+								"&:hover": {
+									bgcolor: "rgba(211, 47, 47, 0.08)", // Light red background
+									color: "error.main",
+								},
+								"&.Mui-disabled": {
+									color: "error.light",
+									opacity: 0.7,
+								},
+							}}
+						>
+							<ListItemIcon
+								sx={{
+									minWidth: 0,
+									mr: 2,
+									color: "inherit",
+								}}
+							>
+								{loggingOut ? (
+									<CircularProgress
+										size={18}
+										color="inherit"
+									/>
+								) : (
+									<Logout fontSize="small" />
+								)}
+							</ListItemIcon>
+							<ListItemText
+								primary={loggingOut ? "Logging out..." : "Logout"}
+								primaryTypographyProps={{
+									fontSize: "0.875rem",
+									fontWeight: 500,
+								}}
+							/>
+						</ListItemButton>
+					</ListItem>
+				)}
 			</Box>
 
 			{/* Toggle button for desktop at bottom if preferred, or use the one in header */}

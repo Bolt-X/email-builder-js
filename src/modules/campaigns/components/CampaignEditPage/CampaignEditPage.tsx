@@ -19,6 +19,7 @@ import {
 	useCurrentCampaign,
 	useCampaignsLoading,
 	setCurrentCampaign,
+	updateCurrentCampaign,
 	useAutosaveState,
 	setDirty,
 } from "../../stores/campaign.metadata.store";
@@ -28,6 +29,7 @@ import {
 	useCampaignTemplateEditor,
 	setEditorJson,
 	setHtml,
+	fetchTemplateById,
 } from "../../stores/campaign.template.store";
 import {
 	fetchCampaignMedia,
@@ -70,8 +72,7 @@ export default function CampaignEditPage() {
 	useEffect(() => {
 		if (id) {
 			fetchCampaignById(id).then(() => {
-				// After loading campaign, load its template and media
-				fetchCampaignTemplate(id);
+				// After loading campaign, load its media
 				fetchCampaignMedia(id);
 				setCampaignMedia(id);
 			});
@@ -83,22 +84,14 @@ export default function CampaignEditPage() {
 		};
 	}, [id]);
 
-	// Autosave effect
+	// Load template content when campaign's selected template changes
 	useEffect(() => {
-		if (!id || !campaign || !autosaveState.enabled) return;
+		if (campaign?.template) {
+			fetchTemplateById(campaign.template);
+		}
+	}, [campaign?.template]);
 
-		const autosaveInterval = setInterval(async () => {
-			try {
-				if (autosaveState.isDirty || templateDirty) {
-					await handleAutosave();
-				}
-			} catch (error) {
-				console.error("Autosave failed:", error);
-			}
-		}, AUTOSAVE_INTERVAL);
-
-		return () => clearInterval(autosaveInterval);
-	}, [id, campaign, autosaveState.isDirty, templateDirty, autosaveState.enabled]);
+	// Removed autosave effect per user request
 
 	// Listen to document changes for template
 	useEffect(() => {
@@ -106,7 +99,9 @@ export default function CampaignEditPage() {
 			setEditorJson(document);
 			// Generate HTML from document
 			try {
-				const generatedHtml = renderToStaticMarkup(document, "root");
+				const generatedHtml = renderToStaticMarkup(document as any, {
+					rootBlockId: "root",
+				});
 				setHtml(generatedHtml);
 			} catch (error) {
 				console.error("Error generating HTML:", error);
@@ -116,25 +111,15 @@ export default function CampaignEditPage() {
 
 	// Handle campaign metadata changes
 	const handleCampaignChange = useCallback(
-		async (updates: Partial<typeof campaign>) => {
+		(updates: Partial<typeof campaign>) => {
 			if (!id || !campaign) return;
-
-			setDirty(true);
-			try {
-				await updateCampaignMetadataAction(id, updates);
-			} catch (error: any) {
-				setSnackbar({
-					open: true,
-					message: error.message || "Failed to update campaign",
-					severity: "error",
-				});
-			}
+			updateCurrentCampaign(updates);
 		},
-		[id, campaign]
+		[id, campaign],
 	);
 
-	// Autosave handler
-	const handleAutosave = useCallback(async () => {
+	// Manual save handler
+	const handleSave = useCallback(async () => {
 		if (!id || !campaign) return;
 
 		try {
@@ -145,26 +130,37 @@ export default function CampaignEditPage() {
 
 			// Save template if dirty
 			if (templateDirty && document) {
-				const generatedHtml = renderToStaticMarkup(document, "root");
+				const generatedHtml = renderToStaticMarkup(document as any, {
+					rootBlockId: "root",
+				});
 				await saveCampaignTemplate(id, document, generatedHtml);
 			}
 
 			setSnackbar({
 				open: true,
-				message: "Auto-saved",
+				message: "Campaign saved successfully",
 				severity: "success",
 			});
 		} catch (error: any) {
-			console.error("Autosave failed:", error);
+			console.error("Save failed:", error);
+			setSnackbar({
+				open: true,
+				message: error.message || "Failed to save campaign",
+				severity: "error",
+			});
 		}
 	}, [id, campaign, autosaveState.isDirty, templateDirty, document]);
 
 	// Handle send test email
 	const handleSendTestEmail = useCallback(async () => {
-		if (!id || !testEmailValue) return;
+		if (!id || !testEmailValue || !campaign) return;
 
 		try {
-			await sendTestEmail(id, [testEmailValue]);
+			await sendTestEmail({
+				to: testEmailValue,
+				subject: campaign.subject || "No Subject",
+				template: html,
+			});
 			setSnackbar({
 				open: true,
 				message: "Test email sent successfully",
@@ -179,14 +175,22 @@ export default function CampaignEditPage() {
 				severity: "error",
 			});
 		}
-	}, [id, testEmailValue]);
+	}, [id, testEmailValue, campaign, html]);
 
 	// Handle start campaign
 	const handleStartCampaign = useCallback(async () => {
 		if (!id || !campaign) return;
 
 		// Validate required fields
-		if (!campaign.name || !campaign.subject || !campaign.fromAddress || !campaign.recipients || campaign.recipients.length === 0) {
+		const hasRecipients =
+			(campaign.recipients && campaign.recipients.length > 0) ||
+			(campaign.contact_lists && campaign.contact_lists.length > 0);
+		if (
+			!campaign.name ||
+			!campaign.subject ||
+			!campaign.fromAddress ||
+			!hasRecipients
+		) {
 			setSnackbar({
 				open: true,
 				message: "Please fill in all required fields",
@@ -196,7 +200,7 @@ export default function CampaignEditPage() {
 		}
 
 		// Save everything first
-		await handleAutosave();
+		await handleSave();
 
 		try {
 			const sendNow = campaign.sendTime === "now";
@@ -217,7 +221,7 @@ export default function CampaignEditPage() {
 				severity: "error",
 			});
 		}
-	}, [id, campaign, handleAutosave]);
+	}, [id, campaign, handleSave]);
 
 	if (loading || !campaign) {
 		return (
@@ -233,60 +237,56 @@ export default function CampaignEditPage() {
 	}
 
 	return (
-		<Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+		<Box
+			sx={{
+				height: "100vh",
+				display: "flex",
+				flexDirection: "column",
+				bgcolor: "white",
+			}}
+		>
 			{/* Header */}
 			<CampaignHeader
 				campaign={campaign}
 				onSendTest={() => setTestEmailDialogOpen(true)}
 				onStartCampaign={handleStartCampaign}
-				onSave={handleAutosave}
+				onSave={handleSave}
 			/>
 
 			{/* Main Content */}
-			<Box sx={{ flex: 1, display: "flex", overflow: "hidden" }}>
+			<Grid
+				container
+				spacing={0}
+				sx={{ height: "calc(100vh - 80px)", overflow: "hidden" }}
+			>
 				{/* Left Panel: Settings Form */}
-				<Box
+				<Grid
+					item
+					xs={12}
+					md={6}
 					sx={{
-						width: 400,
+						height: "100%",
 						overflowY: "auto",
 						borderRight: 1,
 						borderColor: "divider",
-						backgroundColor: "background.paper",
 					}}
 				>
 					<CampaignSettingsForm
 						campaign={campaign}
 						onChange={handleCampaignChange}
 					/>
-				</Box>
-
-				{/* Center Panel: Email Builder */}
-				<Box
-					sx={{
-						flex: 1,
-						display: "flex",
-						flexDirection: "column",
-						overflow: "hidden",
-						position: "relative",
-					}}
-				>
-					<TemplatePanel />
-					<InspectorDrawer />
-				</Box>
+				</Grid>
 
 				{/* Right Panel: Preview */}
-				<Box
-					sx={{
-						width: 450,
-						overflow: "hidden",
-						backgroundColor: "background.paper",
-						display: "flex",
-						flexDirection: "column",
-					}}
+				<Grid
+					item
+					xs={12}
+					md={6}
+					sx={{ height: "100%", overflow: "hidden", bgcolor: "grey.50" }}
 				>
 					<CampaignPreviewPanel campaignId={id!} />
-				</Box>
-			</Box>
+				</Grid>
+			</Grid>
 
 			{/* Send Test Email Dialog */}
 			<Dialog
@@ -322,15 +322,11 @@ export default function CampaignEditPage() {
 			<Snackbar
 				open={snackbar.open}
 				autoHideDuration={4000}
-				onClose={() =>
-					setSnackbar((prev) => ({ ...prev, open: false }))
-				}
+				onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
 				anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
 			>
 				<Alert
-					onClose={() =>
-						setSnackbar((prev) => ({ ...prev, open: false }))
-					}
+					onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
 					severity={snackbar.severity}
 					sx={{ width: "100%" }}
 				>

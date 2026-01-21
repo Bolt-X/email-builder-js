@@ -35,11 +35,7 @@ export default function ContactListFormDrawer({
 	const [loading, setLoading] = useState(false);
 	const [formData, setFormData] = useState<Partial<ContactList>>({
 		name: "",
-		description: "",
-		contactIds: [],
-		isDefault: false,
-		isEnabled: true,
-		tags: [],
+		status: "draft",
 	});
 
 	// Load contact list data when editing
@@ -47,20 +43,12 @@ export default function ContactListFormDrawer({
 		if (mode === "edit" && list) {
 			setFormData({
 				name: list.name || "",
-				description: list.description || "",
-				contactIds: list.contactIds || [],
-				isDefault: list.isDefault || false,
-				isEnabled: list.isEnabled !== false,
-				tags: list.tags || [],
+				status: list.status || "draft",
 			});
 		} else {
 			setFormData({
 				name: "",
-				description: "",
-				contactIds: [],
-				isDefault: false,
-				isEnabled: true,
-				tags: [],
+				status: "draft",
 			});
 		}
 	}, [mode, list, open]);
@@ -79,19 +67,12 @@ export default function ContactListFormDrawer({
 			if (mode === "create") {
 				await createContactListAction({
 					name: formData.name!,
-					description: formData.description,
-					isDefault: false,
-					isEnabled: formData.isEnabled !== false,
-					contactIds: formData.contactIds || [],
-					tags: formData.tags || [],
+					status: formData.status as any,
 				});
 			} else if (list) {
-				await updateContactListAction(list.id, {
+				await updateContactListAction(list.slug, {
 					name: formData.name,
-					description: formData.description,
-					isEnabled: formData.isEnabled,
-					contactIds: formData.contactIds,
-					tags: formData.tags,
+					status: formData.status as any,
 				});
 			}
 			await fetchContactLists();
@@ -153,42 +134,20 @@ export default function ContactListFormDrawer({
 							placeholder="Enter contact list name"
 						/>
 
-						{/* Description */}
+						{/* Status */}
 						<TextField
-							label="Description"
+							select
+							label="Status"
+							required
 							fullWidth
-							multiline
-							rows={3}
-							value={formData.description || ""}
-							onChange={(e) => handleChange("description", e.target.value)}
-							placeholder="Enter contact list description"
-						/>
-
-						{/* Tags */}
-						<Autocomplete
-							multiple
-							options={[]}
-							freeSolo
-							value={formData.tags || []}
-							onChange={(_, newValue) => handleChange("tags", newValue)}
-							renderTags={(value, getTagProps) =>
-								value.map((option, index) => (
-									<Chip
-										variant="outlined"
-										label={option}
-										{...getTagProps({ index })}
-										key={index}
-									/>
-								))
-							}
-							renderInput={(params) => (
-								<TextField
-									{...params}
-									label="Tags"
-									placeholder="Add tags"
-								/>
-							)}
-						/>
+							value={formData.status}
+							onChange={(e) => handleChange("status", e.target.value)}
+							SelectProps={{ native: true }}
+						>
+							<option value="draft">Draft</option>
+							<option value="published">Published</option>
+							<option value="archived">Archived</option>
+						</TextField>
 
 						{/* Action Buttons */}
 						<Stack

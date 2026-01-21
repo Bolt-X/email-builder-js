@@ -21,77 +21,56 @@ export interface Campaign {
 	name: string;
 	description?: string | null;
 	status: CampaignStatus;
-	templateId?: string | number; // Selected template for sending (from campaign's templates)
+	template?: number | null; // ID of the template (M2O)
 	// Email settings
 	subject?: string;
-	fromAddress?: string; // Sender identity
-	// Recipients (can be lists or segments)
+	fromAddress?: string; // Note: Not found in current schema snippet, but used in UI
+	// Recipients
 	recipients?: Recipient[];
-	// Legacy support - will be deprecated in favor of recipients
-	contactListId?: string | number;
+	contact_lists?: any[]; // M2M relationship
 	// Organization
-	tags?: string[]; // Tags for filtering and organization
+	tags?: any[]; // M2M relationship
 	// Send settings
 	sendTime?: SendTimeOption;
-	scheduledAt?: string; // ISO date string - when scheduleAt is set, sendTime should be "schedule"
-	// Legacy support
-	scheduleAt?: string; // ISO date string
-	// Stats (individual fields from API)
-	bounces?: number | null;
+	date_scheduled?: string; // ISO date string
+	date_started?: string;
+	date_ended?: string;
+	// Stats
+	views?: number | null;
 	clicks?: number | null;
 	sent?: number | null;
-	views?: number | null;
-	// Stats object (for backward compatibility and computed values)
-	stats?: {
-		sent: number;
-		opened: number;
-		clicked: number;
-		bounced: number;
-		total: number; // Total target recipients
-	};
-	// Timestamps (API format: snake_case)
+	bounces?: number | null;
+	// Metadata
 	date_created?: string | null;
 	date_updated?: string | null;
-	date_started?: string | null;
-	date_ended?: string | null;
-	// Timestamps (camelCase for backward compatibility)
-	createdAt?: string;
-	updatedAt?: string;
-	lastEditedAt?: string; // Last edit time for display
-	startedAt?: string; // When the campaign started sending
-	endedAt?: string; // When the campaign finished
-	// User tracking
 	user_created?: string | null;
 	user_updated?: string | null;
-	// Sort order
 	sort?: number | null;
 }
 
 // Directus format (for API compatibility)
 export interface DirectusCampaign {
-	id: string | number;
+	slug: string;
 	name: string;
 	description?: string;
 	status: CampaignStatus;
-	template_id?: string | number;
+	template?: number;
 	subject?: string;
-	from_address?: string;
-	recipients?: string; // JSON string array of Recipient
-	contact_list_id?: string | number; // Legacy support
-	tags?: string; // JSON string in Directus
-	send_time?: string; // "now" | "schedule"
-	scheduled_at?: string;
-	schedule_at?: string; // Legacy support
-	stats_sent?: number;
-	stats_opened?: number;
-	stats_clicked?: number;
-	stats_bounced?: number;
-	stats_total?: number;
+	from_address?: string; // Keeping for compatibility, though not in schema snippet
+	contact_lists?: any; // M2M
+	tags?: any; // M2M
+	date_scheduled?: string;
+	date_started?: string;
+	date_ended?: string;
+	views?: number;
+	clicks?: number;
+	sent?: number;
+	bounces?: number;
 	date_created?: string;
 	date_updated?: string;
-	last_edited_at?: string;
-	started_at?: string;
-	ended_at?: string;
+	user_created?: string;
+	user_updated?: string;
+	sort?: number;
 }
 
 // Filter types

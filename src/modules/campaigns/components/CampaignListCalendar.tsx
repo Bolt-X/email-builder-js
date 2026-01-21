@@ -63,8 +63,8 @@ export default function CampaignListCalendar({
 
 	const getCampaignsForDate = (date: Date) => {
 		return campaigns.filter((c) => {
-			if (!c.scheduleAt && !c.createdAt) return false;
-			const targetDate = new Date(c.scheduleAt || c.createdAt!);
+			if (!c.date_scheduled && !c.date_created) return false;
+			const targetDate = new Date(c.date_scheduled || c.date_created!);
 			return (
 				targetDate.getFullYear() === date.getFullYear() &&
 				targetDate.getMonth() === date.getMonth() &&

@@ -46,7 +46,7 @@ export default function ContactListPage() {
 
 	const handleMenuOpen = (
 		event: React.MouseEvent<HTMLElement>,
-		id: string | number
+		id: string | number,
 	) => {
 		setAnchorEl(event.currentTarget);
 		setSelectedId(id);
@@ -75,7 +75,7 @@ export default function ContactListPage() {
 		if (selectedId) {
 			if (
 				window.confirm(
-					"Are you sure you want to delete this contact list? This action cannot be undone."
+					"Are you sure you want to delete this contact list? This action cannot be undone.",
 				)
 			) {
 				// TODO: Implement delete
@@ -130,10 +130,10 @@ export default function ContactListPage() {
 					<TableBody>
 						{contactLists.map((list) => (
 							<TableRow
-								key={list.id}
+								key={list.slug}
 								hover
 								sx={{ cursor: "pointer" }}
-								onClick={() => navigate(`/contacts/lists/${list.id}`)}
+								onClick={() => navigate(`/contacts/lists/${list.slug}`)}
 							>
 								<TableCell>
 									<Stack
@@ -141,7 +141,10 @@ export default function ContactListPage() {
 										alignItems="center"
 										spacing={1}
 									>
-										<People fontSize="small" color="primary" />
+										<People
+											fontSize="small"
+											color="primary"
+										/>
 										<Typography variant="body1">{list.name}</Typography>
 									</Stack>
 								</TableCell>
@@ -150,20 +153,20 @@ export default function ContactListPage() {
 										variant="body2"
 										color="text.secondary"
 									>
-										{list.description || "No description"}
+										{list.status || "No status"}
 									</Typography>
 								</TableCell>
 								<TableCell>
 									<Chip
-										label={`${list.contactIds?.length || 0} contacts`}
+										label={`${list.subscribers?.length || 0} contacts`}
 										size="small"
 										color="primary"
 										variant="outlined"
 									/>
 								</TableCell>
 								<TableCell>
-									{list.createdAt
-										? new Date(list.createdAt).toLocaleDateString()
+									{list.date_created
+										? new Date(list.date_created).toLocaleDateString()
 										: "-"}
 								</TableCell>
 								<TableCell
@@ -172,7 +175,7 @@ export default function ContactListPage() {
 								>
 									<IconButton
 										size="small"
-										onClick={(e) => handleMenuOpen(e, list.id)}
+										onClick={(e) => handleMenuOpen(e, list.slug)}
 									>
 										<MoreVert />
 									</IconButton>

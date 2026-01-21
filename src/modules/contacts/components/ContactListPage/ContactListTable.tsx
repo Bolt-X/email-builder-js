@@ -91,12 +91,9 @@ export default function ContactListTable({
 	const selectedIds = useSelectedContactLists();
 
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-	const [selectedId, setSelectedId] = useState<string | number | null>(null);
+	const [selectedId, setSelectedId] = useState<string | null>(null);
 
-	const handleMenuOpen = (
-		event: React.MouseEvent<HTMLElement>,
-		id: string | number
-	) => {
+	const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
 		setAnchorEl(event.currentTarget);
 		setSelectedId(id);
 	};
@@ -116,7 +113,7 @@ export default function ContactListTable({
 
 	const handleEditAction = () => {
 		if (selectedId) {
-			const list = filtered.find((l) => l.id === selectedId);
+			const list = filtered.find((l) => l.slug === selectedId);
 			if (list) {
 				onEdit(list);
 			}
@@ -138,8 +135,8 @@ export default function ContactListTable({
 
 	const handleDelete = async () => {
 		if (selectedId) {
-			const list = filtered.find((l) => l.id === selectedId);
-			if (list?.isDefault) {
+			const list = filtered.find((l) => l.slug === selectedId);
+			if (list?.is_default) {
 				alert("Cannot delete default list");
 				handleMenuClose();
 				return;
@@ -179,7 +176,7 @@ export default function ContactListTable({
 		}
 	};
 
-	const selectedList = filtered.find((l) => l.id === selectedId);
+	const selectedList = filtered.find((l) => l.slug === selectedId);
 	const isAllSelected =
 		filtered.length > 0 && selectedIds.length === filtered.length;
 	const isIndeterminate =
@@ -188,12 +185,12 @@ export default function ContactListTable({
 	// Column visibility logic (similar to campaign store/filters)
 	const visibleColumns = ["status", "contacts", "tags", "timestamps", "stats"]; // Placeholder for now, store already has visibleColumns
 	const [columnAnchorEl, setColumnAnchorEl] = useState<null | HTMLElement>(
-		null
+		null,
 	);
 
 	// Support for date range popover
 	const [dateAnchorEl, setDateAnchorEl] = useState<HTMLButtonElement | null>(
-		null
+		null,
 	);
 	const [startDate, setStartDate] = useState("");
 	const [endDate, setEndDate] = useState("");
@@ -542,10 +539,10 @@ export default function ContactListTable({
 					</TableHead>
 					<TableBody>
 						{filtered.map((list) => {
-							const isSelected = selectedIds.includes(list.id);
+							const isSelected = selectedIds.includes(list.slug);
 							return (
 								<TableRow
-									key={list.id}
+									key={list.slug}
 									hover
 									selected={isSelected}
 									sx={{
@@ -554,7 +551,7 @@ export default function ContactListTable({
 											backgroundColor: "action.hover",
 										},
 									}}
-									onClick={() => navigate(`/contacts/${list.id}`)}
+									onClick={() => navigate(`/contacts/${list.slug}`)}
 								>
 									<TableCell
 										padding="checkbox"
@@ -563,7 +560,7 @@ export default function ContactListTable({
 									>
 										<Checkbox
 											checked={isSelected}
-											onChange={() => toggleSelectContactList(list.id)}
+											onChange={() => toggleSelectContactList(list.slug)}
 										/>
 									</TableCell>
 									<TableCell>
@@ -625,12 +622,15 @@ export default function ContactListTable({
 											variant="body2"
 											color="text.secondary"
 										>
-											{list.createdAt
-												? new Date(list.createdAt).toLocaleDateString("en-GB", {
-														day: "2-digit",
-														month: "2-digit",
-														year: "numeric",
-													})
+											{list.created_at
+												? new Date(list.created_at).toLocaleDateString(
+														"en-GB",
+														{
+															day: "2-digit",
+															month: "2-digit",
+															year: "numeric",
+														},
+													)
 												: "25/10/2025"}
 										</Typography>
 									</TableCell>
@@ -662,7 +662,7 @@ export default function ContactListTable({
 											</Tooltip>
 											<IconButton
 												size="small"
-												onClick={(e) => handleMenuOpen(e, list.id)}
+												onClick={(e) => handleMenuOpen(e, list.slug)}
 												sx={{ color: "#666" }}
 											>
 												<MoreVert fontSize="small" />
@@ -745,7 +745,7 @@ export default function ContactListTable({
 							}
 							label={<Typography variant="body2">{col}</Typography>}
 						/>
-					)
+					),
 				)}
 			</Popover>
 		</>

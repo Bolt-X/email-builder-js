@@ -21,7 +21,7 @@ import CampaignFilters from "./CampaignFilters";
 import CampaignActionsToolbar from "./CampaignActionsToolbar";
 import CampaignFormDrawer from "./CampaignFormDrawer";
 import { getAllCampaigns } from "../../../services/campaign";
-import { useGetAllCampaigns } from "../../../hooks/useCampain";
+import { useGetAllCampaigns } from "../../../hooks/useCampaigns";
 
 export default function CampaignListPage() {
 	const navigate = useNavigate();
@@ -91,7 +91,7 @@ export default function CampaignListPage() {
 			statusFilter.length > 0 ||
 			contactListFilter ||
 			tagsFilter.length > 0 ||
-			dateRangeFilter
+			dateRangeFilter,
 	);
 
 	const isTrulyEmpty = campaigns?.length === 0 && !loading && !hasFilters;
@@ -135,7 +135,10 @@ export default function CampaignListPage() {
 				{!isTrulyEmpty &&
 					!isFilteredEmpty &&
 					(viewMode === "table" ? (
-						<CampaignListTable campaigns={campaigns ?? []} loading={loading} />
+						<CampaignListTable
+							campaigns={campaigns ?? []}
+							loading={loading}
+						/>
 					) : (
 						<CampaignListCalendar campaigns={campaigns ?? []} />
 					))}
@@ -176,7 +179,7 @@ export default function CampaignListPage() {
 							variant="outlined"
 							onClick={() =>
 								import("../stores/campaign.metadata.store").then((m) =>
-									m.clearFilters()
+									m.clearFilters(),
 								)
 							}
 						>

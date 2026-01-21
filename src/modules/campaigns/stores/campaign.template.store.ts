@@ -74,14 +74,14 @@ export const markSaved = () => {
  * If template doesn't exist, returns null (will be created on first save)
  */
 export const fetchCampaignTemplate = async (
-	campaignId: string | number
+	campaignId: string | number,
 ): Promise<Template | null> => {
 	try {
 		campaignTemplateStore.setState({ loading: true, error: null });
 		const templates = await getTemplatesByCampaign(campaignId);
 		// Each campaign has only one template
 		const template = templates.length > 0 ? templates[0] : null;
-		
+
 		if (template) {
 			campaignTemplateStore.setState({
 				campaignId,
@@ -113,6 +113,40 @@ export const fetchCampaignTemplate = async (
 };
 
 /**
+ * Fetch a specific template by ID and load into store
+ */
+export const fetchTemplateById = async (
+	templateId: string | number,
+): Promise<Template | null> => {
+	try {
+		campaignTemplateStore.setState({ loading: true, error: null });
+		const template = await getTemplateById(templateId);
+
+		if (template) {
+			campaignTemplateStore.setState({
+				template,
+				editorJson: template.json,
+				html: template.html,
+				dirty: false,
+				loading: false,
+			});
+			resetDocument(template.json);
+		} else {
+			campaignTemplateStore.setState({
+				loading: false,
+			});
+		}
+		return template;
+	} catch (err: any) {
+		campaignTemplateStore.setState({
+			error: err.message,
+			loading: false,
+		});
+		return null;
+	}
+};
+
+/**
  * Save template for a campaign
  * Creates template if it doesn't exist, updates otherwise
  */
@@ -120,11 +154,11 @@ export const saveCampaignTemplate = async (
 	campaignId: string | number,
 	json: any,
 	html: string,
-	name?: string
+	name?: string,
 ): Promise<Template> => {
 	try {
 		campaignTemplateStore.setState({ loading: true, error: null });
-		
+
 		const state = campaignTemplateStore.getState();
 		let savedTemplate: Template;
 

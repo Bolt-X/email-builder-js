@@ -12,12 +12,16 @@ import {
 	Paper,
 } from "@mui/material";
 import { Add, People } from "@mui/icons-material";
-import { useContactLists, fetchContactLists, useContactsLoading } from "../store";
+import {
+	useContactLists,
+	fetchContactLists,
+	useContactsLoading,
+} from "../store";
 import { ContactList } from "../types";
 
 interface ContactListSelectorProps {
-	value: string | number | null;
-	onChange: (contactListId: string | number | null) => void;
+	value: string | null;
+	onChange: (contactListSlug: string | null) => void;
 	required?: boolean;
 	showCreateButton?: boolean;
 	onCreateNew?: () => void;
@@ -37,7 +41,7 @@ export default function ContactListSelector({
 		fetchContactLists();
 	}, []);
 
-	const selectedList = contactLists.find((list) => list.id === value);
+	const selectedList = contactLists.find((list) => list.slug === value);
 
 	return (
 		<Stack spacing={2}>
@@ -48,14 +52,14 @@ export default function ContactListSelector({
 				<InputLabel>Contact List</InputLabel>
 				<Select
 					value={value || ""}
-					onChange={(e) => onChange(e.target.value as string | number)}
+					onChange={(e) => onChange(e.target.value as string)}
 					label="Contact List"
 					disabled={loading}
 				>
 					{contactLists.map((list) => (
 						<MenuItem
-							key={list.id}
-							value={list.id}
+							key={list.slug}
+							value={list.slug}
 						>
 							<Stack
 								direction="row"
@@ -65,17 +69,9 @@ export default function ContactListSelector({
 							>
 								<Box>
 									<Typography variant="body1">{list.name}</Typography>
-									{list.description && (
-										<Typography
-											variant="caption"
-											color="text.secondary"
-										>
-											{list.description}
-										</Typography>
-									)}
 								</Box>
 								<Chip
-									label={`${list.contactIds?.length || 0} contacts`}
+									label={`${list.subscribers?.length || 0} contacts`}
 									size="small"
 									variant="outlined"
 									sx={{ ml: 2 }}
@@ -101,22 +97,17 @@ export default function ContactListSelector({
 						spacing={1}
 						mb={1}
 					>
-						<People fontSize="small" color="primary" />
-						<Typography variant="subtitle2">
-							{selectedList.name}
-						</Typography>
+						<People
+							fontSize="small"
+							color="primary"
+						/>
+						<Typography variant="subtitle2">{selectedList.name}</Typography>
 					</Stack>
-					{selectedList.description && (
-						<Typography
-							variant="body2"
-							color="text.secondary"
-							mb={1}
-						>
-							{selectedList.description}
-						</Typography>
-					)}
-					<Typography variant="caption" color="text.secondary">
-						{selectedList.contactIds?.length || 0} contacts in this list
+					<Typography
+						variant="caption"
+						color="text.secondary"
+					>
+						{selectedList.subscribers?.length || 0} contacts in this list
 					</Typography>
 				</Paper>
 			)}

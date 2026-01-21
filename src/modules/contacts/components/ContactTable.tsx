@@ -39,14 +39,9 @@ const statusStyles: Record<
 	ContactStatus,
 	{ bgcolor: string; color: string; label: string }
 > = {
-	subscribed: { bgcolor: "#2E7D32", color: "white", label: "Subscribed" },
-	unsubscribed: { bgcolor: "#D32F2F", color: "white", label: "Unsubscribed" },
-	"non-subscribed": {
-		bgcolor: "#757575",
-		color: "white",
-		label: "Non-subscribed",
-	},
-	bounced: { bgcolor: "#000000", color: "white", label: "Bounced" },
+	enabled: { bgcolor: "#E8F5E9", color: "#2E7D32", label: "Enabled" },
+	blocklisted: { bgcolor: "#FFEBEE", color: "#D32F2F", label: "Blocklisted" },
+	duplicate: { bgcolor: "#FFF3E0", color: "#EF6C00", label: "Duplicate" },
 };
 
 export default function ContactTable({
@@ -55,16 +50,7 @@ export default function ContactTable({
 	onSelectOne,
 	onSelectAll,
 	onClearSelection,
-	visibleColumns = [
-		"email",
-		"firstName",
-		"lastName",
-		"address",
-		"status",
-		"tags",
-		"createdAt",
-		"action",
-	],
+	visibleColumns = ["email", "name", "status", "date_created", "action"],
 	total = 0,
 	page = 0,
 	rowsPerPage = 25,
@@ -76,7 +62,7 @@ export default function ContactTable({
 
 	const handleMenuOpen = (
 		event: React.MouseEvent<HTMLElement>,
-		id: string | number
+		id: string | number,
 	) => {
 		setAnchorEl(event.currentTarget);
 		setSelectedId(id);
@@ -148,7 +134,7 @@ export default function ContactTable({
 									Mail address
 								</TableCell>
 							)}
-							{visibleColumns.includes("firstName") && (
+							{visibleColumns.includes("name") && (
 								<TableCell
 									sx={{
 										fontWeight: 700,
@@ -156,29 +142,7 @@ export default function ContactTable({
 										borderBottom: "1px solid #E5E7EB",
 									}}
 								>
-									First name
-								</TableCell>
-							)}
-							{visibleColumns.includes("lastName") && (
-								<TableCell
-									sx={{
-										fontWeight: 700,
-										color: "text.secondary",
-										borderBottom: "1px solid #E5E7EB",
-									}}
-								>
-									Last name
-								</TableCell>
-							)}
-							{visibleColumns.includes("address") && (
-								<TableCell
-									sx={{
-										fontWeight: 700,
-										color: "text.secondary",
-										borderBottom: "1px solid #E5E7EB",
-									}}
-								>
-									Address
+									Name
 								</TableCell>
 							)}
 							{visibleColumns.includes("status") && (
@@ -192,18 +156,7 @@ export default function ContactTable({
 									Status
 								</TableCell>
 							)}
-							{visibleColumns.includes("tags") && (
-								<TableCell
-									sx={{
-										fontWeight: 700,
-										color: "text.secondary",
-										borderBottom: "1px solid #E5E7EB",
-									}}
-								>
-									Tags
-								</TableCell>
-							)}
-							{visibleColumns.includes("createdAt") && (
+							{visibleColumns.includes("date_created") && (
 								<TableCell
 									sx={{
 										fontWeight: 700,
@@ -233,7 +186,7 @@ export default function ContactTable({
 						{contacts.map((contact) => {
 							const isSelected = selectedContacts.includes(contact.id);
 							const style =
-								statusStyles[contact.status] || statusStyles.subscribed;
+								statusStyles[contact.status] || statusStyles.enabled;
 
 							return (
 								<TableRow
@@ -265,34 +218,10 @@ export default function ContactTable({
 											</Typography>
 										</TableCell>
 									)}
-									{visibleColumns.includes("firstName") && (
+									{visibleColumns.includes("name") && (
 										<TableCell>
 											<Typography variant="body2">
-												{contact.firstName || "-"}
-											</Typography>
-										</TableCell>
-									)}
-									{visibleColumns.includes("lastName") && (
-										<TableCell>
-											<Typography variant="body2">
-												{contact.lastName || "-"}
-											</Typography>
-										</TableCell>
-									)}
-									{visibleColumns.includes("address") && (
-										<TableCell>
-											<Typography
-												variant="body2"
-												color="text.secondary"
-												noWrap
-												sx={{
-													maxWidth: 200,
-													display: "block",
-													overflow: "hidden",
-													textOverflow: "ellipsis",
-												}}
-											>
-												{contact.address || "-"}
+												{contact.name || "-"}
 											</Typography>
 										</TableCell>
 									)}
@@ -312,58 +241,20 @@ export default function ContactTable({
 											/>
 										</TableCell>
 									)}
-									{visibleColumns.includes("tags") && (
-										<TableCell>
-											<Stack
-												direction="row"
-												spacing={0.5}
-											>
-												{contact.tags.slice(0, 2).map((tag) => (
-													<Chip
-														key={tag}
-														label={tag}
-														size="small"
-														sx={{
-															bgcolor: "#F3F4F6",
-															color: "#374151",
-															fontWeight: 500,
-															borderRadius: "4px",
-															fontSize: "0.75rem",
-															height: 24,
-														}}
-													/>
-												))}
-												{contact.tags.length > 2 && (
-													<Chip
-														label={`+${contact.tags.length - 2}`}
-														size="small"
-														sx={{
-															bgcolor: "#F3F4F6",
-															color: "#374151",
-															fontWeight: 500,
-															borderRadius: "4px",
-															fontSize: "0.75rem",
-															height: 24,
-														}}
-													/>
-												)}
-											</Stack>
-										</TableCell>
-									)}
-									{visibleColumns.includes("createdAt") && (
+									{visibleColumns.includes("date_created") && (
 										<TableCell>
 											<Typography
 												variant="body2"
 												color="text.secondary"
 											>
-												{contact.createdAt
-													? new Date(contact.createdAt).toLocaleDateString(
+												{contact.date_created
+													? new Date(contact.date_created).toLocaleDateString(
 															"en-GB",
 															{
 																day: "2-digit",
 																month: "2-digit",
 																year: "numeric",
-															}
+															},
 														)
 													: "-"}
 											</Typography>

@@ -1,12 +1,6 @@
 import { create } from "zustand";
 import { Segment } from "../types";
-import {
-	getAllSegments,
-	createSegment,
-	updateSegment,
-	deleteSegment,
-	calculateSegmentCount,
-} from "../service";
+import { getAllSegments } from "../service";
 
 type SegmentState = {
 	segments: Segment[];
@@ -51,11 +45,11 @@ export const fetchSegments = async () => {
 };
 
 export const createSegmentAction = async (
-	segment: Omit<Segment, "id" | "createdAt" | "updatedAt" | "estimatedCount">
+	segment: Omit<Segment, "id" | "createdAt" | "updatedAt" | "estimatedCount">,
 ): Promise<Segment> => {
 	try {
 		segmentStore.setState({ loading: true, error: null });
-		const newSegment = await createSegment(segment);
+		const newSegment = await createSegmentAction(segment);
 		segmentStore.setState((state) => ({
 			segments: [newSegment, ...state.segments],
 			loading: false,
@@ -72,11 +66,11 @@ export const createSegmentAction = async (
 
 export const updateSegmentAction = async (
 	id: string | number,
-	segment: Partial<Omit<Segment, "id" | "createdAt" | "updatedAt">>
+	segment: Partial<Omit<Segment, "id" | "createdAt" | "updatedAt">>,
 ): Promise<Segment> => {
 	try {
 		segmentStore.setState({ loading: true, error: null });
-		const updatedSegment = await updateSegment(id, segment);
+		const updatedSegment = await updateSegmentAction(id, segment);
 		segmentStore.setState((state) => ({
 			segments: state.segments.map((s) => (s.id === id ? updatedSegment : s)),
 			currentSegment:
@@ -94,14 +88,15 @@ export const updateSegmentAction = async (
 };
 
 export const deleteSegmentAction = async (
-	id: string | number
+	id: string | number,
 ): Promise<void> => {
 	try {
 		segmentStore.setState({ loading: true, error: null });
-		await deleteSegment(id);
+		await deleteSegmentAction(id);
 		segmentStore.setState((state) => ({
 			segments: state.segments.filter((s) => s.id !== id),
-			currentSegment: state.currentSegment?.id === id ? null : state.currentSegment,
+			currentSegment:
+				state.currentSegment?.id === id ? null : state.currentSegment,
 			loading: false,
 		}));
 	} catch (err: any) {
@@ -114,13 +109,13 @@ export const deleteSegmentAction = async (
 };
 
 export const calculateSegmentCountAction = async (
-	id: string | number
+	id: string | number,
 ): Promise<number> => {
 	try {
-		const count = await calculateSegmentCount(id);
+		const count = await calculateSegmentCountAction(id);
 		segmentStore.setState((state) => ({
 			segments: state.segments.map((s) =>
-				s.id === id ? { ...s, estimatedCount: count } : s
+				s.id === id ? { ...s, estimatedCount: count } : s,
 			),
 			currentSegment:
 				state.currentSegment?.id === id

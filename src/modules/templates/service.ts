@@ -8,47 +8,6 @@ import {
 import { directusClientWithRest } from "../../services/directus";
 import { DirectusTemplate, Template } from "./types";
 
-// Mock storage for templates
-const MOCK_TEMPLATES_KEY = "boltx_mock_templates";
-
-function getMockTemplates(): Template[] {
-	const stored = localStorage.getItem(MOCK_TEMPLATES_KEY);
-	if (stored) {
-		try {
-			return JSON.parse(stored);
-		} catch (e) {
-			console.error("Failed to parse mock templates", e);
-		}
-	}
-	// Initial default samples for development
-	return [
-		{
-			id: "mock-sample-1",
-			campaignId: "mock-campaign-id",
-			name: "Welcome Email",
-			description: "Standard welcome message for new users",
-			json: {} as any, // Placeholder or import from sample files
-			html: "<h1>Welcome!</h1>",
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-		},
-		{
-			id: "mock-sample-2",
-			campaignId: "mock-campaign-id",
-			name: "Password Reset",
-			description: "Instructions to reset account password",
-			json: {} as any,
-			html: "<h1>Reset Password</h1>",
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-		},
-	];
-}
-
-function saveMockTemplates(templates: Template[]) {
-	localStorage.setItem(MOCK_TEMPLATES_KEY, JSON.stringify(templates));
-}
-
 /**
  * Transform Directus format to Template model
  */
@@ -73,7 +32,7 @@ function transformFromDirectus(directusTemplate: DirectusTemplate): Template {
  * Transform Template model to Directus format
  */
 function transformToDirectus(
-	template: Partial<Template>
+	template: Partial<Template>,
 ): Partial<DirectusTemplate> {
 	const directusTemplate: Partial<DirectusTemplate> = {};
 
@@ -95,16 +54,9 @@ function transformToDirectus(
  * Get all templates for a specific campaign
  */
 export async function getTemplatesByCampaign(
-	campaignId: string | number
+	campaignId: string | number,
 ): Promise<Template[]> {
 	try {
-		if (campaignId.toString().startsWith("mock-")) {
-			const mockTemplates = getMockTemplates();
-			return mockTemplates.filter(
-				(t) => t.campaignId.toString() === campaignId.toString()
-			);
-		}
-
 		const res = await directusClientWithRest.request(
 			readItems("templates", {
 				fields: ["*"],
@@ -114,7 +66,7 @@ export async function getTemplatesByCampaign(
 					},
 				},
 				sort: ["name"],
-			})
+			}),
 		);
 		return (res as DirectusTemplate[]).map(transformFromDirectus);
 	} catch (error) {
@@ -124,24 +76,20 @@ export async function getTemplatesByCampaign(
 }
 
 /**
- * Get all templates (for backward compatibility - will be filtered by campaign in future)
+ * Get all templates
  */
 export async function getAllTemplates(): Promise<Template[]> {
 	try {
-		const mockTemplates = getMockTemplates();
 		const res = await directusClientWithRest.request(
 			readItems("templates", {
 				fields: ["*"],
 				sort: ["name"],
-			})
+			}),
 		);
-		const directusTemplates = (res as DirectusTemplate[]).map(
-			transformFromDirectus
-		);
-		return [...mockTemplates, ...directusTemplates];
+		return (res as DirectusTemplate[]).map(transformFromDirectus);
 	} catch (error) {
 		console.error("Error fetching templates:", error);
-		return getMockTemplates();
+		return [];
 	}
 }
 
@@ -149,16 +97,9 @@ export async function getAllTemplates(): Promise<Template[]> {
  * Get template by ID
  */
 export async function getTemplateById(
-	id: string | number
+	id: string | number,
 ): Promise<Template | null> {
 	try {
-		if (id.toString().startsWith("mock-")) {
-			const mockTemplates = getMockTemplates();
-			return (
-				mockTemplates.find((t) => t.id.toString() === id.toString()) || null
-			);
-		}
-
 		const res = await directusClientWithRest.request(readItem("templates", id));
 		return transformFromDirectus(res as DirectusTemplate);
 	} catch (error) {
@@ -172,28 +113,15 @@ export async function getTemplateById(
  */
 export async function createTemplate(
 	campaignId: string | number,
-	template: Omit<Template, "id" | "campaignId" | "createdAt" | "updatedAt">
+	template: Omit<Template, "id" | "campaignId" | "createdAt" | "updatedAt">,
 ): Promise<Template> {
 	try {
-		if (campaignId.toString().startsWith("mock-")) {
-			const mockTemplates = getMockTemplates();
-			const newTemplate: Template = {
-				...template,
-				id: `mock-template-${Date.now()}`,
-				campaignId: campaignId,
-				createdAt: new Date().toISOString(),
-				updatedAt: new Date().toISOString(),
-			};
-			saveMockTemplates([newTemplate, ...mockTemplates]);
-			return newTemplate;
-		}
-
 		const payload = transformToDirectus({
 			...template,
 			campaignId,
 		});
 		const res = await directusClientWithRest.request(
-			createItem("templates", payload)
+			createItem("templates", payload),
 		);
 		return transformFromDirectus(res as DirectusTemplate);
 	} catch (error) {
@@ -207,24 +135,12 @@ export async function createTemplate(
  */
 export async function updateTemplate(
 	id: string | number,
-	template: Partial<Omit<Template, "id" | "createdAt" | "updatedAt">>
+	template: Partial<Omit<Template, "id" | "createdAt" | "updatedAt">>,
 ): Promise<Template> {
 	try {
-		if (id.toString().startsWith("mock-")) {
-			const mockTemplates = getMockTemplates();
-			const updatedTemplates = mockTemplates.map((t) => {
-				if (t.id.toString() === id.toString()) {
-					return { ...t, ...template, updatedAt: new Date().toISOString() };
-				}
-				return t;
-			});
-			saveMockTemplates(updatedTemplates);
-			return updatedTemplates.find((t) => t.id.toString() === id.toString())!;
-		}
-
 		const payload = transformToDirectus(template);
 		const res = await directusClientWithRest.request(
-			updateItem("templates", id, payload)
+			updateItem("templates", id, payload),
 		);
 		return transformFromDirectus(res as DirectusTemplate);
 	} catch (error) {
@@ -250,7 +166,7 @@ export async function deleteTemplate(id: string | number): Promise<void> {
  */
 export async function duplicateTemplate(
 	id: string | number,
-	newName?: string
+	newName?: string,
 ): Promise<Template> {
 	try {
 		const original = await getTemplateById(id);

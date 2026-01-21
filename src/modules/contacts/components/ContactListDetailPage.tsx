@@ -44,24 +44,24 @@ export default function ContactListDetailPage() {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(25);
 	const [selectedContacts, setSelectedContacts] = useState<(string | number)[]>(
-		[]
+		[],
 	);
 	const [dateAnchorEl, setDateAnchorEl] = useState<null | HTMLElement>(null);
 	const [columnsAnchorEl, setColumnsAnchorEl] = useState<null | HTMLElement>(
-		null
+		null,
 	);
 	const [statusAnchorEl, setStatusAnchorEl] = useState<null | HTMLElement>(
-		null
+		null,
 	);
 	const [tagAnchorEl, setTagAnchorEl] = useState<null | HTMLElement>(null);
 	const [segmentAnchorEl, setSegmentAnchorEl] = useState<null | HTMLElement>(
-		null
+		null,
 	);
 
 	const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
 	const [selectedSegments, setSelectedSegments] = useState<(string | number)[]>(
-		[]
+		[],
 	);
 
 	const [importModalOpen, setImportModalOpen] = useState(false);
@@ -69,23 +69,17 @@ export default function ContactListDetailPage() {
 
 	const [visibleColumns, setVisibleColumns] = useState<string[]>([
 		"email",
-		"firstName",
-		"lastName",
-		"address",
+		"name",
 		"status",
-		"tags",
-		"createdAt",
+		"date_created",
 		"action",
 	]);
 
 	const availableColumns = [
 		{ key: "email", label: "Mail address" },
-		{ key: "firstName", label: "First name" },
-		{ key: "lastName", label: "Last name" },
-		{ key: "address", label: "Address" },
+		{ key: "name", label: "Name" },
 		{ key: "status", label: "Status" },
-		{ key: "tags", label: "Tags" },
-		{ key: "createdAt", label: "Date created" },
+		{ key: "date_created", label: "Date created" },
 		{ key: "action", label: "Action" },
 	];
 
@@ -93,54 +87,47 @@ export default function ContactListDetailPage() {
 		setVisibleColumns((prev) =>
 			prev.includes(columnKey)
 				? prev.filter((key) => key !== columnKey)
-				: [...prev, columnKey]
+				: [...prev, columnKey],
 		);
 	};
 
 	const contactList = contactLists.find(
-		(list) => String(list.id) === String(id)
+		(list) => String(list.slug) === String(id),
 	);
 
-	const filteredContacts = contacts.filter((contact) => {
+	const contactsInList = contactList?.subscribers || [];
+
+	const filteredContacts = contactsInList.filter((contact) => {
 		// 1. Search Query
 		const query = searchQuery.toLowerCase();
 		const matchesSearch =
 			!searchQuery ||
 			contact.email.toLowerCase().includes(query) ||
-			contact.firstName?.toLowerCase().includes(query) ||
-			contact.lastName?.toLowerCase().includes(query);
+			contact.name?.toLowerCase().includes(query);
 
 		// 2. Status Filter
 		const matchesStatus =
 			selectedStatus.length === 0 || selectedStatus.includes(contact.status);
 
-		// 3. Tag Filter
-		const matchesTags =
-			selectedTags.length === 0 ||
-			contact.tags.some((t) => selectedTags.includes(t));
+		// 3. Tag Filter (Subscribers in schema don't have tags field directly, skipping for now)
+		const matchesTags = true;
 
-		// 4. Segment Filter (Mock logic: if segment filter is on, we'd ideally apply rules, but for now we'll just skip or do basic match if segment had member ids)
-		// For this demo, let's assume segment filter just works if contact is in the list (already filtered by contactList below)
+		// 4. Segment Filter
 		const matchesSegment = true;
 
 		return matchesSearch && matchesStatus && matchesTags && matchesSegment;
 	});
 
-	// Get unique tags for filter options
-	const allTags = Array.from(new Set(contacts.flatMap((c) => c.tags || [])));
-	const statusOptions = [
-		"subscribed",
-		"unsubscribed",
-		"non-subscribed",
-		"bounced",
-	];
+	// Get unique tags (skipping as model changed)
+	const allTags: string[] = [];
+	const statusOptions = ["enabled", "blocklisted", "duplicate"];
 
 	// Pagination logic
 	const totalContacts = filteredContacts.length;
 	const totalPages = Math.ceil(totalContacts / rowsPerPage);
 	const paginatedContacts = filteredContacts.slice(
 		page * rowsPerPage,
-		(page + 1) * rowsPerPage
+		(page + 1) * rowsPerPage,
 	);
 
 	useEffect(() => {
@@ -159,7 +146,7 @@ export default function ContactListDetailPage() {
 
 	const handleSelectOne = (id: string | number) => {
 		setSelectedContacts((prev) =>
-			prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+			prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
 		);
 	};
 
@@ -335,7 +322,7 @@ export default function ContactListDetailPage() {
 													setSelectedSegments((prev) =>
 														prev.includes(s.id)
 															? prev.filter((id) => id !== s.id)
-															: [...prev, s.id]
+															: [...prev, s.id],
 													);
 												}}
 												size="small"
@@ -395,7 +382,7 @@ export default function ContactListDetailPage() {
 													setSelectedStatus((prev) =>
 														prev.includes(status)
 															? prev.filter((s) => s !== status)
-															: [...prev, status]
+															: [...prev, status],
 													);
 												}}
 												size="small"
@@ -470,7 +457,7 @@ export default function ContactListDetailPage() {
 													setSelectedTags((prev) =>
 														prev.includes(tag)
 															? prev.filter((t) => t !== tag)
-															: [...prev, tag]
+															: [...prev, tag],
 													);
 												}}
 												size="small"

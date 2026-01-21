@@ -1,31 +1,47 @@
-export type ContactStatus =
-	| "subscribed"
-	| "unsubscribed"
-	| "non-subscribed"
-	| "bounced";
+export type ContactStatus = "enabled" | "blocklisted" | "duplicate";
 
 export interface Contact {
-	id: string | number;
+	id: string;
 	email: string;
-	firstName?: string;
-	lastName?: string;
-	address?: string;
-	tags: string[];
+	name?: string;
 	status: ContactStatus;
-	createdAt?: string;
+	attribs?: Record<string, any>;
+	date_created?: string;
+	date_updated?: string;
 }
 
+export type ContactListStatus = "published" | "draft" | "archived";
+
 export interface ContactList {
-	id: string | number;
+	slug: string;
 	name: string;
-	description?: string;
-	isDefault: boolean;
-	isEnabled: boolean;
-	contactCount: number; // Computed from contactIds length
-	contactIds: (string | number)[]; // For backward compatibility
-	tags?: string[];
-	createdAt?: string;
-	updatedAt?: string;
+	status: ContactListStatus;
+	subscribers?: Contact[];
+	date_created?: string;
+	date_updated?: string;
+	// Helper field for UI
+	contactCount?: number;
+}
+
+export interface DirectusSubscriber {
+	id: string;
+	email: string;
+	name?: string;
+	status: ContactStatus;
+	attribs?: any;
+	date_created?: string;
+	date_updated?: string;
+}
+
+export interface DirectusContactList {
+	slug: string;
+	name: string;
+	status: ContactListStatus;
+	subscribers?: {
+		subscribers_id: DirectusSubscriber | string;
+	}[];
+	date_created?: string;
+	date_updated?: string;
 }
 
 // Segment types

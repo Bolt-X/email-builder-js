@@ -54,7 +54,7 @@ const campaignMetadataStore = create<CampaignMetadataState>(() => ({
 	tagsFilter: [],
 	dateRangeFilter: null,
 	viewMode: "table",
-	autosaveEnabled: true,
+	autosaveEnabled: false,
 	lastSavedAt: null,
 	isDirty: false,
 	visibleColumns: getStoredColumns(),
@@ -76,7 +76,7 @@ export const useCampaignFilters = () =>
 			tagsFilter: s.tagsFilter,
 			dateRangeFilter: s.dateRangeFilter,
 		}),
-		shallow
+		shallow,
 	);
 export const useCampaignViewMode = () =>
 	campaignMetadataStore((s) => s.viewMode);
@@ -92,6 +92,15 @@ export const useVisibleColumns = () =>
 // --- Actions ---
 export const setCurrentCampaign = (campaign: Campaign | null) => {
 	campaignMetadataStore.setState({ currentCampaign: campaign, isDirty: false });
+};
+
+export const updateCurrentCampaign = (updates: Partial<Campaign>) => {
+	campaignMetadataStore.setState((state) => ({
+		currentCampaign: state.currentCampaign
+			? { ...state.currentCampaign, ...updates }
+			: null,
+		isDirty: true,
+	}));
 };
 
 export const setSearchQuery = (query: string) => {
@@ -111,7 +120,7 @@ export const setTagsFilter = (tags: string[]) => {
 };
 
 export const setDateRangeFilter = (
-	range: { start: string; end: string } | null
+	range: { start: string; end: string } | null,
 ) => {
 	campaignMetadataStore.setState({ dateRangeFilter: range });
 };
@@ -185,7 +194,7 @@ export const fetchCampaignById = async (id: string | number) => {
 };
 
 export const createCampaignAction = async (
-	campaign: Omit<Campaign, "id" | "createdAt" | "updatedAt">
+	campaign: Omit<Campaign, "id" | "createdAt" | "updatedAt">,
 ): Promise<Campaign> => {
 	try {
 		campaignMetadataStore.setState({ loading: true, error: null });
@@ -207,20 +216,32 @@ export const createCampaignAction = async (
 
 export const updateCampaignMetadataAction = async (
 	id: string | number,
-	campaign: Partial<Omit<Campaign, "id" | "createdAt" | "updatedAt">>
+	campaign: Partial<Omit<Campaign, "id" | "createdAt" | "updatedAt">>,
 ): Promise<Campaign> => {
 	try {
-		campaignMetadataStore.setState({ loading: true, error: null });
-		const updatedCampaign = await updateCampaign(id, campaign);
+		// Optimistic update
 		campaignMetadataStore.setState((state) => ({
+			error: null,
 			campaigns: state.campaigns.map((c) =>
-				c.id === id ? updatedCampaign : c
+				c.slug === id ? { ...c, ...campaign } : c,
 			),
 			currentCampaign:
-				state.currentCampaign?.id === id
+				state.currentCampaign?.slug === id
+					? { ...state.currentCampaign, ...campaign }
+					: state.currentCampaign,
+		}));
+
+		const updatedCampaign = await updateCampaign(id, campaign);
+
+		// Sync with actual server data
+		campaignMetadataStore.setState((state) => ({
+			campaigns: state.campaigns.map((c) =>
+				c.slug === id ? updatedCampaign : c,
+			),
+			currentCampaign:
+				state.currentCampaign?.slug === id
 					? updatedCampaign
 					: state.currentCampaign,
-			loading: false,
 		}));
 		markSaved();
 		return updatedCampaign;
@@ -233,16 +254,14 @@ export const updateCampaignMetadataAction = async (
 	}
 };
 
-export const deleteCampaignAction = async (
-	id: string | number
-): Promise<void> => {
+export const deleteCampaignAction = async (slug: string): Promise<void> => {
 	try {
 		campaignMetadataStore.setState({ loading: true, error: null });
-		await deleteCampaign(id);
+		await deleteCampaign(slug);
 		campaignMetadataStore.setState((state) => ({
-			campaigns: state.campaigns.filter((c) => c.id !== id),
+			campaigns: state.campaigns.filter((c) => c.slug !== slug),
 			currentCampaign:
-				state.currentCampaign?.id === id ? null : state.currentCampaign,
+				state.currentCampaign?.slug === slug ? null : state.currentCampaign,
 			loading: false,
 		}));
 	} catch (err: any) {
@@ -256,7 +275,7 @@ export const deleteCampaignAction = async (
 
 export const duplicateCampaignAction = async (
 	id: string | number,
-	newName?: string
+	newName?: string,
 ): Promise<Campaign> => {
 	try {
 		campaignMetadataStore.setState({ loading: true, error: null });

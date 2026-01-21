@@ -12,136 +12,138 @@ import {
 	DirectusCampaign,
 	Recipient,
 } from "./types";
-import mockCampaigns from "./data/campaigns.json";
-
-// Simulation of a local file/database using localStorage
-const MOCK_STORAGE_KEY = "boltx_mock_campaigns";
-
-function getMockCampaigns(): Campaign[] {
-	const stored = localStorage.getItem(MOCK_STORAGE_KEY);
-	if (stored) {
-		try {
-			return JSON.parse(stored);
-		} catch (e) {
-			console.error("Failed to parse mock campaigns from localStorage", e);
-		}
-	}
-	// Initial dummy data from JSON file
-	return mockCampaigns as Campaign[];
-}
-
-function saveMockCampaigns(campaigns: Campaign[]) {
-	localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(campaigns));
-	console.log("Mock data saved to simulated JSON storage (localStorage)");
-}
 
 /**
  * Transform Directus format to Campaign model
  */
-function transformFromDirectus(directusCampaign: DirectusCampaign): Campaign {
-	// Parse recipients (new format) or fallback to legacy contactListId
-	let recipients: Recipient[] = [];
-	if (directusCampaign.recipients) {
-		try {
-			recipients = JSON.parse(directusCampaign.recipients);
-		} catch (e) {
-			console.warn("Failed to parse recipients:", e);
-		}
-	}
-	// Legacy support: if contact_list_id exists but no recipients, create a recipient
-	if (recipients.length === 0 && directusCampaign.contact_list_id) {
-		recipients = [
-			{
-				id: directusCampaign.contact_list_id,
-				type: "list",
-				name: "Contact List",
-			},
-		];
-	}
-
-	// Handle sendTime and scheduledAt
-	const scheduleAt =
-		directusCampaign.scheduled_at || directusCampaign.schedule_at;
-	const sendTime =
-		directusCampaign.send_time || (scheduleAt ? "schedule" : "now");
-
+export function transformFromDirectus(
+	directusCampaign: DirectusCampaign,
+): Campaign {
 	return {
-		id: directusCampaign.id,
+		slug: directusCampaign.slug,
 		name: directusCampaign.name,
 		description: directusCampaign.description,
 		status: directusCampaign.status,
-		templateId: directusCampaign.template_id,
+		template: directusCampaign.template,
 		subject: directusCampaign.subject || "",
 		fromAddress: directusCampaign.from_address || "",
-		recipients,
-		contactListId: directusCampaign.contact_list_id, // Legacy support
-		tags: directusCampaign.tags ? JSON.parse(directusCampaign.tags) : [],
-		sendTime: sendTime as "now" | "schedule",
-		scheduledAt: scheduleAt,
-		scheduleAt, // Legacy support
-		stats: {
-			sent: directusCampaign.stats_sent || 0,
-			opened: directusCampaign.stats_opened || 0,
-			clicked: directusCampaign.stats_clicked || 0,
-			bounced: directusCampaign.stats_bounced || 0,
-			total: directusCampaign.stats_total || 0,
-		},
-		createdAt: directusCampaign.date_created,
-		updatedAt: directusCampaign.date_updated,
-		lastEditedAt:
-			directusCampaign.last_edited_at || directusCampaign.date_updated,
-		startedAt: directusCampaign.started_at,
-		endedAt: directusCampaign.ended_at,
+		recipients: (directusCampaign.contact_lists || []).map((t: any) => {
+			if (typeof t === "object" && t.contact_lists_slug) {
+				const list = t.contact_lists_slug;
+				if (typeof list === "object") {
+					return {
+						id: list.slug || list.id,
+						type: "list" as const,
+						name: list.name || list.slug,
+						count: list.contactCount || 0,
+					};
+				}
+				return {
+					id: list,
+					type: "list" as const,
+					name: list,
+					count: 0,
+				};
+			}
+			return t;
+		}),
+		tags: (directusCampaign.tags || []).map((t: any) => {
+			if (typeof t === "object") {
+				// If it's a junction object with a nested tag object
+				if (t.tag && typeof t.tag === "object") {
+					return {
+						slug: t.tag.slug || t.tag.id,
+						title: t.tag.title || t.tag.id,
+					};
+				}
+				// If it's a junction object with the slug directly in the 'tag' field
+				if (t.tag) {
+					return {
+						slug: t.tag,
+						title: t.tag, // Fallback to slug for title if not joined
+					};
+				}
+				// If it's already a tag object
+				if (t.slug || t.title) {
+					return t;
+				}
+			}
+			return t; // Return as is (could be an ID)
+		}),
+		// Send settings logic
+		sendTime: directusCampaign.date_scheduled ? "schedule" : "now",
+		date_scheduled: directusCampaign.date_scheduled,
+		date_started: directusCampaign.date_started,
+		date_ended: directusCampaign.date_ended,
+		// Stats
+		views: directusCampaign.views,
+		clicks: directusCampaign.clicks,
+		sent: directusCampaign.sent,
+		bounces: directusCampaign.bounces,
+		// Metadata
+		date_created: directusCampaign.date_created,
+		date_updated: directusCampaign.date_updated,
+		user_created: directusCampaign.user_created,
+		user_updated: directusCampaign.user_updated,
+		sort: directusCampaign.sort,
 	};
 }
 
 /**
  * Transform Campaign model to Directus format
  */
-function transformToDirectus(
-	campaign: Partial<Campaign>
+export function transformToDirectus(
+	campaign: Partial<Campaign>,
 ): Partial<DirectusCampaign> {
 	const directusCampaign: Partial<DirectusCampaign> = {};
 
+	if (campaign.slug !== undefined) directusCampaign.slug = campaign.slug;
 	if (campaign.name !== undefined) directusCampaign.name = campaign.name;
 	if (campaign.description !== undefined)
 		directusCampaign.description = campaign.description;
 	if (campaign.status !== undefined) directusCampaign.status = campaign.status;
-	if (campaign.templateId !== undefined)
-		directusCampaign.template_id = campaign.templateId;
+	if (campaign.template !== undefined)
+		directusCampaign.template = campaign.template as number;
 	if (campaign.subject !== undefined)
 		directusCampaign.subject = campaign.subject;
 	if (campaign.fromAddress !== undefined)
 		directusCampaign.from_address = campaign.fromAddress;
-	if (campaign.recipients !== undefined)
-		directusCampaign.recipients = JSON.stringify(campaign.recipients);
-	// Legacy support
-	if (campaign.contactListId !== undefined)
-		directusCampaign.contact_list_id = campaign.contactListId;
-	if (campaign.tags !== undefined)
-		directusCampaign.tags = JSON.stringify(campaign.tags);
-	if (campaign.sendTime !== undefined)
-		directusCampaign.send_time = campaign.sendTime;
-	if (campaign.scheduledAt !== undefined) {
-		directusCampaign.scheduled_at = campaign.scheduledAt;
-		directusCampaign.schedule_at = campaign.scheduledAt; // Legacy support
-	} else if (campaign.scheduleAt !== undefined) {
-		directusCampaign.schedule_at = campaign.scheduleAt; // Legacy support
-		directusCampaign.scheduled_at = campaign.scheduleAt;
+
+	if (campaign.recipients !== undefined) {
+		const listRecipients = (campaign.recipients || []).filter(
+			(r) => r.type === "list",
+		);
+		directusCampaign.contact_lists = listRecipients.map((r) => ({
+			contact_lists_slug: r.id,
+		}));
 	}
-	if (campaign.stats) {
-		directusCampaign.stats_sent = campaign.stats.sent;
-		directusCampaign.stats_opened = campaign.stats.opened;
-		directusCampaign.stats_clicked = campaign.stats.clicked;
-		directusCampaign.stats_bounced = campaign.stats.bounced;
-		directusCampaign.stats_total = campaign.stats.total;
+
+	if (campaign.tags !== undefined) {
+		// Map M2M tags to junction objects
+		directusCampaign.tags = (campaign.tags || []).map((t: any) => {
+			const slug = t.slug || (typeof t === "string" ? t : undefined);
+			if (slug) {
+				return {
+					tag: slug,
+				};
+			}
+			return t;
+		});
 	}
-	if (campaign.startedAt !== undefined)
-		directusCampaign.started_at = campaign.startedAt;
-	if (campaign.endedAt !== undefined)
-		directusCampaign.ended_at = campaign.endedAt;
-	// Update lastEditedAt on any update
-	directusCampaign.last_edited_at = new Date().toISOString();
+
+	if (campaign.date_scheduled !== undefined)
+		directusCampaign.date_scheduled = campaign.date_scheduled;
+
+	if (campaign.date_started !== undefined)
+		directusCampaign.date_started = campaign.date_started;
+	if (campaign.date_ended !== undefined)
+		directusCampaign.date_ended = campaign.date_ended;
+
+	if (campaign.views !== undefined) directusCampaign.views = campaign.views;
+	if (campaign.clicks !== undefined) directusCampaign.clicks = campaign.clicks;
+	if (campaign.sent !== undefined) directusCampaign.sent = campaign.sent;
+	if (campaign.bounces !== undefined)
+		directusCampaign.bounces = campaign.bounces;
 
 	return directusCampaign;
 }
@@ -164,7 +166,9 @@ function buildFilterQuery(filters: CampaignFilters) {
 	}
 
 	if (filters.contactListId) {
-		filter.contact_list_id = { _eq: filters.contactListId };
+		filter.contact_lists = {
+			contact_lists_slug: { _eq: filters.contactListId },
+		};
 	}
 
 	if (filters.tags && filters.tags.length > 0) {
@@ -187,100 +191,87 @@ function buildFilterQuery(filters: CampaignFilters) {
  * Get all campaigns with optional filters
  */
 export async function getCampaigns(
-	filters?: CampaignFilters
+	filters?: CampaignFilters,
 ): Promise<Campaign[]> {
 	try {
-		// For development: Use mock data
-		let filteredData = getMockCampaigns();
-
-		if (filters) {
-			const { searchQuery, status, contactListId, tags, dateRange } = filters;
-
-			// Filter by search query (name or subject)
-			if (searchQuery) {
-				const query = searchQuery.toLowerCase();
-				filteredData = filteredData.filter(
-					(c) =>
-						c.name.toLowerCase().includes(query) ||
-						c.subject.toLowerCase().includes(query)
-				);
-			}
-
-			// Filter by status (multiple)
-			if (status && status.length > 0) {
-				filteredData = filteredData.filter((c) => status.includes(c.status));
-			}
-
-			// Filter by contact list
-			if (contactListId) {
-				filteredData = filteredData.filter((c) =>
-					c.recipients?.some((r) => String(r.id) === String(contactListId))
-				);
-			}
-
-			// Filter by tags (any match)
-			if (tags && tags.length > 0) {
-				filteredData = filteredData.filter((c) =>
-					c.tags?.some((tag) => tags.includes(tag))
-				);
-			}
-
-			// Filter by date range (scheduleAt)
-			if (dateRange) {
-				const start = new Date(dateRange.start).getTime();
-				const end = new Date(dateRange.end || new Date()).getTime();
-				filteredData = filteredData.filter((c) => {
-					if (!c.scheduleAt && !c.scheduledAt) return false;
-					const campaignDate = new Date(
-						c.scheduleAt || c.scheduledAt!
-					).getTime();
-					return campaignDate >= start && campaignDate <= end;
-				});
-			}
-		}
-
-		return filteredData;
-
-		/* Later: API implementation
 		const query: any = {
-			fields: ["*"],
-			sort: ["-date_created"],
+			fields: [
+				"*",
+				"tags.*",
+				"tags.tag.*",
+				"contact_lists.*",
+				"contact_lists.contact_lists_slug.*",
+			],
+			sort: "-date_created",
 		};
 
 		if (filters) {
-			const filterQuery = buildFilterQuery(filters);
-			if (filterQuery) {
-				query.filter = filterQuery;
+			const directusFilter: any = {};
+
+			if (filters.searchQuery) {
+				directusFilter._or = [
+					{ name: { _icontains: filters.searchQuery } },
+					{ subject: { _icontains: filters.searchQuery } },
+				];
+			}
+
+			if (filters.status && filters.status.length > 0) {
+				directusFilter.status = { _in: filters.status };
+			}
+
+			if (filters.contactListId) {
+				directusFilter.contact_lists = {
+					contact_lists_slug: { _eq: filters.contactListId },
+				};
+			}
+
+			if (filters.tags && filters.tags.length > 0) {
+				directusFilter.tags = {
+					tag: { _in: filters.tags },
+				};
+			}
+
+			if (filters.dateRange) {
+				directusFilter.date_created = {
+					_gte: filters.dateRange.start,
+					_lte: filters.dateRange.end,
+				};
+			}
+
+			if (Object.keys(directusFilter).length > 0) {
+				query.filter = directusFilter;
 			}
 		}
 
 		const res = await directusClientWithRest.request(
-			readItems("campaigns", query)
+			readItems("campaigns", query),
 		);
 		return (res as DirectusCampaign[]).map(transformFromDirectus);
-        */
 	} catch (error) {
 		console.error("Error fetching campaigns:", error);
-		return getMockCampaigns();
+		return [];
 	}
 }
 
 /**
- * Get campaign by ID
+ * Get campaign by ID (using slug as ID)
  */
 export async function getCampaignById(
-	id: string | number
+	id: string | number,
 ): Promise<Campaign | null> {
 	try {
-		const mockData = getMockCampaigns();
-		return mockData.find((c) => c.id.toString() === id.toString()) || null;
-
-		/* Later: API implementation
 		const res = await directusClientWithRest.request(
-			readItem("campaigns", id)
+			readItem("campaigns", id, {
+				fields: [
+					"*",
+					"tags.*",
+					"tags.tag.*",
+					"contact_lists.*",
+					"contact_lists.contact_lists_slug.*",
+				],
+			}),
 		);
 		return transformFromDirectus(res as DirectusCampaign);
-        */
 	} catch (error) {
 		console.error("Error fetching campaign:", error);
 		return null;
@@ -291,29 +282,22 @@ export async function getCampaignById(
  * Create a new campaign
  */
 export async function createCampaign(
-	campaign: Omit<Campaign, "id" | "createdAt" | "updatedAt">
+	campaign: Omit<Campaign, "date_created" | "date_updated">,
 ): Promise<Campaign> {
 	try {
-		const mockData = getMockCampaigns();
-		const newCampaign: Campaign = {
-			...campaign,
-			id: `mock-${Date.now()}`,
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-		};
-
-		const updatedData = [newCampaign, ...mockData];
-		saveMockCampaigns(updatedData);
-
-		return newCampaign;
-
-		/* Later: API implementation
 		const payload = transformToDirectus(campaign);
 		const res = await directusClientWithRest.request(
-			createItem("campaigns", payload)
+			createItem("campaigns", payload, {
+				fields: [
+					"*",
+					"tags.*",
+					"tags.tag.*",
+					"contact_lists.*",
+					"contact_lists.contact_lists_slug.*",
+				],
+			}),
 		);
 		return transformFromDirectus(res as DirectusCampaign);
-        */
 	} catch (error) {
 		console.error("Error creating campaign:", error);
 		throw error;
@@ -325,12 +309,20 @@ export async function createCampaign(
  */
 export async function updateCampaign(
 	id: string | number,
-	campaign: Partial<Omit<Campaign, "id" | "createdAt" | "updatedAt">>
+	campaign: Partial<Omit<Campaign, "date_created" | "date_updated">>,
 ): Promise<Campaign> {
 	try {
 		const payload = transformToDirectus(campaign);
 		const res = await directusClientWithRest.request(
-			updateItem("campaigns", id, payload)
+			updateItem("campaigns", id, payload, {
+				fields: [
+					"*",
+					"tags.*",
+					"tags.tag.*",
+					"contact_lists.*",
+					"contact_lists.contact_lists_slug.*",
+				],
+			}),
 		);
 		return transformFromDirectus(res as DirectusCampaign);
 	} catch (error) {
@@ -356,7 +348,7 @@ export async function deleteCampaign(id: string | number): Promise<void> {
  */
 export async function startCampaign(
 	id: string | number,
-	sendNow: boolean = true
+	sendNow: boolean = true,
 ): Promise<Campaign> {
 	const campaign = await getCampaignById(id);
 	if (!campaign) {
@@ -368,7 +360,7 @@ export async function startCampaign(
 		sendNow || campaign.sendTime === "now" ? "running" : "scheduled";
 	return updateCampaign(id, {
 		status,
-		startedAt: status === "running" ? new Date().toISOString() : undefined,
+		date_started: status === "running" ? new Date().toISOString() : undefined,
 	});
 }
 
@@ -391,22 +383,24 @@ export async function stopCampaign(id: string | number): Promise<Campaign> {
  */
 export async function duplicateCampaign(
 	id: string | number,
-	newName?: string
+	newName?: string,
 ): Promise<Campaign> {
 	const campaign = await getCampaignById(id);
 	if (!campaign) {
 		throw new Error("Campaign not found");
 	}
 
-	const duplicatedCampaign: Omit<Campaign, "id" | "createdAt" | "updatedAt"> = {
+	const duplicatedCampaign: Omit<Campaign, "date_created" | "date_updated"> = {
 		...campaign,
 		name: newName || `${campaign.name} (Copy)`,
 		status: "draft",
 		sendTime: "now",
-		scheduledAt: undefined,
-		scheduleAt: undefined,
-		stats: undefined,
-		templateId: undefined, // Will be cloned separately
+		date_scheduled: undefined,
+		views: 0,
+		clicks: 0,
+		sent: 0,
+		bounces: 0,
+		template: undefined, // Will be cloned separately
 	};
 
 	return createCampaign(duplicatedCampaign);
@@ -415,11 +409,29 @@ export async function duplicateCampaign(
 /**
  * Send test email for a campaign
  */
-export async function sendTestEmail(
-	id: string | number,
-	testEmails: string[]
-): Promise<void> {
-	// This will be implemented with the sending service
-	// For now, just a placeholder
-	console.log("Sending test email for campaign", id, "to", testEmails);
+export async function sendTestEmail(payload: {
+	to: string;
+	subject: string;
+	template: string;
+}): Promise<void> {
+	try {
+		const response = await fetch(
+			`${import.meta.env.VITE_SEND_TEST_EMAIL_URL}`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(payload),
+			},
+		);
+
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({}));
+			throw new Error(errorData.message || "Failed to send test email");
+		}
+	} catch (error) {
+		console.error("Error sending test email:", error);
+		throw error;
+	}
 }

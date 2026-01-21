@@ -7,11 +7,9 @@ import {
 	Typography,
 	Paper,
 } from "@mui/material";
-import {
-	MonitorOutlined,
-	PhoneIphoneOutlined,
-} from "@mui/icons-material";
+import { MonitorOutlined, PhoneIphoneOutlined } from "@mui/icons-material";
 import { useCampaignTemplateEditor } from "../../stores/campaign.template.store";
+import { useCurrentCampaign } from "../../stores/campaign.metadata.store";
 
 type PreviewMode = "desktop" | "mobile";
 
@@ -24,10 +22,11 @@ export default function CampaignPreviewPanel({
 }: CampaignPreviewPanelProps) {
 	const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
 	const { html } = useCampaignTemplateEditor();
+	const campaign = useCurrentCampaign();
 
 	const handleModeChange = (
 		event: React.MouseEvent<HTMLElement>,
-		newMode: PreviewMode | null
+		newMode: PreviewMode | null,
 	) => {
 		if (newMode !== null) {
 			setPreviewMode(newMode);
@@ -47,7 +46,10 @@ export default function CampaignPreviewPanel({
 						minHeight: "400px",
 					}}
 				>
-					<Typography variant="body2" color="text.secondary">
+					<Typography
+						variant="body2"
+						color="text.secondary"
+					>
 						No template content yet. Start building your email.
 					</Typography>
 				</Box>
@@ -70,12 +72,37 @@ export default function CampaignPreviewPanel({
 					elevation={0}
 					sx={{
 						width: previewMode === "desktop" ? "100%" : "375px",
-						maxWidth: previewMode === "desktop" ? "600px" : "375px",
+						maxWidth: previewMode === "desktop" ? "100%" : "375px",
 						height: "fit-content",
 						bgcolor: "white",
 						boxShadow: 2,
+						overflow: "hidden",
+						transition: "all 0.3s ease",
 					}}
 				>
+					{/* Fake Browser/Email Header */}
+					<Box
+						sx={{
+							p: 2,
+							borderBottom: 1,
+							borderColor: "divider",
+							bgcolor: "#f8f9fa",
+						}}
+					>
+						<Typography
+							variant="caption"
+							color="text.secondary"
+							display="block"
+						>
+							Subject: <strong>{campaign?.subject || "No Subject"}</strong>
+						</Typography>
+						<Typography
+							variant="caption"
+							color="text.secondary"
+						>
+							From: {campaign?.fromAddress || "No From Address"}
+						</Typography>
+					</Box>
 					<Box
 						dangerouslySetInnerHTML={{ __html: html }}
 						sx={{

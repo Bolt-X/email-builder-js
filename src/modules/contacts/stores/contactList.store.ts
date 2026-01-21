@@ -28,9 +28,12 @@ type ContactListState = {
 };
 
 const getStoredColumns = (): string[] => {
-	if (typeof window === "undefined") return ["name", "description", "contactCount", "createdAt", "actions"];
+	if (typeof window === "undefined")
+		return ["name", "status", "contactCount", "date_created", "actions"];
 	const stored = localStorage.getItem("contactListColumns");
-	return stored ? JSON.parse(stored) : ["name", "description", "contactCount", "createdAt", "actions"];
+	return stored
+		? JSON.parse(stored)
+		: ["name", "status", "contactCount", "date_created", "actions"];
 };
 
 const contactListStore = create<ContactListState>(() => ({
@@ -49,7 +52,8 @@ const contactListStore = create<ContactListState>(() => ({
 
 // --- Selectors ---
 export const useContactLists = () => contactListStore((s) => s.contactLists);
-export const useCurrentContactList = () => contactListStore((s) => s.currentList);
+export const useCurrentContactList = () =>
+	contactListStore((s) => s.currentList);
 export const useContactListsLoading = () => contactListStore((s) => s.loading);
 export const useContactListsError = () => contactListStore((s) => s.error);
 export const useContactListFilters = () =>
@@ -59,7 +63,7 @@ export const useContactListFilters = () =>
 			sortBy: s.sortBy,
 			sortOrder: s.sortOrder,
 		}),
-		shallow
+		shallow,
 	);
 export const useContactListPagination = () =>
 	contactListStore(
@@ -67,7 +71,7 @@ export const useContactListPagination = () =>
 			page: s.page,
 			rowsPerPage: s.rowsPerPage,
 		}),
-		shallow
+		shallow,
 	);
 export const useSelectedContactLists = () =>
 	contactListStore((s) => s.selectedIds);
@@ -83,10 +87,15 @@ export const setSearchQuery = (query: string) => {
 	contactListStore.setState({ searchQuery: query, page: 0 });
 };
 
-export const setSort = (sortBy: ContactListState["sortBy"], sortOrder?: "asc" | "desc") => {
+export const setSort = (
+	sortBy: ContactListState["sortBy"],
+	sortOrder?: "asc" | "desc",
+) => {
 	contactListStore.setState((state) => ({
 		sortBy,
-		sortOrder: sortOrder || (state.sortBy === sortBy && state.sortOrder === "asc" ? "desc" : "asc"),
+		sortOrder:
+			sortOrder ||
+			(state.sortBy === sortBy && state.sortOrder === "asc" ? "desc" : "asc"),
 	}));
 };
 
@@ -98,18 +107,18 @@ export const setRowsPerPage = (rowsPerPage: number) => {
 	contactListStore.setState({ rowsPerPage, page: 0 });
 };
 
-export const toggleSelectContactList = (id: string | number) => {
+export const toggleSelectContactList = (slug: string) => {
 	contactListStore.setState((state) => {
-		const selectedIds = state.selectedIds.includes(id)
-			? state.selectedIds.filter((selectedId) => selectedId !== id)
-			: [...state.selectedIds, id];
-		return { selectedIds };
+		const selectedIds = state.selectedIds.includes(slug)
+			? state.selectedIds.filter((id) => id !== slug)
+			: [...state.selectedIds, slug];
+		return { selectedIds: selectedIds as string[] };
 	});
 };
 
 export const selectAllContactLists = () => {
 	contactListStore.setState((state) => ({
-		selectedIds: state.contactLists.map((list) => list.id),
+		selectedIds: state.contactLists.map((list) => list.slug),
 	}));
 };
 
@@ -142,11 +151,17 @@ export const fetchContactLists = async () => {
 };
 
 export const createContactListAction = async (
-	list: Omit<ContactList, "id" | "createdAt" | "updatedAt" | "contactCount">
+	list: Omit<
+		ContactList,
+		"slug" | "date_created" | "date_updated" | "contactCount"
+	>,
 ): Promise<ContactList> => {
 	try {
 		contactListStore.setState({ loading: true, error: null });
-		const newList = await createContactList(list);
+		const newList = await createContactList({
+			...list,
+			slug: list.name.toLowerCase().replace(/ /g, "-"),
+		});
 		contactListStore.setState((state) => ({
 			contactLists: [newList, ...state.contactLists],
 			loading: false,
@@ -162,16 +177,18 @@ export const createContactListAction = async (
 };
 
 export const updateContactListAction = async (
-	id: string | number,
-	list: Partial<Omit<ContactList, "id" | "createdAt" | "updatedAt">>
+	slug: string,
+	list: Partial<Omit<ContactList, "slug" | "date_created" | "date_updated">>,
 ): Promise<ContactList> => {
 	try {
 		contactListStore.setState({ loading: true, error: null });
-		const updatedList = await updateContactList(id, list);
+		const updatedList = await updateContactList(slug, list);
 		contactListStore.setState((state) => ({
-			contactLists: state.contactLists.map((l) => (l.id === id ? updatedList : l)),
+			contactLists: state.contactLists.map((l) =>
+				l.slug === slug ? updatedList : l,
+			),
 			currentList:
-				state.currentList?.id === id ? updatedList : state.currentList,
+				state.currentList?.slug === slug ? updatedList : state.currentList,
 			loading: false,
 		}));
 		return updatedList;
@@ -184,16 +201,16 @@ export const updateContactListAction = async (
 	}
 };
 
-export const deleteContactListAction = async (
-	id: string | number
-): Promise<void> => {
+export const deleteContactListAction = async (slug: string): Promise<void> => {
 	try {
 		contactListStore.setState({ loading: true, error: null });
-		await deleteContactList(id);
+		await deleteContactList(slug);
 		contactListStore.setState((state) => ({
-			contactLists: state.contactLists.filter((l) => l.id !== id),
-			currentList: state.currentList?.id === id ? null : state.currentList,
-			selectedIds: state.selectedIds.filter((selectedId) => selectedId !== id),
+			contactLists: state.contactLists.filter((l) => l.slug !== slug),
+			currentList: state.currentList?.slug === slug ? null : state.currentList,
+			selectedIds: state.selectedIds.filter(
+				(selectedId) => selectedId !== slug,
+			),
 			loading: false,
 		}));
 	} catch (err: any) {
@@ -206,19 +223,20 @@ export const deleteContactListAction = async (
 };
 
 export const toggleContactListEnabled = async (
-	id: string | number
+	slug: string,
 ): Promise<ContactList> => {
-	const list = contactListStore.getState().contactLists.find((l) => l.id === id);
+	const list = contactListStore
+		.getState()
+		.contactLists.find((l) => l.slug === slug);
 	if (!list) throw new Error("Contact list not found");
-	return updateContactListAction(id, { isEnabled: !list.isEnabled });
+	const newStatus = list.status === "published" ? "draft" : "published";
+	return updateContactListAction(slug, { status: newStatus as any });
 };
 
-export const exportContactListAction = async (
-	id: string | number
-): Promise<void> => {
+export const exportContactListAction = async (slug: string): Promise<void> => {
 	try {
 		contactListStore.setState({ loading: true, error: null });
-		await exportContactList(id);
+		await exportContactList(slug);
 		contactListStore.setState({ loading: false });
 	} catch (err: any) {
 		contactListStore.setState({
@@ -242,7 +260,7 @@ export const useFilteredContactLists = () => {
 		filtered = filtered.filter(
 			(list) =>
 				list.name.toLowerCase().includes(query) ||
-				list.description?.toLowerCase().includes(query)
+				list.status?.toLowerCase().includes(query),
 		);
 	}
 
@@ -255,16 +273,16 @@ export const useFilteredContactLists = () => {
 				break;
 			case "date_created":
 				comparison =
-					new Date(a.createdAt || 0).getTime() -
-					new Date(b.createdAt || 0).getTime();
+					new Date(a.date_created || 0).getTime() -
+					new Date(b.date_created || 0).getTime();
 				break;
 			case "contact_count":
-				comparison = a.contactCount - b.contactCount;
+				comparison = (a.contactCount || 0) - (b.contactCount || 0);
 				break;
 			case "last_updated":
 				comparison =
-					new Date(a.updatedAt || a.createdAt || 0).getTime() -
-					new Date(b.updatedAt || b.createdAt || 0).getTime();
+					new Date(a.date_updated || a.date_created || 0).getTime() -
+					new Date(b.date_updated || b.date_created || 0).getTime();
 				break;
 		}
 		return sortOrder === "asc" ? comparison : -comparison;

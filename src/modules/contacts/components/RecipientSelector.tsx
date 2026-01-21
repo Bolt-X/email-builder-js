@@ -43,11 +43,11 @@ export default function RecipientSelector({
 		fetchSegments();
 	}, []);
 
-	const handleAddList = (listId: string | number) => {
-		const list = contactLists.find((l) => l.id === listId);
-		if (list && !value.find((r) => r.id === listId && r.type === "list")) {
+	const handleAddList = (slug: string) => {
+		const list = contactLists.find((l) => l.slug === slug);
+		if (list && !value.find((r) => r.id === slug && r.type === "list")) {
 			const newRecipient: Recipient = {
-				id: listId,
+				id: slug,
 				type: "list",
 				name: list.name,
 				count: list.contactCount,
@@ -79,7 +79,9 @@ export default function RecipientSelector({
 	};
 
 	// Filter out disabled lists
-	const enabledLists = contactLists.filter((list) => list.isEnabled);
+	const enabledLists = contactLists.filter(
+		(list) => list.status === "published",
+	);
 
 	return (
 		<Stack spacing={2}>
@@ -126,11 +128,20 @@ export default function RecipientSelector({
 										spacing={1}
 									>
 										{recipient.type === "list" ? (
-											<People fontSize="small" color="primary" />
+											<People
+												fontSize="small"
+												color="primary"
+											/>
 										) : (
-											<FilterList fontSize="small" color="secondary" />
+											<FilterList
+												fontSize="small"
+												color="secondary"
+											/>
 										)}
-										<Typography variant="body2" fontWeight="medium">
+										<Typography
+											variant="body2"
+											fontWeight="medium"
+										>
 											{recipient.name}
 										</Typography>
 										<Chip
@@ -140,7 +151,10 @@ export default function RecipientSelector({
 										/>
 									</Stack>
 									{recipient.count !== undefined && (
-										<Typography variant="caption" color="text.secondary">
+										<Typography
+											variant="caption"
+											color="text.secondary"
+										>
 											{recipient.count} recipients
 										</Typography>
 									)}
@@ -159,9 +173,11 @@ export default function RecipientSelector({
 
 			{/* Total Recipients */}
 			{value.length > 0 && (
-				<Typography variant="body2" color="primary">
-					Total recipients:{" "}
-					{value.reduce((sum, r) => sum + (r.count || 0), 0)}
+				<Typography
+					variant="body2"
+					color="primary"
+				>
+					Total recipients: {value.reduce((sum, r) => sum + (r.count || 0), 0)}
 				</Typography>
 			)}
 
@@ -171,7 +187,10 @@ export default function RecipientSelector({
 					variant="outlined"
 					sx={{ p: 2, mt: 1 }}
 				>
-					<Typography variant="subtitle2" mb={1}>
+					<Typography
+						variant="subtitle2"
+						mb={1}
+					>
 						Select Contact Lists
 					</Typography>
 					<FormControl fullWidth>
@@ -180,16 +199,22 @@ export default function RecipientSelector({
 							onChange={(e) => handleAddList(e.target.value)}
 							displayEmpty
 						>
-							<MenuItem value="" disabled>
+							<MenuItem
+								value=""
+								disabled
+							>
 								Select a list
 							</MenuItem>
 							{enabledLists
 								.filter(
 									(list) =>
-										!value.find((r) => r.id === list.id && r.type === "list")
+										!value.find((r) => r.id === list.slug && r.type === "list"),
 								)
 								.map((list) => (
-									<MenuItem key={list.id} value={list.id}>
+									<MenuItem
+										key={list.slug}
+										value={list.slug}
+									>
 										<ListItemText
 											primary={list.name}
 											secondary={`${list.contactCount} contacts`}
@@ -214,7 +239,10 @@ export default function RecipientSelector({
 					variant="outlined"
 					sx={{ p: 2, mt: 1 }}
 				>
-					<Typography variant="subtitle2" mb={1}>
+					<Typography
+						variant="subtitle2"
+						mb={1}
+					>
 						Select Segments
 					</Typography>
 					<FormControl fullWidth>
@@ -223,18 +251,24 @@ export default function RecipientSelector({
 							onChange={(e) => handleAddSegment(e.target.value)}
 							displayEmpty
 						>
-							<MenuItem value="" disabled>
+							<MenuItem
+								value=""
+								disabled
+							>
 								Select a segment
 							</MenuItem>
 							{segments
 								.filter(
 									(segment) =>
 										!value.find(
-											(r) => r.id === segment.id && r.type === "segment"
-										)
+											(r) => r.id === segment.id && r.type === "segment",
+										),
 								)
 								.map((segment) => (
-									<MenuItem key={segment.id} value={segment.id}>
+									<MenuItem
+										key={segment.id}
+										value={segment.id}
+									>
 										<ListItemText
 											primary={segment.name}
 											secondary={`${segment.estimatedCount || 0} estimated contacts`}

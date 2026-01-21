@@ -48,22 +48,12 @@ const statusOptions: CampaignStatus[] = [
 	"cancelled",
 ];
 
-// Mock options for demonstration
-const contactOptions = [
-	{ id: 1, name: "Newsletter Members" },
-	{ id: 2, name: "VIP Customers" },
-	{ id: 3, name: "Product Launch List" },
-];
-
-const tagOptions = [
-	"Promotion",
-	"Product",
-	"Newsletter",
-	"Announcement",
-	"Support",
-];
+import { useGetAllContactLists } from "../../../hooks/useContactLists";
+import { useGetAllTags } from "../../../hooks/useTags";
 
 export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
+	const { data: contactLists = [] } = useGetAllContactLists();
+	const { data: allTags = [] } = useGetAllTags();
 	const filters = useCampaignFilters();
 	const viewMode = useCampaignViewMode();
 	const visibleColumns = useVisibleColumns();
@@ -84,10 +74,10 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 	// Local state for filters to support "Apply on Click"
 	const [localSearch, setLocalSearch] = useState(filters.searchQuery);
 	const [localStatus, setLocalStatus] = useState<CampaignStatus[]>(
-		filters.statusFilter
+		filters.statusFilter,
 	);
 	const [localContacts, setLocalContacts] = useState<string | number | null>(
-		filters.contactListFilter
+		filters.contactListFilter,
 	);
 	const [localTags, setLocalTags] = useState<string[]>(filters.tagsFilter);
 	const [localDate, setLocalDate] = useState<{
@@ -143,7 +133,10 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 	};
 
 	return (
-		<Box sx={{borderBottom: "1px solid #e0e0e0", pb: 2, bgcolor: "white"}} mt={[0, "0rem !important"]}>
+		<Box
+			sx={{ borderBottom: "1px solid #e0e0e0", pb: 2, bgcolor: "white" }}
+			mt={[0, "0rem !important"]}
+		>
 			<Stack
 				direction="row"
 				justifyContent="space-between"
@@ -259,20 +252,23 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							disabled={disabled}
 							renderValue={(selected) => {
 								if (!selected) return "";
-								const contact = contactOptions.find(
-									(c) => String(c.id) === String(selected)
+								const contact = contactLists.find(
+									(c) => String(c.slug) === String(selected),
 								);
 								return contact ? contact.name : "";
 							}}
 							sx={{ fontSize: "0.875rem" }}
 						>
-							<MenuItem value="">
+							<MenuItem
+								key="none"
+								value=""
+							>
 								<em>None</em>
 							</MenuItem>
-							{contactOptions.map((option) => (
+							{contactLists.map((option) => (
 								<MenuItem
-									key={option.id}
-									value={option.id}
+									key={option.slug}
+									value={option.slug}
 								>
 									{option.name}
 								</MenuItem>
@@ -304,16 +300,19 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							disabled={disabled}
 							renderValue={(selected) => {
 								if (!selected || selected.length === 0) return "";
-								return selected.join(", ");
+								return allTags
+									.filter((t) => selected.includes(t.slug))
+									.map((t) => t.title)
+									.join(", ");
 							}}
 							sx={{ fontSize: "0.875rem" }}
 						>
-							{tagOptions.map((tag) => (
+							{allTags.map((tag) => (
 								<MenuItem
-									key={tag}
-									value={tag}
+									key={tag.slug}
+									value={tag.slug}
 								>
-									{tag}
+									{tag.title}
 								</MenuItem>
 							))}
 						</Select>
@@ -453,7 +452,10 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							horizontal: "right",
 						}}
 					>
-						<Box sx={{ p: 2, minWidth: 200 }} mt={[0, "0rem !important"]}>
+						<Box
+							sx={{ p: 2, minWidth: 200 }}
+							mt={[0, "0rem !important"]}
+						>
 							<Stack spacing={1}>
 								<FormControlLabel
 									control={

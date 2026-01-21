@@ -13,6 +13,7 @@ import {
 	Send,
 	PlayArrow,
 	Schedule,
+	Edit,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { Campaign, CampaignStatus } from "../../types";
@@ -54,16 +55,19 @@ export default function CampaignHeader({
 		const now = new Date();
 		const diffMs = now.getTime() - date.getTime();
 		const diffMins = Math.floor(diffMs / 60000);
-		
+
 		if (diffMins < 1) return "Just now";
-		if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+		if (diffMins < 60)
+			return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
 		const diffHours = Math.floor(diffMins / 60);
-		if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+		if (diffHours < 24)
+			return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
 		const diffDays = Math.floor(diffHours / 24);
 		return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
 	};
 
-	const canStart = campaign.status === "draft" || campaign.status === "scheduled";
+	const canStart =
+		campaign.status === "draft" || campaign.status === "scheduled";
 
 	return (
 		<Box
@@ -90,26 +94,47 @@ export default function CampaignHeader({
 				>
 					<IconButton
 						onClick={handleBack}
-						size="small"
+						sx={{ color: "text.primary" }}
 					>
 						<ArrowBack />
 					</IconButton>
-					
-					<Stack spacing={0.5}>
-						<Stack
-							direction="row"
-							alignItems="center"
-							spacing={1.5}
+
+					<Stack
+						direction="row"
+						alignItems="center"
+						spacing={2}
+					>
+						<Typography
+							variant="h5"
+							fontWeight="bold"
 						>
-							<Typography variant="h6">
-								{campaign.name || "Untitled Campaign"}
-							</Typography>
-							<Chip
-								label={campaign.status}
-								color={statusColors[campaign.status]}
+							{campaign.name || "Untitled Campaign"}
+						</Typography>
+						<Chip
+							label={campaign.status}
+							size="small"
+							sx={{
+								backgroundColor: "neutral.black.10",
+								color: "neutral.black.100",
+								fontWeight: "500",
+								textTransform: "capitalize",
+							}}
+						/>
+						{campaign.template && (
+							<Button
+								variant="text"
 								size="small"
-							/>
-						</Stack>
+								onClick={() => navigate(`/templates/${campaign.template}`)}
+								sx={{
+									textTransform: "none",
+									fontWeight: 600,
+									color: "primary.main",
+									"&:hover": { textDecoration: "underline" },
+								}}
+							>
+								Edit Design
+							</Button>
+						)}
 						<Stack
 							direction="row"
 							alignItems="center"
@@ -119,7 +144,10 @@ export default function CampaignHeader({
 								variant="caption"
 								color="text.secondary"
 							>
-								Last edited {formatLastEditTime(campaign.lastEditedAt || campaign.updatedAt)}
+								Last edited{" "}
+								{formatLastEditTime(
+									campaign.date_updated || campaign.date_created || undefined,
+								)}
 							</Typography>
 							{autosaveState.isDirty && (
 								<Typography
@@ -145,22 +173,65 @@ export default function CampaignHeader({
 				<Stack
 					direction="row"
 					alignItems="center"
-					spacing={1}
+					spacing={2}
 				>
 					<Button
-						variant="outlined"
-						startIcon={<Send />}
+						variant="text"
 						onClick={onSendTest}
-						size="small"
+						sx={{
+							textTransform: "none",
+							fontWeight: 600,
+							borderRadius: "100px",
+							px: 3,
+							color: "primary.main",
+							"&:hover": {
+								textDecoration: "underline",
+								bgcolor: "transparent",
+							},
+						}}
 					>
 						Send test email
+					</Button>
+					<Button
+						variant="outlined"
+						onClick={onSave}
+						sx={{
+							borderRadius: "100px",
+							px: 4,
+							py: 1,
+							textTransform: "none",
+							fontWeight: 600,
+							borderWidth: 1.5,
+							borderColor: "primary.main",
+							color: "primary.main",
+							"&:hover": {
+								borderWidth: 1.5,
+								bgcolor: "rgba(25, 118, 210, 0.04)",
+							},
+						}}
+					>
+						Save
 					</Button>
 					{canStart && (
 						<Button
 							variant="contained"
-							startIcon={campaign.sendTime === "schedule" ? <Schedule /> : <PlayArrow />}
 							onClick={handleStartCampaign}
-							size="small"
+							sx={{
+								borderRadius: "100px",
+								px: 4,
+								py: 1,
+								textTransform: "none",
+								fontWeight: 600,
+								boxShadow: "none",
+								border: "1.5px solid",
+								borderColor: "primary.main",
+								bgcolor: "primary.main",
+								"&:hover": {
+									boxShadow: "none",
+									bgcolor: "primary.dark",
+									borderColor: "primary.dark",
+								},
+							}}
 						>
 							{campaign.sendTime === "schedule" ? "Schedule" : "Start"} campaign
 						</Button>
