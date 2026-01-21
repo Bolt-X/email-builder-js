@@ -30,7 +30,7 @@ import {
 } from "@mui/icons-material";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCreateCampaign } from "../../../../hooks/useCampaigns";
+import { useCreateCampaign, useUpdateCampaign } from "../../../../hooks/useCampaigns";
 import { useGetAllTags } from "../../../../hooks/useTags";
 import ModalCreateTag from "../../../tags/ModalCreateTag";
 import { useGetAllTemplates } from "../../../../hooks/useTemplates";
@@ -80,7 +80,8 @@ export default function CampaignCreatePage() {
 		scheduledAt: null,
 		subscribers: [],
 	});
-	const { mutate: createCampaignMutation } = useCreateCampaign();
+	const mutateCreate = useCreateCampaign();
+	const mutateUpdate = useUpdateCampaign()
 	const handleChange = (prop: keyof CampaignFormValues) => (event: any) => {
 		setValues({ ...values, [prop]: event.target.value });
 	};
@@ -95,15 +96,15 @@ export default function CampaignCreatePage() {
 		setValues((prev) => ({ ...prev, subscribers }));
 	};
 
-	const handleSubmit = async (e?: React.FormEvent) => {
+	const handleSubmit = async (e?: React.FormEvent, isRunning?: boolean) => {
 		if (e) e.preventDefault();
 		setSubmitting(true);
 		try {
-			createCampaignMutation({
+			const res = await mutateCreate.mutateAsync({
 				name: values.name,
 				subject: values.subject,
 				fromAddress: values.fromAddress,
-				status: "draft",
+				status: status || "draft",
 				subscribers: values.subscribers,
 				tags: values.tags,
 				sendTime: values.sendType === "now" ? "now" : "schedule",
@@ -116,6 +117,13 @@ export default function CampaignCreatePage() {
 				template: values.template,
 				slug: values.name.toLowerCase().replace(/ /g, "-") + "-" + Date.now(), // Generate a basic slug
 			});
+			console.log("Campaign created:", res);
+			if (isRunning) {
+				mutateUpdate.mutateAsync({
+					slug: res.slug,
+					payload: { status: "running" },
+				});
+			}
 		} catch (error) {
 			console.error("Failed to create campaign:", error);
 		} finally {
@@ -245,7 +253,7 @@ export default function CampaignCreatePage() {
 					</Button>
 					<Button
 						variant="outlined"
-						onClick={() => handleSubmit()}
+						onClick={(e) => handleSubmit(e, false)}
 						disabled={submitting}
 						sx={{
 							borderRadius: "100px",
@@ -266,7 +274,7 @@ export default function CampaignCreatePage() {
 					</Button>
 					<Button
 						variant="contained"
-						onClick={() => handleSubmit()}
+						onClick={(e) => handleSubmit(e, true)}
 						disabled={submitting}
 						sx={{
 							borderRadius: "100px",

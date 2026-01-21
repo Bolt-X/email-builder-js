@@ -4,6 +4,8 @@ import {
 	readItem,
 	readItems,
 	updateItem,
+	deleteItems,
+	updateItems
 } from "@directus/sdk";
 import { directusClientWithRest } from "./directus";
 import {
@@ -65,6 +67,7 @@ export const createCampaign = async (data: Campaign) => {
 				],
 			}),
 		);
+		console.log("Create Campaign Response:", res);
 		return transformFromDirectus(res as DirectusCampaign);
 	} catch (error) {
 		console.error("Failed to create campaign:", error);
@@ -92,6 +95,26 @@ export const updateCampaign = async (id: string, data: Partial<Campaign>) => {
 	}
 };
 
+export const updateMutipleCampaigns = async (ids: string[], data: Partial<Campaign>) => {
+	try {
+		const payload = transformToDirectus(data);
+		const res = await directusClientWithRest.request(
+			updateItems("campaigns", ids, payload as any, {
+				fields: [
+					"*",
+					"tags.*",
+					"tags.tag.*",
+					"contact_lists.contact_lists_slug.*",
+				],
+			}),
+		);
+		return res ?? null;
+	} catch (error) {
+		console.error("Failed to update campaigns:", error);
+		throw error;
+	}
+};
+
 export const deleteCampaign = async (id: string | number) => {
 	try {
 		const res = await directusClientWithRest.request(
@@ -100,6 +123,18 @@ export const deleteCampaign = async (id: string | number) => {
 		return res ?? null;
 	} catch (error) {
 		console.error("Failed to delete campaign:", error);
+		throw error;
+	}
+};
+
+export const deleteMutipleCampaigns = async (ids: string[]) => {
+	try {
+		const res = await directusClientWithRest.request(
+			deleteItems("campaigns", ids),
+		);
+		return res ?? null;
+	} catch (error) {
+		console.error("Failed to delete campaigns:", error);
 		throw error;
 	}
 };

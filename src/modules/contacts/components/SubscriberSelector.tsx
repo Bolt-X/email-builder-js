@@ -118,12 +118,13 @@ export default function SubscriberSelector({
 			>
 				{/* List Selector */}
 				<FormControl fullWidth>
-					<InputLabel>Add Contact List</InputLabel>
+					{/* <InputLabel>Add Contact List</InputLabel> */}
 					<Select
 						value=""
-						label="Add Contact List"
+						// label="Add Contact List"
 						onChange={(e) => handleAddList(e.target.value)}
 						displayEmpty
+						size="small"
 					>
 						{availableLists.length === 0 ? (
 							<MenuItem
@@ -173,6 +174,7 @@ export default function SubscriberSelector({
 						label="Add Segment"
 						onChange={(e) => handleAddSegment(e.target.value)}
 						displayEmpty
+						size="small"
 					>
 						{availableSegments.length === 0 ? (
 							<MenuItem
