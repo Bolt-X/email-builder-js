@@ -6,12 +6,7 @@ import {
 	updateItem,
 } from "@directus/sdk";
 import { directusClientWithRest } from "../../services/directus";
-import {
-	Campaign,
-	CampaignFilters,
-	DirectusCampaign,
-	Recipient,
-} from "./types";
+import { Campaign, CampaignFilters, DirectusCampaign } from "./types";
 
 /**
  * Transform Directus format to Campaign model
@@ -27,7 +22,7 @@ export function transformFromDirectus(
 		template: directusCampaign.template,
 		subject: directusCampaign.subject || "",
 		fromAddress: directusCampaign.from_address || "",
-		recipients: (directusCampaign.contact_lists || []).map((t: any) => {
+		subscribers: (directusCampaign.contact_lists || []).map((t: any) => {
 			if (typeof t === "object" && t.contact_lists_slug) {
 				const list = t.contact_lists_slug;
 				if (typeof list === "object") {
@@ -109,8 +104,8 @@ export function transformToDirectus(
 	if (campaign.fromAddress !== undefined)
 		directusCampaign.from_address = campaign.fromAddress;
 
-	if (campaign.recipients !== undefined) {
-		const listRecipients = (campaign.recipients || []).filter(
+	if (campaign.subscribers !== undefined) {
+		const listRecipients = (campaign.subscribers || []).filter(
 			(r) => r.type === "list",
 		);
 		directusCampaign.contact_lists = listRecipients.map((r) => ({

@@ -21,6 +21,7 @@ export interface ContactList {
 	date_updated?: string;
 	// Helper field for UI
 	contactCount?: number;
+	is_default?: boolean;
 }
 
 export interface DirectusSubscriber {

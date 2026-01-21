@@ -183,7 +183,7 @@ export default function CampaignEditPage() {
 
 		// Validate required fields
 		const hasRecipients =
-			(campaign.recipients && campaign.recipients.length > 0) ||
+			(campaign.subscribers && campaign.subscribers.length > 0) ||
 			(campaign.contact_lists && campaign.contact_lists.length > 0);
 		if (
 			!campaign.name ||

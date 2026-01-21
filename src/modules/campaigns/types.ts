@@ -7,13 +7,13 @@ export type CampaignStatus =
 
 export type SendTimeOption = "now" | "schedule";
 
-export type RecipientType = "list" | "segment";
+export type SubscriberType = "list" | "segment";
 
-export interface Recipient {
+export interface SubscriberSelection {
 	id: string | number;
-	type: RecipientType;
+	type: SubscriberType;
 	name: string;
-	count?: number; // Preview recipient count
+	count?: number; // Preview subscriber count
 }
 
 export interface Campaign {
@@ -25,8 +25,8 @@ export interface Campaign {
 	// Email settings
 	subject?: string;
 	fromAddress?: string; // Note: Not found in current schema snippet, but used in UI
-	// Recipients
-	recipients?: Recipient[];
+	// Subscribers
+	subscribers?: SubscriberSelection[];
 	contact_lists?: any[]; // M2M relationship
 	// Organization
 	tags?: any[]; // M2M relationship

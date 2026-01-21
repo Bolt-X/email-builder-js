@@ -52,6 +52,7 @@ export function transformContactListFromDirectus(item: any): ContactList {
 		date_created: item.date_created,
 		date_updated: item.date_updated,
 		contactCount: item.subscribers?.length || 0,
+		is_default: item.is_default,
 	};
 }
 
@@ -65,6 +66,7 @@ export function transformContactListToDirectus(
 	if (list.slug !== undefined) directusList.slug = list.slug;
 	if (list.name !== undefined) directusList.name = list.name;
 	if (list.status !== undefined) directusList.status = list.status;
+	if (list.is_default !== undefined) directusList.is_default = list.is_default;
 	return directusList;
 }
 

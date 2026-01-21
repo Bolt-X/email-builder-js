@@ -21,6 +21,7 @@ import {
 	DialogTitle,
 	DialogContent,
 	DialogActions,
+	Divider,
 } from "@mui/material";
 import {
 	ArrowBack,
@@ -35,6 +36,8 @@ import ModalCreateTag from "../../../tags/ModalCreateTag";
 import { useGetAllTemplates } from "../../../../hooks/useTemplates";
 import { sendTestEmail } from "../../service";
 import { Snackbar, Alert } from "@mui/material";
+import SubscriberSelector from "../../../contacts/components/SubscriberSelector";
+import { SubscriberSelection } from "../../types";
 
 interface CampaignFormValues {
 	name: string;
@@ -45,6 +48,7 @@ interface CampaignFormValues {
 	description: string;
 	template: number | null;
 	scheduledAt: string | null;
+	subscribers: SubscriberSelection[];
 }
 
 export default function CampaignCreatePage() {
@@ -74,6 +78,7 @@ export default function CampaignCreatePage() {
 		description: "",
 		template: null,
 		scheduledAt: null,
+		subscribers: [],
 	});
 	const { mutate: createCampaignMutation } = useCreateCampaign();
 	const handleChange = (prop: keyof CampaignFormValues) => (event: any) => {
@@ -86,6 +91,10 @@ export default function CampaignCreatePage() {
 		setValues({ ...values, scheduledAt: event.target.value });
 	};
 
+	const handleSubscribersChange = (subscribers: SubscriberSelection[]) => {
+		setValues((prev) => ({ ...prev, subscribers }));
+	};
+
 	const handleSubmit = async (e?: React.FormEvent) => {
 		if (e) e.preventDefault();
 		setSubmitting(true);
@@ -95,7 +104,7 @@ export default function CampaignCreatePage() {
 				subject: values.subject,
 				fromAddress: values.fromAddress,
 				status: "draft",
-				contact_lists: [],
+				subscribers: values.subscribers,
 				tags: values.tags,
 				sendTime: values.sendType === "now" ? "now" : "schedule",
 				date_scheduled:
@@ -420,6 +429,24 @@ export default function CampaignCreatePage() {
 									/>
 								</FormControl>
 							</Box>
+
+							{/* To lists or segments */}
+							<Divider sx={{ my: 1 }} />
+							<Box>
+								<Typography
+									variant="subtitle2"
+									sx={{ mb: 1 }}
+								>
+									To lists or segments <span style={{ color: "red" }}>*</span>
+								</Typography>
+								<SubscriberSelector
+									value={values.subscribers || []}
+									onChange={handleSubscribersChange}
+									required
+								/>
+							</Box>
+
+							<Divider sx={{ my: 1 }} />
 
 							{/* Tags */}
 							<Box>

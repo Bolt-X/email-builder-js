@@ -22,7 +22,7 @@ import {
 	updateCampaignMetadataAction,
 	useCurrentCampaign,
 } from "../stores/campaign.metadata.store";
-import ContactListSelector from "../../contacts/components/ContactListSelector";
+import SubscriberSelector from "../../contacts/components/SubscriberSelector";
 
 interface CampaignFormDrawerProps {
 	open: boolean;
@@ -37,21 +37,25 @@ export default function CampaignFormDrawer({
 	campaignId,
 	mode = "create",
 }: CampaignFormDrawerProps) {
+	interface CampaignFormData extends Partial<Campaign> {
+		contactListId?: string | number;
+		templateId?: number;
+	}
+
 	const currentCampaign = useCurrentCampaign();
 	const [loading, setLoading] = useState(false);
-	const [formData, setFormData] = useState<Partial<Campaign>>({
+	const [formData, setFormData] = useState<CampaignFormData>({
 		name: "",
 		description: "",
 		status: "draft" as CampaignStatus,
 		subject: "",
 		fromAddress: "",
-		recipients: [],
+		subscribers: [],
 		tags: [],
 		sendTime: "now",
 		contactListId: "",
-		scheduleAt: "",
+		date_scheduled: "",
 	});
-
 
 	// Load campaign data when editing
 	useEffect(() => {
@@ -61,8 +65,11 @@ export default function CampaignFormDrawer({
 				description: currentCampaign.description || "",
 				status: currentCampaign.status || "draft",
 				tags: currentCampaign.tags || [],
-				contactListId: currentCampaign.contactListId || "",
-				scheduleAt: currentCampaign.scheduleAt || "",
+				// Check if there is a recipient list to populate contactListId
+				contactListId:
+					currentCampaign.subscribers?.find((r) => r.type === "list")?.id || "",
+				date_scheduled: currentCampaign.date_scheduled || "",
+				subscribers: currentCampaign.subscribers || [],
 			});
 		} else if (mode === "create") {
 			// Reset form for create mode
@@ -72,7 +79,8 @@ export default function CampaignFormDrawer({
 				status: "draft" as CampaignStatus,
 				tags: [],
 				contactListId: "",
-				scheduleAt: "",
+				date_scheduled: "",
+				subscribers: [],
 			});
 		}
 	}, [mode, currentCampaign, open]);
@@ -83,8 +91,8 @@ export default function CampaignFormDrawer({
 
 		try {
 			if (mode === "create") {
-				// Convert contactListId to recipients format
-				const recipients = formData.contactListId
+				// Convert contactListId to subscribers format
+				const subscribers = formData.contactListId
 					? [
 							{
 								id: formData.contactListId,
@@ -92,7 +100,7 @@ export default function CampaignFormDrawer({
 								name: "Contact List",
 							},
 						]
-					: formData.recipients || [];
+					: formData.subscribers || [];
 
 				await createCampaignAction({
 					name: formData.name!,
@@ -100,15 +108,11 @@ export default function CampaignFormDrawer({
 					status: formData.status!,
 					subject: formData.subject || "",
 					fromAddress: formData.fromAddress || "noreply@boltx.com",
-					recipients,
+					subscribers,
 					tags: formData.tags || [],
 					sendTime: formData.sendTime || "now",
-					scheduledAt: formData.scheduledAt || formData.scheduleAt as string | undefined,
-					// Legacy support
-					templateId: formData.templateId,
-					contactListId: formData.contactListId as string | number,
-					scheduleAt: formData.scheduledAt || formData.scheduleAt as string | undefined,
-				});
+					date_scheduled: formData.date_scheduled || undefined,
+				} as any); // Type assertion needed because action might expect exact Campaign shape but here we provide what we can
 			} else if (campaignId) {
 				await updateCampaignMetadataAction(campaignId, {
 					name: formData.name,
@@ -116,14 +120,18 @@ export default function CampaignFormDrawer({
 					status: formData.status,
 					subject: formData.subject,
 					fromAddress: formData.fromAddress,
-					recipients: formData.recipients,
+					subscribers: formData.contactListId
+						? [
+								{
+									id: formData.contactListId,
+									type: "list" as const,
+									name: "Contact List",
+								},
+							]
+						: formData.subscribers,
 					tags: formData.tags,
 					sendTime: formData.sendTime,
-					scheduledAt: formData.scheduledAt || formData.scheduleAt as string | undefined,
-					// Legacy support
-					templateId: formData.templateId,
-					contactListId: formData.contactListId as string | number,
-					scheduleAt: formData.scheduledAt || formData.scheduleAt as string | undefined,
+					date_scheduled: formData.date_scheduled || undefined,
 				});
 			}
 			onClose();
@@ -135,7 +143,7 @@ export default function CampaignFormDrawer({
 		}
 	};
 
-	const handleChange = (field: keyof Campaign, value: any) => {
+	const handleChange = (field: keyof CampaignFormData, value: any) => {
 		setFormData((prev) => ({
 			...prev,
 			[field]: value,
@@ -213,16 +221,13 @@ export default function CampaignFormDrawer({
 							</Select>
 						</FormControl>
 
-						{/* Contact List Selection */}
-						<ContactListSelector
-							value={formData.contactListId as string | number | null}
-							onChange={(id) => handleChange("contactListId", id)}
+						{/* Subscriber Selection */}
+						<SubscriberSelector
+							value={formData.subscribers || []}
+							onChange={(subscribers) =>
+								handleChange("subscribers", subscribers)
+							}
 							required
-							showCreateButton
-							onCreateNew={() => {
-								// TODO: Open create contact list dialog
-								console.log("Create new contact list");
-							}}
 						/>
 
 						{/* Tags */}
@@ -234,7 +239,7 @@ export default function CampaignFormDrawer({
 							onChange={(_, newValue) => {
 								handleChange(
 									"tags",
-									newValue.map((v) => (typeof v === "string" ? v : v))
+									newValue.map((v) => (typeof v === "string" ? v : v)),
 								);
 							}}
 							renderTags={(value, getTagProps) =>
@@ -262,17 +267,15 @@ export default function CampaignFormDrawer({
 							type="datetime-local"
 							fullWidth
 							value={
-								formData.scheduleAt
-									? new Date(formData.scheduleAt)
-											.toISOString()
-											.slice(0, 16)
+								formData.date_scheduled
+									? new Date(formData.date_scheduled).toISOString().slice(0, 16)
 									: ""
 							}
 							onChange={(e) => {
 								const dateValue = e.target.value
 									? new Date(e.target.value).toISOString()
 									: "";
-								handleChange("scheduleAt", dateValue);
+								handleChange("date_scheduled", dateValue);
 							}}
 							InputLabelProps={{ shrink: true }}
 							helperText="Leave empty to send immediately"

@@ -16,8 +16,8 @@ import {
 	FormControlLabel,
 	Radio,
 } from "@mui/material";
-import { Campaign, Recipient, RecipientType } from "../../types";
-import RecipientSelector from "../../../contacts/components/RecipientSelector";
+import { Campaign, SubscriberSelection, SubscriberType } from "../../types";
+import SubscriberSelector from "../../../contacts/components/SubscriberSelector";
 import { useGetAllTemplates } from "../../../../hooks/useTemplates";
 import { useGetAllTags } from "../../../../hooks/useTags";
 import ModalCreateTag from "../../../tags/ModalCreateTag";
@@ -35,8 +35,8 @@ export default function CampaignSettingsForm({
 	const { data: tags } = useGetAllTags();
 	const [addTagModalOpen, setAddTagModalOpen] = useState(false);
 
-	const handleRecipientsChange = (recipients: Recipient[]) => {
-		onChange({ recipients });
+	const handleSubscribersChange = (subscribers: SubscriberSelection[]) => {
+		onChange({ subscribers });
 	};
 
 	const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,9 +224,9 @@ export default function CampaignSettingsForm({
 					>
 						To lists or segments <span style={{ color: "red" }}>*</span>
 					</Typography>
-					<RecipientSelector
-						value={campaign.recipients || []}
-						onChange={handleRecipientsChange}
+					<SubscriberSelector
+						value={campaign.subscribers || []}
+						onChange={handleSubscribersChange}
 						required
 					/>
 				</Box>
