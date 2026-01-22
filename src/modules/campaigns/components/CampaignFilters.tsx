@@ -330,7 +330,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							color: "text.primary",
 							borderColor: "rgba(0,0,0,0.12)",
 							px: 2,
-							minHeight: 40,
+							minHeight: 42,
 							justifyContent: "flex-start",
 							minWidth: 140,
 							fontWeight: 400,
@@ -348,7 +348,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							variant="contained"
 							size="small"
 							onClick={handleSearch}
-							sx={{ height: 40, px: 2, borderRadius: "6px" }}
+							sx={{ height: 38, px: 2, borderRadius: "6px" }}
 						>
 							Search
 						</Button>

@@ -204,7 +204,7 @@ export default function ContactListTable({
 				elevation={0}
 				sx={{
 					mb: 2,
-					bgcolor: isBatchMode ? "primary.main" : "transparent",
+					bgcolor: isBatchMode ? "primary.main" : "none",
 					borderRadius: 2,
 					overflow: "hidden",
 					height: 60,
@@ -580,7 +580,7 @@ export default function ContactListTable({
 											>
 												{list.name}
 											</Typography>
-											{list.isDefault && (
+											{list.is_default && (
 												<Box
 													sx={{
 														bgcolor: "#F0F7FF",
@@ -609,7 +609,7 @@ export default function ContactListTable({
 												textOverflow: "ellipsis",
 											}}
 										>
-											{list.description}
+											{/* {list.description} */}
 										</Typography>
 									</TableCell>
 									<TableCell>
@@ -622,8 +622,8 @@ export default function ContactListTable({
 											variant="body2"
 											color="text.secondary"
 										>
-											{list.created_at
-												? new Date(list.created_at).toLocaleDateString(
+											{list.date_created
+												? new Date(list.date_created).toLocaleDateString(
 														"en-GB",
 														{
 															day: "2-digit",
@@ -705,7 +705,7 @@ export default function ContactListTable({
 				<MenuItem
 					onClick={handleDelete}
 					sx={{ color: "error.main" }}
-					disabled={selectedList?.isDefault}
+					disabled={selectedList?.is_default}
 				>
 					<Delete sx={{ mr: 1 }} />
 					Delete list
