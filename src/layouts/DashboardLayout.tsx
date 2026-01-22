@@ -456,7 +456,7 @@ export default function DashboardLayout() {
 												display: "block",
 											}}
 										>
-											{user.email}
+											{user?.email || "user@gmail.com"}
 										</Typography>
 									</Box>
 								)}
