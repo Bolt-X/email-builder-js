@@ -43,6 +43,7 @@ import {
 	Settings,
 } from "@mui/icons-material";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useAuthStore } from "../contexts/auth";
 
 const DRAWER_WIDTH = 240;
 const COLLAPSED_WIDTH = 65; // Adjust based on design
@@ -145,6 +146,17 @@ export default function DashboardLayout() {
 	});
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { user, logout } = useAuthStore((s) => {
+		return {
+			user: s.user,
+			logout: s.logout,
+		};
+	});
+
+	const userFullName = user
+		? user.first_name + " " + user.last_name
+		: "Unknown user";
+	const userFirstLetter = userFullName.charAt(0);
 
 	const handleDrawerToggle = () => {
 		if (isMobile) {
@@ -419,7 +431,7 @@ export default function DashboardLayout() {
 										fontSize: "0.875rem",
 									}}
 								>
-									U
+									{userFirstLetter}
 								</Avatar>
 								{open && (
 									<Box sx={{ flexGrow: 1, minWidth: 0 }}>
@@ -432,7 +444,7 @@ export default function DashboardLayout() {
 												whiteSpace: "nowrap",
 											}}
 										>
-											User Name
+											{userFullName}
 										</Typography>
 										<Typography
 											variant="caption"
@@ -444,7 +456,7 @@ export default function DashboardLayout() {
 												display: "block",
 											}}
 										>
-											user@example.com
+											{user.email}
 										</Typography>
 									</Box>
 								)}

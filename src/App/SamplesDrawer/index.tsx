@@ -33,10 +33,12 @@ export default function SamplesDrawer() {
 	const navigate = useNavigate();
 	const samplesDrawerOpen = useSamplesDrawerOpen();
 	const SAMPLES_DRAWER_WIDTH = useSamplesDrawerWidth();
-	const { user, logout } = useAuthStore((s) => ({
-		user: s.user,
-		logout: s.logout,
-	}));
+	const { user, logout } = useAuthStore((s) => {
+		return {
+			user: s.user,
+			logout: s.logout,
+		};
+	});
 
 	const userFullName = user
 		? user.first_name + " " + user.last_name
