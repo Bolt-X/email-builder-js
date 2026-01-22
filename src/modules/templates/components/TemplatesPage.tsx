@@ -28,7 +28,7 @@ export default function TemplatesPage() {
 		return templates.filter(
 			(t) =>
 				t.name.toLowerCase().includes(query) ||
-				(t.description && t.description.toLowerCase().includes(query))
+				(t.description && t.description.toLowerCase().includes(query)),
 		);
 	}, [templates, searchQuery]);
 
@@ -61,7 +61,7 @@ export default function TemplatesPage() {
 			>
 				<Typography
 					variant="h4"
-					sx={{ fontWeight: 800, color: "text.primary" }}
+					sx={{ fontWeight: 600, color: "text.primary" }}
 				>
 					Templates
 				</Typography>

@@ -107,7 +107,12 @@ export default function CampaignListPage() {
 				alignItems="center"
 				sx={{ px: 3, py: "20px", bgcolor: "white" }}
 			>
-				<Typography variant="h4">Campaigns</Typography>
+				<Typography
+					variant="h4"
+					sx={{ fontWeight: 600, color: "text.primary" }}
+				>
+					Campaigns
+				</Typography>
 				<Button
 					variant="contained"
 					startIcon={<Add />}

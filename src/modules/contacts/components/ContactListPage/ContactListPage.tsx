@@ -54,7 +54,7 @@ export default function ContactListPage() {
 			>
 				<Typography
 					variant="h4"
-					sx={{ fontWeight: 800, color: "text.primary" }}
+					sx={{ fontWeight: 600, color: "text.primary" }}
 				>
 					Contact list
 				</Typography>
