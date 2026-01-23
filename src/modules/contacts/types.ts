@@ -13,15 +13,17 @@ export interface Contact {
 export type ContactListStatus = "published" | "draft" | "archived";
 
 export interface ContactList {
-	slug: string;
+	slug?: string;
 	name: string;
-	status: ContactListStatus;
+	status?: ContactListStatus;
 	subscribers?: Contact[];
 	date_created?: string;
 	date_updated?: string;
 	// Helper field for UI
 	contactCount?: number;
 	is_default?: boolean;
+	description?: string;
+	campaigns?: string[];
 }
 
 export interface DirectusSubscriber {

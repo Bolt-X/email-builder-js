@@ -18,6 +18,7 @@ import SegmentsTable from "./SegmentsTable";
 
 import { Add } from "@mui/icons-material";
 import { ContactList } from "../../types";
+import ModalCreateContactList from "./ModalCreateOrEdit";
 
 export default function ContactListPage() {
 	const contactLists = useContactLists();
@@ -25,6 +26,7 @@ export default function ContactListPage() {
 	const [formDrawerOpen, setFormDrawerOpen] = useState(false);
 	const [formMode, setFormMode] = useState<"create" | "edit">("create");
 	const [editingList, setEditingList] = useState<ContactList | null>(null);
+	const [openModal, setOpenModal] = useState(false);
 
 	useEffect(() => {
 		fetchContactLists();
@@ -38,14 +40,14 @@ export default function ContactListPage() {
 	};
 
 	const handleEdit = (list: ContactList) => {
-		setFormMode("edit");
-		setEditingList(list);
-		setFormDrawerOpen(true);
+		setOpenModal(true);
+		setEditingList(list)
 	};
 
 	return (
 		<Box sx={{ p: 0 }}>
 			{/* Page Title & Actions */}
+			<ModalCreateContactList open={openModal} onClose={() => setOpenModal(false)} dataContactList={editingList} />
 			<Stack
 				direction="row"
 				justifyContent="space-between"
@@ -62,7 +64,7 @@ export default function ContactListPage() {
 				<Button
 					variant="contained"
 					startIcon={<Add />}
-					onClick={handleCreate}
+					onClick={() => setOpenModal(true)}
 					sx={{
 						borderRadius: 10,
 						textTransform: "none",
