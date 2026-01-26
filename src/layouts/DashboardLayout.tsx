@@ -74,6 +74,9 @@ const Drawer = styled(MuiDrawer, {
 	...(open && {
 		...openedMixin(theme),
 		"& .MuiDrawer-paper": openedMixin(theme),
+		"& .MuiDrawer-paper::-webkit-scrollbar": {
+			display: "none",
+		},
 	}),
 	...(!open && {
 		...closedMixin(theme),
@@ -139,6 +142,7 @@ export default function DashboardLayout() {
 		Campaigns: true, // Default open or closed? Let's default open for visibility
 		Contacts: true,
 	});
+	const [solutionOpen, setSolutionOpen] = useState(true);
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { user, restoreSession, logout } = useAuthStore((s) => ({
@@ -205,7 +209,7 @@ export default function DashboardLayout() {
 				sx={{
 					display: "flex",
 					alignItems: "center",
-					justifyContent: "space-between",
+					justifyContent: open ? "space-between" : "center",
 					px: 2,
 					minHeight: 80,
 				}}
@@ -264,6 +268,8 @@ export default function DashboardLayout() {
 							}}
 							sx={{
 								maxWidth: "fit-content",
+								display: "inline-block",
+								mt: 0.75,
 							}}
 						/>
 					</ListItemButton>
@@ -272,8 +278,8 @@ export default function DashboardLayout() {
 						onClick={() => navigate("/campaigns/new")}
 						sx={{
 							bgcolor: "#f3f4f6",
-							width: 52,
-							height: 52,
+							width: 54,
+							height: 54,
 							mx: "auto",
 							display: "flex",
 							"&:hover": { bgcolor: "#e5e7eb" },
@@ -430,8 +436,10 @@ export default function DashboardLayout() {
 									display: "flex",
 									justifyContent: "space-between",
 									alignItems: "flex-start",
-									mb: 1,
+									mb: solutionOpen ? 1 : 0,
+									cursor: "pointer",
 								}}
+								onClick={() => setSolutionOpen(!solutionOpen)}
 							>
 								<Box
 									sx={{
@@ -444,56 +452,66 @@ export default function DashboardLayout() {
 								>
 									<SolutionIcon sx={{ color: "#ef4444", fontSize: 20 }} />
 								</Box>
-								<ExpandLess sx={{ color: "text.secondary", fontSize: 20 }} />
+								{solutionOpen ? (
+									<ExpandLess sx={{ color: "text.secondary", fontSize: 20 }} />
+								) : (
+									<ExpandMore sx={{ color: "text.secondary", fontSize: 20 }} />
+								)}
 							</Box>
-							<Typography
-								variant="subtitle2"
-								noWrap={true}
-								sx={{ fontWeight: 700, mb: 1.5, lineHeight: 1.2 }}
+							<Collapse
+								in={solutionOpen}
+								timeout="auto"
+								unmountOnExit
 							>
-								Giải pháp rút ngắn thời gian soạn & gửi email
-							</Typography>
-							<Stack spacing={0.8}>
-								{[
-									"Gói gọn quy trình trong 5 thao tác.",
-									"Giao diện tối giản, dễ dùng.",
-									"Tiết kiệm thời gian & nâng cao hiệu quả công việc.",
-									"Trải nghiệm mượt, tốc độ xử lý nhanh.",
-								].map((text, i) => (
-									<Stack
-										key={i}
-										direction="row"
-										spacing={1}
-										alignItems="flex-start"
-									>
-										<CheckIcon
-											sx={{ color: "success.main", fontSize: 14, mt: 0.3 }}
-										/>
-										<Typography
-											variant="caption"
-											color="text.secondary"
-											noWrap={true}
-											sx={{ lineHeight: 1.3 }}
+								<Typography
+									variant="subtitle2"
+									noWrap={true}
+									sx={{ fontWeight: 700, mb: 1.5, lineHeight: 1.2, mt: 1 }}
+								>
+									Giải pháp rút ngắn thời gian soạn & gửi email
+								</Typography>
+								<Stack spacing={0.8}>
+									{[
+										"Gói gọn quy trình trong 5 thao tác.",
+										"Giao diện tối giản, dễ dùng.",
+										"Tiết kiệm thời gian & nâng cao hiệu quả công việc.",
+										"Trải nghiệm mượt, tốc độ xử lý nhanh.",
+									].map((text, i) => (
+										<Stack
+											key={i}
+											direction="row"
+											spacing={1}
+											alignItems="flex-start"
 										>
-											{text}
-										</Typography>
-									</Stack>
-								))}
-							</Stack>
-							<Typography
-								variant="caption"
-								component="a"
-								href="#"
-								sx={{
-									display: "block",
-									mt: 1.5,
-									color: "primary.main",
-									fontWeight: 600,
-									textDecoration: "none",
-								}}
-							>
-								Tìm hiểu thêm
-							</Typography>
+											<CheckIcon
+												sx={{ color: "success.main", fontSize: 14, mt: 0.3 }}
+											/>
+											<Typography
+												variant="caption"
+												color="text.secondary"
+												noWrap={true}
+												sx={{ lineHeight: 1.3 }}
+											>
+												{text}
+											</Typography>
+										</Stack>
+									))}
+								</Stack>
+								<Typography
+									variant="caption"
+									component="a"
+									href="#"
+									sx={{
+										display: "block",
+										mt: 1.5,
+										color: "primary.main",
+										fontWeight: 600,
+										textDecoration: "none",
+									}}
+								>
+									Tìm hiểu thêm
+								</Typography>
+							</Collapse>
 						</Box>
 					</Box>
 				) : (
