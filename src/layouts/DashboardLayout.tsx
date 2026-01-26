@@ -81,6 +81,9 @@ const Drawer = styled(MuiDrawer, {
 	...(!open && {
 		...closedMixin(theme),
 		"& .MuiDrawer-paper": closedMixin(theme),
+		"& .MuiDrawer-paper::-webkit-scrollbar": {
+			display: "none",
+		},
 	}),
 }));
 
