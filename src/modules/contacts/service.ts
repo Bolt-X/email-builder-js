@@ -1,28 +1,28 @@
 import {
   createItem,
   createItems,
-  readItems,
+  deleteItems,
   readItem,
-  updateItem,
-  deleteItem,
-  updateItems,
+  readItems,
+  updateItem
 } from "@directus/sdk";
 import { directusClientWithRest } from "../../services/directus";
 import { Contact, ContactList, Segment } from "./types";
-import { red } from "@mui/material/colors";
 
 /**
  * Transform Directus Subscriber to Contact model
  */
 export function transformContactFromDirectus(item: any): Contact {
+  console.log("item", item);
+
   return {
-    id: item.id,
-    email: item.email,
-    name: item.name,
-    status: item.status,
+    id: item?.id,
+    email: item?.email,
+    name: item?.name,
+    status: item?.status,
     attribs: item.attribs,
-    date_created: item.date_created,
-    date_updated: item.date_updated,
+    date_created: item?.date_created,
+    date_updated: item?.date_updated,
   };
 }
 
@@ -81,6 +81,7 @@ export async function getAllContacts(): Promise<Contact[]> {
         sort: ["-date_created"],
       }),
     );
+    console.log("res", res);
     return (res as any[]).map(transformContactFromDirectus);
   } catch (error) {
     console.error("Error fetching subscribers:", error);
@@ -96,11 +97,11 @@ export async function getAllContactLists(
     const filter =
       from || to
         ? {
-            date_created: {
-              ...(from && { _gte: from }),
-              ...(to && { _lte: to }),
-            },
-          }
+          date_created: {
+            ...(from && { _gte: from }),
+            ...(to && { _lte: to }),
+          },
+        }
         : undefined;
 
     const res = await directusClientWithRest.request(
@@ -182,11 +183,21 @@ export async function updateContactList(
   }
 }
 
-export async function deleteContactList(slug: string): Promise<void> {
+export async function deleteContactList(slugs: string[]): Promise<void> {
   try {
-    await directusClientWithRest.request(deleteItem("contact_lists", slug));
+    await directusClientWithRest.request(deleteItems("contact_lists", slugs));
   } catch (error) {
     console.error("Error deleting contact list:", error);
+    throw error;
+  }
+}
+
+const createContactListSubscriber = async (payload: any): Promise<any> => {
+  try {
+    const res = await directusClientWithRest.request(createItems("contact_lists_subscribers", payload));
+    return res as any;
+  } catch (error) {
+    console.error("Error creating contact list subscriber:", error);
     throw error;
   }
 }
@@ -207,39 +218,15 @@ export async function duplicateContactList(
     const newList = await createContactList({
       name: newName || `${original.name} (Copy)`,
       status: "draft",
-	  subscribers: original.subscribers,
-	  campaigns: original.campaigns,
     });
-	
-    // Copy subscribers by adding the new contact list to their contact_lists array
-    if (original.subscribers && original.subscribers.length > 0) {
-      try {
-        for (const subscriber of original.subscribers) {
-          if (subscriber.id) {
-            // Get current contact to get its contact_lists array
-            const currentContact = await directusClientWithRest.request(
-              readItem("subscribers", subscriber.id, {
-                fields: ["contact_lists"],
-              }),
-            );
 
-            const currentContactLists = currentContact.contact_lists || [];
+    const payload = original.subscribers.map((subscriber) => ({
+      list: newList.slug,
+      subscriber: subscriber.id,
+    }));
 
-            // Add the new contact list slug to the subscriber's contact_lists
-            await directusClientWithRest.request(
-              updateItem("subscribers", subscriber.id, {
-                contact_lists: [...currentContactLists, newSlug],
-              }),
-            );
-          }
-        }
-      } catch (error) {
-        console.error("Error copying subscribers to new contact list:", error);
-        // Continue - list is created even if subscriber copy fails
-      }
-    }
+    await createContactListSubscriber(payload);
 
-    // Fetch and return the complete new list with all subscribers
     const completeList = await getContactListBySlug(newSlug);
     return completeList || newList;
   } catch (error) {
@@ -301,3 +288,23 @@ export async function exportContactList(slug: string | number): Promise<void> {
   console.log("Exporting contact list:", slug);
   // TODO: Implement actual export logic (CSV/Excel)
 }
+
+export const getContactListBySlugWithSubscribers = async (slug: string) => {
+  try {
+    const res = await directusClientWithRest.request(
+      readItems("contact_lists_subscribers", {
+        filter: {
+          list: {
+            _eq: slug,
+          },
+        },
+        fields: ["*", "subscriber.*"], // thường là subscriber chứ không phải subscribers
+      })
+    );
+
+    return res;
+  } catch (error) {
+    console.error("Error fetching contact list with subscribers:", error);
+    throw error;
+  }
+};

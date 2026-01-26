@@ -1,7 +1,7 @@
-export type ContactStatus = "enabled" | "blocklisted" | "duplicate";
+export type ContactStatus = "subscribed" | "non_subscribed" | "unsubscribed";
 
 export interface Contact {
-	id: string;
+	id?: string;
 	email: string;
 	name?: string;
 	status: ContactStatus;

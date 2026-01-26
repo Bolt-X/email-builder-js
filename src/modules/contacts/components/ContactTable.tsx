@@ -39,9 +39,9 @@ const statusStyles: Record<
 	ContactStatus,
 	{ bgcolor: string; color: string; label: string }
 > = {
-	enabled: { bgcolor: "#E8F5E9", color: "#2E7D32", label: "Enabled" },
-	blocklisted: { bgcolor: "#FFEBEE", color: "#D32F2F", label: "Blocklisted" },
-	duplicate: { bgcolor: "#FFF3E0", color: "#EF6C00", label: "Duplicate" },
+	subscribed: { bgcolor: "#E8F5E9", color: "#2E7D32", label: "Subscribed" },
+	non_subscribed: { bgcolor: "#FFEBEE", color: "#D32F2F", label: "Non subscribed" },
+	unsubscribed: { bgcolor: "#FFF3E0", color: "#EF6C00", label: "Unsubscribed" },
 };
 
 export default function ContactTable({
@@ -186,7 +186,7 @@ export default function ContactTable({
 						{contacts.map((contact) => {
 							const isSelected = selectedContacts.includes(contact.id);
 							const style =
-								statusStyles[contact.status] || statusStyles.enabled;
+								statusStyles[contact.status] || statusStyles.subscribed;
 
 							return (
 								<TableRow
@@ -249,13 +249,13 @@ export default function ContactTable({
 											>
 												{contact.date_created
 													? new Date(contact.date_created).toLocaleDateString(
-															"en-GB",
-															{
-																day: "2-digit",
-																month: "2-digit",
-																year: "numeric",
-															},
-														)
+														"en-GB",
+														{
+															day: "2-digit",
+															month: "2-digit",
+															year: "numeric",
+														},
+													)
 													: "-"}
 											</Typography>
 										</TableCell>

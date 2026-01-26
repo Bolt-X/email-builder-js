@@ -36,7 +36,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetAllContactLists } from "../../../../hooks/useContactLists";
+import { useDeleteContactList, useGetAllContactLists } from "../../../../hooks/useContactLists";
 import { duplicateContactList } from "../../service";
 import {
   clearSelection,
@@ -58,6 +58,7 @@ import { ContactList } from "../../types";
 import { c } from "vite/dist/node/types.d-aGj9QkWt";
 import { set } from "zod";
 import ModalDuplicate from "./ModalDuplicate";
+import ModalCustomDelete from "../base/ModalCustomDelete";
 
 interface ContactListTableProps {
   formDrawerOpen: boolean;
@@ -78,6 +79,7 @@ export default function ContactListTable({
   setEditingList,
   onEdit,
 }: ContactListTableProps) {
+  const { mutateAsync: deleteContactList, isPending: isDeleting } = useDeleteContactList();
   const navigate = useNavigate();
   const [startDate, setStartDate] = useState<undefined | string>(undefined);
   const [endDate, setEndDate] = useState<undefined | string>(undefined);
@@ -97,6 +99,8 @@ export default function ContactListTable({
     from: undefined,
     to: undefined
   })
+
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleFiltered = () => {
     setFiltered({
@@ -156,24 +160,22 @@ export default function ContactListTable({
     }
   };
 
+  console.log("selectedIds", selectedIds);
+
+
   const handleDelete = async () => {
-    if (selectedId) {
-      const list = contactLists?.find((l) => l.slug === selectedId);
-      if (list?.is_default) {
-        alert("Cannot delete default list");
-        handleMenuClose();
-        return;
+    try {
+      if (selectedIds.length > 0) {
+        deleteContactList(selectedIds as string[]);
+      } else {
+        deleteContactList([selectedId as string]);
       }
-      if (
-        window.confirm("Are you sure you want to delete this contact list?")
-      ) {
-        try {
-          await deleteContactListAction(selectedId);
-        } catch (error) {
-          console.error("Failed to delete list:", error);
-        }
-      }
+    } catch (error) {
+      console.error("Failed to delete contact list:", error);
+    }
+    finally {
       handleMenuClose();
+      setConfirmDelete(false);
     }
   };
 
@@ -214,7 +216,8 @@ export default function ContactListTable({
 
   return (
     <>
-      <ModalDuplicate open={openModalDuplicate} onClose={() => {setOpenModalDuplicate(false); setSelectedId(null)}} slug={selectedId} />
+      <ModalDuplicate open={openModalDuplicate} onClose={() => { setOpenModalDuplicate(false); setSelectedId(null) }} slug={selectedId} />
+      <ModalCustomDelete open={confirmDelete} isPending={isDeleting} onClose={() => setConfirmDelete(false)} onOk={handleDelete} title="Delete Contact List" content={<Typography>Are you sure you want to delete {selectedIds.length > 1 ? `${selectedIds.length} items` : "this item"}? You won't be able to undo this action.</Typography>} />
       {/* Toolbar / Batch Action Bar */}
       <Paper
         elevation={0}
@@ -255,7 +258,7 @@ export default function ContactListTable({
             </Stack>
 
             <Stack direction="row" spacing={2} alignItems="center">
-              <Button
+              {/* <Button
                 variant="text"
                 color="inherit"
                 startIcon={<Campaign />}
@@ -270,7 +273,7 @@ export default function ContactListTable({
                 sx={{ textTransform: "none", fontWeight: 600 }}
               >
                 Duplicate
-              </Button>
+              </Button> */}
               <Button
                 variant="text"
                 color="inherit"
@@ -284,6 +287,7 @@ export default function ContactListTable({
                 color="inherit"
                 startIcon={<Delete />}
                 sx={{ textTransform: "none", fontWeight: 600 }}
+                onClick={() => setConfirmDelete(true)}
               >
                 Delete
               </Button>
@@ -671,7 +675,7 @@ export default function ContactListTable({
           Duplicate list
         </MenuItem>
         <MenuItem
-          onClick={handleDelete}
+          onClick={() => setConfirmDelete(true)}
           sx={{ color: "error.main" }}
           disabled={selectedList?.is_default}
         >
