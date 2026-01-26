@@ -109,7 +109,13 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 		setLocalContacts(filters.contactListFilter);
 		setLocalTags(filters.tagsFilter || []);
 		setLocalDate(filters.dateRangeFilter);
-	}, [filters]);
+	}, [
+		filters.searchQuery,
+		filters.statusFilter,
+		filters.contactListFilter,
+		filters.tagsFilter,
+		filters.dateRangeFilter,
+	]);
 
 	const handleDateClick = (event: React.MouseEvent<HTMLButtonElement>) => {
 		setAnchorEl(event.currentTarget);

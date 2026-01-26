@@ -5,7 +5,7 @@ import {
 	readItems,
 	updateItem,
 	deleteItems,
-	updateItems
+	updateItems,
 } from "@directus/sdk";
 import { directusClientWithRest } from "./directus";
 import {
@@ -15,18 +15,55 @@ import {
 	transformToDirectus,
 } from "../modules/campaigns";
 
-export const getAllCampaigns = async () => {
+export const getAllCampaigns = async (filters?: any) => {
 	try {
+		const query: any = {
+			fields: [
+				"*",
+				"tags.*",
+				"tags.tag.*",
+				"contact_lists.contact_lists_slug.*",
+			],
+			sort: "-date_created",
+		};
+
+		if (filters) {
+			const filterConditions: any[] = [];
+
+			if (filters.searchQuery) {
+				filterConditions.push({
+					name: { _icontains: filters.searchQuery },
+				});
+			}
+
+			if (filters.status && filters.status.length > 0) {
+				filterConditions.push({
+					status: { _in: filters.status },
+				});
+			}
+
+			if (filters.contactListId) {
+				filterConditions.push({
+					contact_lists: {
+						contact_lists_slug: {
+							_eq: filters.contactListId,
+						},
+					},
+				});
+			}
+
+			// Add other filters as needed
+
+			if (filterConditions.length > 0) {
+				query.filter =
+					filterConditions.length === 1
+						? filterConditions[0]
+						: { _and: filterConditions };
+			}
+		}
+
 		const res = await directusClientWithRest.request(
-			readItems("campaigns", {
-				fields: [
-					"*",
-					"tags.*",
-					"tags.tag.*",
-					"contact_lists.contact_lists_slug.*",
-				],
-				sort: "-date_created",
-			}),
+			readItems("campaigns", query),
 		);
 		return (res as DirectusCampaign[]).map(transformFromDirectus);
 	} catch (error) {
@@ -95,7 +132,10 @@ export const updateCampaign = async (id: string, data: Partial<Campaign>) => {
 	}
 };
 
-export const updateMutipleCampaigns = async (ids: string[], data: Partial<Campaign>) => {
+export const updateMutipleCampaigns = async (
+	ids: string[],
+	data: Partial<Campaign>,
+) => {
 	try {
 		const payload = transformToDirectus(data);
 		const res = await directusClientWithRest.request(

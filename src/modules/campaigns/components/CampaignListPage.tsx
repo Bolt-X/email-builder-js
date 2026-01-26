@@ -19,8 +19,6 @@ import CampaignListTable from "./CampaignListTable";
 import CampaignListCalendar from "./CampaignListCalendar";
 import CampaignFilters from "./CampaignFilters";
 import CampaignActionsToolbar from "./CampaignActionsToolbar";
-import CampaignFormDrawer from "./CampaignFormDrawer";
-import { getAllCampaigns } from "../../../services/campaign";
 import { useGetAllCampaigns } from "../../../hooks/useCampaigns";
 
 export default function CampaignListPage() {
@@ -29,12 +27,7 @@ export default function CampaignListPage() {
 	// const loading = useCampaignsLoading();
 	const filters = useCampaignFilters();
 	const viewMode = useCampaignViewMode();
-	const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
 
-	const { data: campaigns, isLoading: loading } = useGetAllCampaigns();
-
-	// Build filter object from store state
-	// Destructure to get stable primitive values for dependencies
 	const {
 		searchQuery,
 		statusFilter,
@@ -59,19 +52,8 @@ export default function CampaignListPage() {
 		dateRangeFilter,
 	]);
 
-	useEffect(() => {
-		fetchCampaigns(filterObject);
-	}, [filterObject]);
-
-	const handleCreateCampaign = () => {
-		setCreateDrawerOpen(true);
-	};
-
-	const handleCloseDrawer = () => {
-		setCreateDrawerOpen(false);
-		// Refresh campaigns list
-		fetchCampaigns(filterObject);
-	};
+	const { data: campaigns, isFetching: loading } =
+		useGetAllCampaigns(filterObject);
 
 	// if (loading && campaigns.length === 0) {
 	// 	return (
@@ -96,8 +78,6 @@ export default function CampaignListPage() {
 
 	const isTrulyEmpty = campaigns?.length === 0 && !loading && !hasFilters;
 	const isFilteredEmpty = campaigns?.length === 0 && !loading && hasFilters;
-
-	// ... existing imports
 
 	return (
 		<Box>
