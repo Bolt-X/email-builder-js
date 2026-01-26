@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
 	Box,
 	CSSObject,
@@ -20,33 +20,28 @@ import {
 	Divider,
 	Typography,
 	Stack,
-	CircularProgress,
 } from "@mui/material";
 import {
-	SpaceDashboardOutlined,
-	SendOutlined,
-	TopicOutlined,
-	ImageOutlined,
-	PeopleAltOutlined,
-	SettingsOutlined,
-	ChevronLeft,
-	ChevronRight,
-	Menu as MenuIcon,
+	BarChart as DashboardIcon,
+	Campaign as CampaignsIcon,
+	Group as ContactsIcon,
+	Settings as SettingsIcon,
+	Add as AddIcon,
+	NotificationsNone as NotificationsIcon,
+	MarkEmailRead as SolutionIcon,
+	KeyboardDoubleArrowLeft as ChevronLeft,
+	KeyboardDoubleArrowRight as ChevronRight,
 	ExpandLess,
 	ExpandMore,
 	Logout,
-	Dashboard,
-	Send,
-	Article,
-	Image,
-	People,
-	Settings,
+	Check as CheckIcon,
+	MenuBook as ToggleIcon,
 } from "@mui/icons-material";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../contexts/auth";
 
-const DRAWER_WIDTH = 240;
-const COLLAPSED_WIDTH = 65; // Adjust based on design
+const DRAWER_WIDTH = 272;
+const COLLAPSED_WIDTH = 80; // Adjust based on design
 
 const openedMixin = (theme: Theme): CSSObject => ({
 	width: DRAWER_WIDTH,
@@ -89,12 +84,12 @@ const Drawer = styled(MuiDrawer, {
 const navigationItems = [
 	{
 		label: "Dashboard",
-		icon: <Dashboard />,
+		icon: <DashboardIcon />,
 		path: "/",
 	},
 	{
 		label: "Campaigns",
-		icon: <Send />,
+		icon: <CampaignsIcon />,
 		path: "/campaigns",
 		children: [
 			{
@@ -103,7 +98,7 @@ const navigationItems = [
 			},
 			{
 				label: "Templates",
-				path: "/templates", // Keeping global route for now, but linked here
+				path: "/templates",
 			},
 			{
 				label: "Media",
@@ -113,7 +108,7 @@ const navigationItems = [
 	},
 	{
 		label: "Contacts",
-		icon: <People />,
+		icon: <ContactsIcon />,
 		path: "/contacts",
 		children: [
 			{
@@ -128,7 +123,7 @@ const navigationItems = [
 	},
 	{
 		label: "Settings",
-		icon: <Settings />,
+		icon: <SettingsIcon />,
 		path: "/settings",
 	},
 ];
@@ -146,17 +141,22 @@ export default function DashboardLayout() {
 	});
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { user, logout } = useAuthStore((s) => {
-		return {
-			user: s.user,
-			logout: s.logout,
-		};
-	});
+	const { user, restoreSession, logout } = useAuthStore((s) => ({
+		user: s.user,
+		restoreSession: s.restoreSession,
+		logout: s.logout,
+	}));
+
+	useEffect(() => {
+		if (!user) {
+			restoreSession();
+		}
+	}, [user, restoreSession]);
 
 	const userFullName = user
-		? user.first_name + " " + user.last_name
-		: "Unknown user";
-	const userFirstLetter = userFullName.charAt(0);
+		? (user.first_name || "") + " " + (user.last_name || "")
+		: "BoltX Digital";
+	const userFirstLetter = userFullName.trim().charAt(0) || "B";
 
 	const handleDrawerToggle = () => {
 		if (isMobile) {
@@ -172,10 +172,8 @@ export default function DashboardLayout() {
 		hasChildren: boolean,
 	) => {
 		if (hasChildren) {
-			// If collapsed, open sidebar first
 			if (!open && !isMobile) {
 				setOpen(true);
-				// Add delay before opening menu? No, instantaneous is better.
 				setOpenMenus((prev) => ({ ...prev, [label]: true }));
 			} else {
 				setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -207,31 +205,86 @@ export default function DashboardLayout() {
 				sx={{
 					display: "flex",
 					alignItems: "center",
-					justifyContent: open ? "space-between" : "center",
-					px: [1],
-					minHeight: 64,
+					justifyContent: "space-between",
+					px: 2,
+					minHeight: 80,
 				}}
 			>
 				{open && (
-					<img
-						alt="logo-boltx"
-						src="/assets/logo/Logo BoltX primary.svg"
-						style={{ height: 32, marginLeft: 12 }}
-					/>
+					<Stack
+						direction="row"
+						alignItems="center"
+						spacing={1}
+						sx={{ flexGrow: 1 }}
+					>
+						<img
+							alt="logo-boltx"
+							src="/assets/logo/Logo BoltX primary.svg"
+							style={{ height: 40 }}
+						/>
+					</Stack>
 				)}
-				{!open && (
-					<img
-						alt="logo-boltx-small"
-						src="/assets/logo/Logo BoltX primary.svg" // Replace with icon only logo if available
-						style={{ height: 32 }}
-					/>
-				)}
-				{!isMobile && open && (
-					<IconButton onClick={handleDrawerToggle}>
-						<ChevronLeft />
+				<IconButton
+					onClick={handleDrawerToggle}
+					sx={{ color: "text.secondary" }}
+				>
+					{open ? <ChevronLeft /> : <ChevronRight />}
+				</IconButton>
+			</Toolbar>
+
+			<Box
+				sx={{
+					px: open ? 3 : 1,
+					mb: 2.5,
+					display: "flex",
+					justifyContent: "center",
+				}}
+			>
+				{open ? (
+					<ListItemButton
+						onClick={() => navigate("/campaigns/new")}
+						sx={{
+							bgcolor: "#f3f4f6",
+							borderRadius: 10,
+							py: 1.5,
+							width: "100%",
+							justifyContent: "center",
+							alignItems: "center",
+							"&:hover": { bgcolor: "#e5e7eb" },
+						}}
+					>
+						<ListItemIcon sx={{ minWidth: 0, mr: 1, color: "text.primary" }}>
+							<AddIcon />
+						</ListItemIcon>
+						<ListItemText
+							primary="Create"
+							primaryTypographyProps={{
+								fontWeight: 700,
+								color: "text.primary",
+							}}
+							sx={{
+								maxWidth: "fit-content",
+							}}
+						/>
+					</ListItemButton>
+				) : (
+					<IconButton
+						onClick={() => navigate("/campaigns/new")}
+						sx={{
+							bgcolor: "#f3f4f6",
+							width: 52,
+							height: 52,
+							mx: "auto",
+							display: "flex",
+							"&:hover": { bgcolor: "#e5e7eb" },
+						}}
+					>
+						<AddIcon />
 					</IconButton>
 				)}
-			</Toolbar>
+			</Box>
+
+			<Divider sx={{ mx: 1.5, mb: 2, opacity: 0.5 }} />
 
 			<Box sx={{ flexGrow: 1, mt: 2 }}>
 				<List>
@@ -239,20 +292,14 @@ export default function DashboardLayout() {
 						const hasChildren = !!item.children;
 						const isMenuOpen = openMenus[item.label];
 
-						// Active Check
 						let isActive = false;
 						if (item.path === "/") {
 							isActive = location.pathname === "/";
 						} else {
-							// If it has children, checking if parent path starts matches might be weak if children paths are different (e.g. templates)
-							// Check item path matches OR any child matches
 							isActive =
-								location.pathname.startsWith(item.path) ||
-								(hasChildren && isChildActive(item));
+								location.pathname === item.path ||
+								location.pathname.startsWith(item.path + "/");
 						}
-
-						// Special check for Campaigns parent when exactly on campaigns list
-						// If we are on /campaigns, both "Campaigns" parent and "All Campaigns" child match.
 
 						return (
 							<React.Fragment key={item.label}>
@@ -265,56 +312,35 @@ export default function DashboardLayout() {
 										placement="right"
 									>
 										<ListItemButton
-											selected={isActive && !hasChildren} // Only highlight parent if no children, OR if we want parent highlight when child active? Usually parent is highlighted too. Let's try highlighting parent if any child active or itself active.
-											// Actually, if child active, parent styling might differ.
-											// Let's stick to standard behavior: Parent highlighted if itself or child active.
 											onClick={() =>
 												handleMenuClick(item.label, item.path, hasChildren)
 											}
 											sx={{
-												minHeight: 48,
+												minHeight: 52,
 												justifyContent: open ? "initial" : "center",
-												px: 2.5,
-												mx: 1.5,
+												px: open ? 1.5 : 3,
+												mx: open ? 1 : 0.5,
 												borderRadius: 2,
-												mb: 0.5,
+												color: isActive ? "primary.main" : "text.secondary",
 												"&.Mui-selected": {
-													backgroundColor: "primary.main",
-													color: "primary.contrastText",
-													"&:hover": {
-														backgroundColor: "primary.dark",
-													},
+													backgroundColor: "transparent",
+													color: "primary.main",
 													"& .MuiListItemIcon-root": {
-														color: "primary.contrastText",
-													},
-													// Reset text color for expand icon
-													"& .MuiSvgIcon-root": {
-														color: "primary.contrastText",
+														color: "primary.main",
 													},
 												},
-												// Handle parent active state visually distinct?
-												...(hasChildren &&
-													isActive && {
-														backgroundColor: "rgba(0, 0, 0, 0.04)",
-														"&.Mui-selected": {
-															backgroundColor: "rgba(0, 0, 0, 0.08)",
-															color: "primary.main",
-															"& .MuiListItemIcon-root": {
-																color: "primary.main",
-															},
-															"& .MuiSvgIcon-root": {
-																color: "primary.main",
-															},
-														},
-													}),
+												"&:hover": {
+													backgroundColor: "rgba(0, 0, 0, 0.04)",
+												},
 											}}
+											selected={isActive && !hasChildren}
 										>
 											<ListItemIcon
 												sx={{
 													minWidth: 0,
-													mr: open ? 2 : "auto",
+													mr: open ? 1.5 : "auto",
 													justifyContent: "center",
-													color: isActive ? "inherit" : "text.secondary",
+													color: isActive ? "primary.main" : "text.secondary",
 												}}
 											>
 												{item.icon}
@@ -323,7 +349,7 @@ export default function DashboardLayout() {
 												primary={item.label}
 												sx={{ opacity: open ? 1 : 0 }}
 												primaryTypographyProps={{
-													fontWeight: isActive ? 600 : 400,
+													fontWeight: isActive ? 700 : 500,
 												}}
 											/>
 											{hasChildren &&
@@ -343,41 +369,35 @@ export default function DashboardLayout() {
 											disablePadding
 										>
 											{item.children.map((child) => {
-												const isChildActive =
-													location.pathname === child.path ||
-													(child.path !== "/" &&
-														location.pathname.startsWith(child.path) &&
-														child.path !== "/campaigns");
-												// Refined active check for sub-items
-												const isDeepActive =
-													location.pathname === child.path ||
-													(child.path !== "/campaigns" &&
-														child.path !== "/contacts" &&
-														child.path !== "/" &&
-														location.pathname.startsWith(child.path));
+												const isChildActive = location.pathname === child.path;
 
 												return (
 													<ListItemButton
 														key={child.label}
 														sx={{
-															pl: 6,
-															ml: 3.5,
+															pl: 8,
 															mr: 1.5,
 															borderRadius: 2,
 															mb: 0.5,
+															color: isChildActive
+																? "primary.main"
+																: "text.secondary",
 															"&.Mui-selected": {
-																bgcolor: "primary.main",
-																color: "primary.contrastText",
+																bgcolor: "transparent",
+																color: "primary.main",
 																fontWeight: "bold",
-																"&:hover": {
-																	backgroundColor: "primary.dark",
-																},
 															},
 														}}
-														selected={isDeepActive}
+														selected={isChildActive}
 														onClick={() => handleNavigation(child.path)}
 													>
-														<ListItemText primary={child.label} />
+														<ListItemText
+															primary={child.label}
+															primaryTypographyProps={{
+																fontSize: "0.9rem",
+																fontWeight: isChildActive ? 600 : 400,
+															}}
+														/>
 													</ListItemButton>
 												);
 											})}
@@ -390,154 +410,172 @@ export default function DashboardLayout() {
 				</List>
 			</Box>
 
-			{/* User Profile Section */}
-			<Box sx={{ mt: "auto", borderTop: "1px solid", borderColor: "divider" }}>
-				<ListItem
-					disablePadding
-					sx={{ display: "block", px: 1.5, py: 1.5 }}
-				>
-					<Tooltip
-						title={!open ? "User Account" : ""}
-						placement="right"
-					>
-						<ListItemButton
-							onClick={() => {
-								// Toggle user menu or navigate to profile
-								if (!open) {
-									setOpen(true);
-								}
-							}}
+			{/* Solution Card & User Profile pushed to bottom */}
+			<Box sx={{ mt: "auto", p: 1.5 }}>
+				{/* Solution Card */}
+				{open ? (
+					<Box sx={{ mb: 3 }}>
+						<Box
 							sx={{
-								minHeight: 48,
-								justifyContent: open ? "initial" : "center",
-								px: 2,
+								p: 1.5,
 								borderRadius: 2,
-								"&:hover": {
-									bgcolor: "rgba(0, 0, 0, 0.04)",
-								},
+								bgcolor: "#f8faff",
+								border: "1px solid",
+								borderColor: "#e0e7ff",
+								position: "relative",
 							}}
 						>
-							<Stack
-								direction="row"
-								spacing={1.5}
-								alignItems="center"
-								sx={{ width: "100%" }}
+							<Box
+								sx={{
+									display: "flex",
+									justifyContent: "space-between",
+									alignItems: "flex-start",
+									mb: 1,
+								}}
 							>
-								<Avatar
+								<Box
 									sx={{
-										width: 32,
-										height: 32,
-										bgcolor: "primary.main",
-										fontSize: "0.875rem",
+										bgcolor: "white",
+										p: 0.5,
+										borderRadius: 1,
+										boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+										display: "flex",
 									}}
 								>
-									{userFirstLetter}
-								</Avatar>
-								{open && (
-									<Box sx={{ flexGrow: 1, minWidth: 0 }}>
-										<Typography
-											variant="body2"
-											sx={{
-												fontWeight: 600,
-												overflow: "hidden",
-												textOverflow: "ellipsis",
-												whiteSpace: "nowrap",
-											}}
-										>
-											{userFullName}
-										</Typography>
+									<SolutionIcon sx={{ color: "#ef4444", fontSize: 20 }} />
+								</Box>
+								<ExpandLess sx={{ color: "text.secondary", fontSize: 20 }} />
+							</Box>
+							<Typography
+								variant="subtitle2"
+								noWrap={true}
+								sx={{ fontWeight: 700, mb: 1.5, lineHeight: 1.2 }}
+							>
+								Giải pháp rút ngắn thời gian soạn & gửi email
+							</Typography>
+							<Stack spacing={0.8}>
+								{[
+									"Gói gọn quy trình trong 5 thao tác.",
+									"Giao diện tối giản, dễ dùng.",
+									"Tiết kiệm thời gian & nâng cao hiệu quả công việc.",
+									"Trải nghiệm mượt, tốc độ xử lý nhanh.",
+								].map((text, i) => (
+									<Stack
+										key={i}
+										direction="row"
+										spacing={1}
+										alignItems="flex-start"
+									>
+										<CheckIcon
+											sx={{ color: "success.main", fontSize: 14, mt: 0.3 }}
+										/>
 										<Typography
 											variant="caption"
 											color="text.secondary"
-											sx={{
-												overflow: "hidden",
-												textOverflow: "ellipsis",
-												whiteSpace: "nowrap",
-												display: "block",
-											}}
+											noWrap={true}
+											sx={{ lineHeight: 1.3 }}
 										>
-											{user?.email || "user@gmail.com"}
+											{text}
 										</Typography>
-									</Box>
-								)}
+									</Stack>
+								))}
 							</Stack>
-						</ListItemButton>
-					</Tooltip>
-				</ListItem>
-
-				{/* Logout Button */}
-				{open && (
-					<ListItem
-						disablePadding
-						sx={{ px: 1.5, pb: 1.5 }}
-					>
-						<ListItemButton
-							onClick={async () => {
-								if (loggingOut) return;
-								setLoggingOut(true);
-								try {
-									// Use auth store logout
-									const { useAuthStore } = await import("../contexts/auth");
-									const logout = useAuthStore.getState().logout;
-									await logout();
-									window.location.href = "/auth/login";
-								} catch (error) {
-									console.error("Logout error:", error);
-									setLoggingOut(false);
-								}
-							}}
-							disabled={loggingOut}
-							sx={{
-								minHeight: 40,
-								px: 2,
-								borderRadius: 2,
-								color: "error.main",
-								"&:hover": {
-									bgcolor: "rgba(211, 47, 47, 0.08)", // Light red background
-									color: "error.main",
-								},
-								"&.Mui-disabled": {
-									color: "error.light",
-									opacity: 0.7,
-								},
-							}}
-						>
-							<ListItemIcon
+							<Typography
+								variant="caption"
+								component="a"
+								href="#"
 								sx={{
-									minWidth: 0,
-									mr: 2,
-									color: "inherit",
+									display: "block",
+									mt: 1.5,
+									color: "primary.main",
+									fontWeight: 600,
+									textDecoration: "none",
 								}}
 							>
-								{loggingOut ? (
-									<CircularProgress
-										size={18}
-										color="inherit"
-									/>
-								) : (
-									<Logout fontSize="small" />
-								)}
-							</ListItemIcon>
-							<ListItemText
-								primary={loggingOut ? "Logging out..." : "Logout"}
-								primaryTypographyProps={{
-									fontSize: "0.875rem",
-									fontWeight: 500,
-								}}
-							/>
-						</ListItemButton>
-					</ListItem>
+								Tìm hiểu thêm
+							</Typography>
+						</Box>
+					</Box>
+				) : (
+					<Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+						<Box
+							sx={{
+								bgcolor: "white",
+								p: 1,
+								borderRadius: 1.5,
+								boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+								display: "flex",
+								border: "1px solid #f3f4f6",
+							}}
+						>
+							<SolutionIcon sx={{ color: "#ef4444" }} />
+						</Box>
+					</Box>
 				)}
+				<Divider sx={{ mb: 1, opacity: 0.5 }} />
 			</Box>
 
-			{/* Toggle button for desktop at bottom if preferred, or use the one in header */}
-			{!isMobile && !open && (
-				<Box sx={{ display: "flex", justifyContent: "center", p: 1 }}>
-					<IconButton onClick={handleDrawerToggle}>
-						<ChevronRight />
-					</IconButton>
-				</Box>
-			)}
+			{/* User Profile Section moved to bottom Box with margin auto */}
+			<Box sx={{ p: 2, mb: 1 }}>
+				<Stack
+					direction="row"
+					alignItems="center"
+					justifyContent={open ? "space-between" : "center"}
+					sx={{ px: open ? 1 : 0 }}
+				>
+					<Stack
+						direction="row"
+						spacing={1.5}
+						alignItems="center"
+					>
+						<Avatar
+							sx={{
+								width: 40,
+								height: 40,
+								bgcolor: "#f97316",
+								fontSize: "1rem",
+								fontWeight: 600,
+							}}
+						>
+							{userFirstLetter}
+						</Avatar>
+						{open && (
+							<Box sx={{ minWidth: 0 }}>
+								<Typography
+									variant="subtitle2"
+									sx={{
+										fontWeight: 700,
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+										color: "text.primary",
+									}}
+								>
+									{userFullName}
+								</Typography>
+							</Box>
+						)}
+					</Stack>
+					{open && (
+						<Box sx={{ position: "relative" }}>
+							<NotificationsIcon />
+							{/* Red dot */}
+							<Box
+								sx={{
+									position: "absolute",
+									top: 2,
+									right: 2,
+									width: 8,
+									height: 8,
+									bgcolor: "error.main",
+									borderRadius: "50%",
+									border: "2px solid white",
+								}}
+							/>
+						</Box>
+					)}
+				</Stack>
+			</Box>
 		</Box>
 	);
 
