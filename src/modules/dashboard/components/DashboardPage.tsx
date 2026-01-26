@@ -6,6 +6,7 @@ import {
 	BarChart as BarChartIcon,
 	TrendingUp,
 } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 import { useGetAllCampaigns } from "../../../hooks/useCampaigns";
 import { useGetAllContactLists } from "../../../hooks/useContactLists";
 import StatCard from "./StatCard";
@@ -14,6 +15,7 @@ import RecentCampaignsTable from "./RecentCampaignsTable";
 import QuickActions from "./QuickActions";
 
 export default function DashboardPage() {
+	const { t } = useTranslation();
 	const { data: campaigns, isLoading: campaignsLoading } = useGetAllCampaigns();
 	const { data: contactLists, isLoading: listsLoading } =
 		useGetAllContactLists();
@@ -67,7 +69,13 @@ export default function DashboardPage() {
 		}));
 
 	return (
-		<Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: "#f8f9fa", minHeight: "100vh" }}>
+		<Box
+			sx={{
+				p: { xs: 2, sm: 3 },
+				bgcolor: "background.default",
+				minHeight: "100vh",
+			}}
+		>
 			<Stack
 				direction="row"
 				justifyContent="space-between"
@@ -82,7 +90,7 @@ export default function DashboardPage() {
 						fontSize: { xs: "1.75rem", md: "2.125rem" },
 					}}
 				>
-					Dashboard
+					{t("dashboard.title")}
 				</Typography>
 			</Stack>
 
@@ -98,11 +106,15 @@ export default function DashboardPage() {
 					md={3}
 				>
 					<StatCard
-						title="Total Contacts"
+						title={t("dashboard.total_contacts")}
 						value={totalContacts.toLocaleString()}
 						icon={<People />}
 						color="#4f46e5"
-						tendency={{ value: "12%", label: "vs last month", isUp: true }}
+						tendency={{
+							value: "12%",
+							label: t("dashboard.vs_last_month"),
+							isUp: true,
+						}}
 					/>
 				</Grid>
 				<Grid
@@ -112,7 +124,7 @@ export default function DashboardPage() {
 					md={3}
 				>
 					<StatCard
-						title="Active Campaigns"
+						title={t("dashboard.active_campaigns")}
 						value={activeCampaigns}
 						icon={<Email />}
 						color="#0ea5e9"
@@ -125,11 +137,15 @@ export default function DashboardPage() {
 					md={3}
 				>
 					<StatCard
-						title="Avg. Open Rate"
+						title={t("dashboard.avg_open_rate")}
 						value={`${avgOpenRate.toFixed(1)}%`}
 						icon={<TrendingUp />}
 						color="#10b981"
-						tendency={{ value: "4.3%", label: "vs last week", isUp: true }}
+						tendency={{
+							value: "4.3%",
+							label: t("dashboard.vs_last_week"),
+							isUp: true,
+						}}
 					/>
 				</Grid>
 				<Grid
@@ -139,11 +155,15 @@ export default function DashboardPage() {
 					md={3}
 				>
 					<StatCard
-						title="Avg. Click Rate"
+						title={t("dashboard.avg_click_rate")}
 						value={`${avgClickRate.toFixed(1)}%`}
 						icon={<BarChartIcon />}
 						color="#f59e0b"
-						tendency={{ value: "1.2%", label: "vs last week", isUp: false }}
+						tendency={{
+							value: "1.2%",
+							label: t("dashboard.vs_last_week"),
+							isUp: false,
+						}}
 					/>
 				</Grid>
 

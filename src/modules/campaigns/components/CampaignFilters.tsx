@@ -25,6 +25,7 @@ import {
 	Typography,
 } from "@mui/material";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
 	setSearchQuery,
 	setStatusFilter,
@@ -52,6 +53,7 @@ import { useGetAllContactLists } from "../../../hooks/useContactLists";
 import { useGetAllTags } from "../../../hooks/useTags";
 
 export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
+	const { t } = useTranslation();
 	const { data: contactLists = [] } = useGetAllContactLists();
 	const { data: allTags = [] } = useGetAllTags();
 	const filters = useCampaignFilters();
@@ -140,7 +142,12 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 
 	return (
 		<Box
-			sx={{ borderBottom: "1px solid #e0e0e0", pb: 2, bgcolor: "white" }}
+			sx={{
+				borderBottom: "1px solid",
+				borderColor: "divider",
+				py: 2,
+				bgcolor: "background.paper",
+			}}
 			mt={[0, "0rem !important"]}
 		>
 			<Stack
@@ -165,7 +172,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						size="small"
 					>
 						<TextField
-							placeholder="Search campaigns..."
+							placeholder={t("campaigns.search_placeholder")}
 							size="small"
 							value={localSearch}
 							onChange={(e) => setLocalSearch(e.target.value)}
@@ -205,7 +212,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 								display: localStatus.length > 0 ? "none" : "block",
 							}}
 						>
-							Status
+							{t("common.status")}
 						</InputLabel>
 						<Select
 							labelId="status-label"
@@ -218,7 +225,9 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							disabled={disabled}
 							renderValue={(selected) => {
 								if (!selected || selected.length === 0) return "";
-								return selected.join(", ");
+								return selected
+									.map((s) => t(`campaigns.status.${s}`))
+									.join(", ");
 							}}
 							sx={{ fontSize: "0.875rem" }}
 						>
@@ -227,7 +236,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 									key={status}
 									value={status}
 								>
-									{status}
+									{t(`campaigns.status.${status}`)}
 								</MenuItem>
 							))}
 						</Select>
@@ -246,7 +255,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 								display: localContacts ? "none" : "block",
 							}}
 						>
-							Contacts
+							{t("campaigns.columns.contacts")}
 						</InputLabel>
 						<Select
 							labelId="contacts-label"
@@ -269,7 +278,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 								key="none"
 								value=""
 							>
-								<em>None</em>
+								<em>{t("common.none")}</em>
 							</MenuItem>
 							{contactLists.map((option) => (
 								<MenuItem
@@ -295,7 +304,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 								display: localTags.length > 0 ? "none" : "block",
 							}}
 						>
-							Tags
+							{t("campaigns.columns.tags")}
 						</InputLabel>
 						<Select
 							labelId="tags-label"
@@ -307,8 +316,8 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							renderValue={(selected) => {
 								if (!selected || selected.length === 0) return "";
 								return allTags
-									.filter((t) => selected.includes(t.slug))
-									.map((t) => t.title)
+									.filter((t_tag) => selected.includes(t_tag.slug))
+									.map((t_tag) => t_tag.title)
 									.join(", ");
 							}}
 							sx={{ fontSize: "0.875rem" }}
@@ -343,7 +352,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							fontSize: "0.875rem",
 						}}
 					>
-						Date created
+						{t("campaigns.date_created")}
 					</Button>
 
 					<Stack
@@ -356,7 +365,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							onClick={handleSearch}
 							sx={{ height: 38, px: 2, borderRadius: "6px" }}
 						>
-							Search
+							{t("common.search")}
 						</Button>
 
 						<Button
@@ -370,7 +379,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 								color: "text.secondary",
 							}}
 						>
-							Clear
+							{t("common.clear")}
 						</Button>
 					</Stack>
 
@@ -388,7 +397,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							spacing={2}
 						>
 							<TextField
-								label="From"
+								label={t("campaigns.date_range.from")}
 								type="date"
 								size="small"
 								InputLabelProps={{ shrink: true }}
@@ -401,7 +410,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 								}
 							/>
 							<TextField
-								label="To"
+								label={t("campaigns.date_range.to")}
 								type="date"
 								size="small"
 								InputLabelProps={{ shrink: true }}
@@ -432,18 +441,18 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						sx={{
 							borderRadius: 20,
 							textTransform: "none",
-							color: "#555",
-							borderColor: "#e0e0e0",
+							color: "text.primary",
+							borderColor: "divider",
 							px: 2,
 							height: 40,
 							fontWeight: 600,
 							"&:hover": {
-								borderColor: "#ccc",
-								backgroundColor: "rgba(0,0,0,0.02)",
+								borderColor: "primary.main",
+								backgroundColor: "action.hover",
 							},
 						}}
 					>
-						Columns
+						{t("campaigns.columns.title")}
 					</Button>
 					<Popover
 						open={Boolean(columnAnchorEl)}
@@ -471,7 +480,11 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 											size="small"
 										/>
 									}
-									label={<Typography variant="body2">Name</Typography>}
+									label={
+										<Typography variant="body2">
+											{t("campaigns.columns.name")}
+										</Typography>
+									}
 								/>
 								<FormControlLabel
 									control={
@@ -481,7 +494,11 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 											size="small"
 										/>
 									}
-									label={<Typography variant="body2">Status</Typography>}
+									label={
+										<Typography variant="body2">
+											{t("campaigns.columns.status")}
+										</Typography>
+									}
 								/>
 								<FormControlLabel
 									control={
@@ -491,7 +508,11 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 											size="small"
 										/>
 									}
-									label={<Typography variant="body2">Contacts</Typography>}
+									label={
+										<Typography variant="body2">
+											{t("campaigns.columns.contacts")}
+										</Typography>
+									}
 								/>
 								<FormControlLabel
 									control={
@@ -501,7 +522,11 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 											size="small"
 										/>
 									}
-									label={<Typography variant="body2">Tags</Typography>}
+									label={
+										<Typography variant="body2">
+											{t("campaigns.columns.tags")}
+										</Typography>
+									}
 								/>
 								<FormControlLabel
 									control={
@@ -511,7 +536,11 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 											size="small"
 										/>
 									}
-									label={<Typography variant="body2">Timestamps</Typography>}
+									label={
+										<Typography variant="body2">
+											{t("campaigns.columns.timestamps")}
+										</Typography>
+									}
 								/>
 								<FormControlLabel
 									control={
@@ -521,7 +550,11 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 											size="small"
 										/>
 									}
-									label={<Typography variant="body2">Stats</Typography>}
+									label={
+										<Typography variant="body2">
+											{t("campaigns.columns.stats")}
+										</Typography>
+									}
 								/>
 								<FormControlLabel
 									control={
@@ -531,7 +564,11 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 											size="small"
 										/>
 									}
-									label={<Typography variant="body2">Actions</Typography>}
+									label={
+										<Typography variant="body2">
+											{t("campaigns.columns.actions")}
+										</Typography>
+									}
 								/>
 							</Stack>
 						</Box>
@@ -546,18 +583,19 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 						size="small"
 						disabled={disabled}
 						sx={{
-							backgroundColor: "white",
+							backgroundColor: "background.paper",
 							borderRadius: 20,
-							border: "1px solid #e0e0e0",
+							border: "1px solid",
+							borderColor: "divider",
 							"& .MuiToggleButton-root": {
 								borderRadius: 20,
 								border: "none",
 								height: 40,
 								width: 50,
-								color: "#555",
+								color: "text.secondary",
 								"&.Mui-selected": {
-									backgroundColor: "#f2f2f2",
-									color: "#000",
+									backgroundColor: "action.selected",
+									color: "primary.main",
 								},
 								"&:first-of-type": {
 									borderTopRightRadius: 0,
@@ -566,7 +604,8 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 								"&:last-of-type": {
 									borderTopLeftRadius: 0,
 									borderBottomLeftRadius: 0,
-									borderLeft: "1px solid #e0e0e0",
+									borderLeft: "1px solid",
+									borderColor: "divider",
 								},
 							},
 						}}

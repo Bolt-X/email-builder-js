@@ -12,7 +12,14 @@ export default function SegmentsTable() {
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				sx={{ px: 3, py: "20px", bgcolor: "white", mb: 2 }}
+				sx={{
+					px: 3,
+					py: "20px",
+					bgcolor: "background.paper",
+					borderBottom: 1,
+					borderColor: "divider",
+					mb: 2,
+				}}
 			>
 				<Typography
 					variant="h4"

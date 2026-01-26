@@ -12,9 +12,14 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@mui/material/styles";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../contexts/auth";
 
 export default function LoginPage() {
+	const { t } = useTranslation();
+	const theme = useTheme();
+	const isDark = theme.palette.mode === "dark";
 	const navigate = useNavigate();
 	const login = useAuthStore((s) => s.login);
 
@@ -32,7 +37,7 @@ export default function LoginPage() {
 			await login(email, password);
 			navigate("/");
 		} catch (err: any) {
-			setError(err?.errors?.[0]?.message || "Incorrect login credentials!");
+			setError(err?.errors?.[0]?.message || t("login.error_invalid"));
 		} finally {
 			setLoading(false);
 		}
@@ -41,13 +46,40 @@ export default function LoginPage() {
 	return (
 		<Box
 			sx={{
+				position: "relative",
 				height: "100vh",
 				width: "100%",
 				display: "flex",
 				alignItems: "center",
 				justifyContent: "center",
+				overflow: "hidden",
 			}}
 		>
+			<Box
+				sx={{
+					position: "absolute",
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					backgroundImage:
+						"url(/assets/images/campaigns_list_page_screenshot.png)",
+					backgroundSize: "cover",
+					backgroundPosition: "center",
+					filter: "blur(10px)",
+					transform: "scale(1.1)", // scale up slightly to hide blurred edges
+					zIndex: -1,
+					"&::after": {
+						content: '""',
+						position: "absolute",
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						bgcolor: isDark ? "rgba(0, 0, 0, 0.6)" : "rgba(0, 0, 0, 0.2)", // Darker overlay in dark mode
+					},
+				}}
+			/>
 			<Paper
 				elevation={4}
 				sx={{
@@ -62,7 +94,7 @@ export default function LoginPage() {
 					variant="h5"
 					sx={{ mb: 3, fontWeight: 600 }}
 				>
-					Login
+					{t("login.title")}
 				</Typography>
 
 				{error && (
@@ -76,7 +108,7 @@ export default function LoginPage() {
 
 				<form onSubmit={handleSubmit}>
 					<TextField
-						label="Email"
+						label={t("login.email")}
 						type="email"
 						autoComplete="email"
 						value={email}
@@ -86,7 +118,7 @@ export default function LoginPage() {
 						sx={{ mb: 2 }}
 					/>
 					<TextField
-						label="Password"
+						label={t("login.password")}
 						type={showPassword ? "text" : "password"}
 						autoComplete="current-password"
 						value={password}
@@ -123,7 +155,7 @@ export default function LoginPage() {
 								color="inherit"
 							/>
 						) : (
-							"Submit"
+							t("login.submit")
 						)}
 					</Button>
 				</form>

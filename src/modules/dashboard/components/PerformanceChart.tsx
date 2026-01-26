@@ -10,12 +10,15 @@ import {
 	ResponsiveContainer,
 	Legend,
 } from "recharts";
+import { useTranslation } from "react-i18next";
 
 interface PerformanceChartProps {
 	data: any[];
 }
 
 const PerformanceChart: React.FC<PerformanceChartProps> = ({ data }) => {
+	const { t } = useTranslation();
+
 	return (
 		<Card
 			sx={{
@@ -33,7 +36,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ data }) => {
 					variant="h6"
 					sx={{ fontWeight: 700, mb: 3, fontSize: "1.1rem" }}
 				>
-					Campaign Performance
+					{t("dashboard.campaign_performance")}
 				</Typography>
 				<Box sx={{ flexGrow: 1, width: "100%", minHeight: 0 }}>
 					<ResponsiveContainer
@@ -87,14 +90,14 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ data }) => {
 							/>
 							<Bar
 								dataKey="clicked"
-								name="Clicked"
+								name={t("dashboard.clicked")}
 								fill="#f59e0b"
 								radius={[6, 6, 0, 0]}
 								barSize={12}
 							/>
 							<Bar
 								dataKey="opened"
-								name="Opened"
+								name={t("dashboard.opened")}
 								fill="#10b981"
 								radius={[6, 6, 0, 0]}
 								barSize={12}

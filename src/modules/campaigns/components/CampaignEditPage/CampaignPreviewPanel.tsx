@@ -62,7 +62,7 @@ export default function CampaignPreviewPanel({
 					width: "100%",
 					height: "100%",
 					overflow: "auto",
-					bgcolor: "grey.100",
+					bgcolor: "background.default",
 					display: "flex",
 					justifyContent: "center",
 					p: 2,
@@ -74,7 +74,7 @@ export default function CampaignPreviewPanel({
 						width: previewMode === "desktop" ? "100%" : "375px",
 						maxWidth: previewMode === "desktop" ? "100%" : "375px",
 						height: "fit-content",
-						bgcolor: "white",
+						bgcolor: "background.paper",
 						boxShadow: 2,
 						overflow: "hidden",
 						transition: "all 0.3s ease",
@@ -86,7 +86,7 @@ export default function CampaignPreviewPanel({
 							p: 2,
 							borderBottom: 1,
 							borderColor: "divider",
-							bgcolor: "#f8f9fa",
+							bgcolor: "action.hover",
 						}}
 					>
 						<Typography

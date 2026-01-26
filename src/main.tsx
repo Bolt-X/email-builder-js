@@ -29,64 +29,155 @@ import CampaignsLayout from "./modules/campaigns/components/CampaignsLayout";
 import CampaignCreatePage from "./modules/campaigns/components/CampaignCreatePage/CampaignCreatePage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { useMediaQuery } from "@mui/material";
+import { getTheme } from "./theme";
+import { useSettingsStore } from "./modules/settings/store";
+
+import "./i18n";
+import i18n from "./i18n";
+
 // Create a client
 const queryClient = new QueryClient();
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Routes>
-            <Route element={<PrivateRoute />}>
-              {/* Dashboard routes with new layout */}
-              <Route path="/" element={<DashboardLayout />}>
-                <Route index element={<DashboardPage />} />
+function AppWrapper() {
+	const { themeMode, language } = useSettingsStore();
+	const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
 
-                <Route path="media" element={<MediaPage />} />
+	React.useEffect(() => {
+		i18n.changeLanguage(language);
+	}, [language]);
 
-                {/* Campaign routes wrapper with Tabs */}
-                <Route path="campaigns" element={<CampaignListPage />} />
-                <Route path="campaigns/new" element={<CampaignCreatePage />} />
-                <Route path="campaigns/:id" element={<CampaignEditPage />} />
-                <Route path="templates" element={<TemplatesPage />} />
-                <Route path="templates/:id" element={<TemplateDetailPage />} />
-                {/* Template editing from campaign context */}
-                <Route
-                  path="campaigns/:campaignId/templates/:templateId"
-                  element={<TemplateDetailPage />}
-                />
+	const mode = React.useMemo(() => {
+		if (themeMode === "system") {
+			return prefersDarkMode ? "dark" : "light";
+		}
+		return themeMode;
+	}, [themeMode, prefersDarkMode]);
 
-                {/* Contacts routes */}
-                <Route path="contacts">
-                  <Route index element={<ContactListPage />} />
-                  <Route path=":id" element={<ContactListDetailPage />} />
-                </Route>
-                <Route path="segments" element={<SegmentsTable />} />
-                <Route path="settings" element={<SettingsPage />} />
-                {/* Analytics route */}
-                <Route path="analytics" element={<AnalyticsDashboard />} />
-              </Route>
+	const dynamicTheme = React.useMemo(() => getTheme(mode), [mode]);
 
-              {/* MainLayout routes can be kept for other purposes or removed if not needed */}
-              <Route path="/editor-only" element={<MainLayout />}>
-                <Route index element={<App />} />
-              </Route>
-            </Route>
+	return (
+		<ThemeProvider theme={dynamicTheme}>
+			<CssBaseline />
+			<Routes>
+				<Route element={<PrivateRoute />}>
+					{/* Dashboard routes with new layout */}
+					<Route
+						path="/"
+						element={<DashboardLayout />}
+					>
+						<Route
+							index
+							element={<DashboardPage />}
+						/>
 
-            <Route path="auth" element={<AuthLayout />}>
-              <Route index element={<Navigate to="login" replace />} />
-              <Route path="login" element={<LoginPage />} />
-              {/* <Route
+						<Route
+							path="media"
+							element={<MediaPage />}
+						/>
+
+						{/* Campaign routes wrapper with Tabs */}
+						<Route
+							path="campaigns"
+							element={<CampaignListPage />}
+						/>
+						<Route
+							path="campaigns/new"
+							element={<CampaignCreatePage />}
+						/>
+						<Route
+							path="campaigns/:id"
+							element={<CampaignEditPage />}
+						/>
+						<Route
+							path="templates"
+							element={<TemplatesPage />}
+						/>
+						<Route
+							path="templates/:id"
+							element={<TemplateDetailPage />}
+						/>
+						{/* Template editing from campaign context */}
+						<Route
+							path="campaigns/:campaignId/templates/:templateId"
+							element={<TemplateDetailPage />}
+						/>
+
+						{/* Contacts routes */}
+						<Route path="contacts">
+							<Route
+								index
+								element={<ContactListPage />}
+							/>
+							<Route
+								path=":id"
+								element={<ContactListDetailPage />}
+							/>
+						</Route>
+						<Route
+							path="segments"
+							element={<SegmentsTable />}
+						/>
+						<Route
+							path="settings"
+							element={<SettingsPage />}
+						/>
+						{/* Analytics route */}
+						<Route
+							path="analytics"
+							element={<AnalyticsDashboard />}
+						/>
+					</Route>
+
+					{/* MainLayout routes can be kept for other purposes or removed if not needed */}
+					<Route
+						path="/editor-only"
+						element={<MainLayout />}
+					>
+						<Route
+							index
+							element={<App />}
+						/>
+					</Route>
+				</Route>
+
+				<Route
+					path="auth"
+					element={<AuthLayout />}
+				>
+					<Route
+						index
+						element={
+							<Navigate
+								to="login"
+								replace
+							/>
+						}
+					/>
+					<Route
+						path="login"
+						element={<LoginPage />}
+					/>
+					{/* <Route
 							path="signup"
 							element={<SignupPage />}
 						/> */}
-            </Route>
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </ThemeProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
-  </React.StrictMode>
+				</Route>
+				<Route
+					path="*"
+					element={<NotFoundPage />}
+				/>
+			</Routes>
+		</ThemeProvider>
+	);
+}
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+	<React.StrictMode>
+		<QueryClientProvider client={queryClient}>
+			<BrowserRouter>
+				<AppWrapper />
+			</BrowserRouter>
+		</QueryClientProvider>
+	</React.StrictMode>,
 );

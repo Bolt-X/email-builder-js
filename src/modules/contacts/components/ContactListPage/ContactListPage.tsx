@@ -41,18 +41,28 @@ export default function ContactListPage() {
 
 	const handleEdit = (list: ContactList) => {
 		setOpenModal(true);
-		setEditingList(list)
+		setEditingList(list);
 	};
 
 	return (
 		<Box sx={{ p: 0 }}>
 			{/* Page Title & Actions */}
-			<ModalCreateContactList open={openModal} onClose={() => setOpenModal(false)} dataContactList={editingList} />
+			<ModalCreateContactList
+				open={openModal}
+				onClose={() => setOpenModal(false)}
+				dataContactList={editingList}
+			/>
 			<Stack
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				sx={{ px: 3, py: "20px", bgcolor: "white" }}
+				sx={{
+					px: 3,
+					py: "20px",
+					bgcolor: "background.paper",
+					borderBottom: 1,
+					borderColor: "divider",
+				}}
 			>
 				<Typography
 					variant="h4"

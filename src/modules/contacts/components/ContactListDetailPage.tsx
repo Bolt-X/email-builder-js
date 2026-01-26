@@ -179,7 +179,13 @@ export default function ContactListDetailPage() {
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				sx={{ px: 3, py: "20px", bgcolor: "white" }}
+				sx={{
+					px: 3,
+					py: "20px",
+					bgcolor: "background.paper",
+					borderBottom: 1,
+					borderColor: "divider",
+				}}
 			>
 				<Stack
 					direction="row"
@@ -268,7 +274,7 @@ export default function ContactListDetailPage() {
 							width: 300,
 							"& .MuiOutlinedInput-root": {
 								borderRadius: "6px",
-								bgcolor: "white",
+								bgcolor: "background.paper",
 								height: 40,
 								"& fieldset": { borderColor: "rgba(0, 0, 0, 0.12)" },
 							},

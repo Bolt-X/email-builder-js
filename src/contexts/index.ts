@@ -11,7 +11,7 @@ const appState = create<TValue>(() => ({
 	modalSearchOpen: false,
 	searchTerm: null,
 	drawerNoteOpen: false,
-	message: null
+	message: null,
 }));
 
 export const useModalSearchOpen = () => {
@@ -44,8 +44,8 @@ export const useMessage = () => {
 	return appState((s) => s.message);
 };
 
-export const setMessage = (errMsg: string) => {
+export const setMessage = (errMsg: string | null) => {
 	appState.setState({
-		message: errMsg
-	})
-}
+		message: errMsg,
+	});
+};

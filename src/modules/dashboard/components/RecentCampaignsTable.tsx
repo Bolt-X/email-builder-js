@@ -12,6 +12,7 @@ import {
 	Chip,
 	Box,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { Campaign } from "../../campaigns/types";
 
 interface RecentCampaignsTableProps {
@@ -21,6 +22,7 @@ interface RecentCampaignsTableProps {
 const RecentCampaignsTable: React.FC<RecentCampaignsTableProps> = ({
 	campaigns,
 }) => {
+	const { t } = useTranslation();
 	const getStatusStyles = (status: string) => {
 		switch (status) {
 			case "finished":
@@ -49,12 +51,12 @@ const RecentCampaignsTable: React.FC<RecentCampaignsTableProps> = ({
 						variant="h6"
 						sx={{ fontWeight: 700, fontSize: "1.1rem" }}
 					>
-						Recent Campaigns
+						{t("dashboard.recent_campaigns")}
 					</Typography>
 				</Box>
 				<TableContainer sx={{ overflowX: "auto" }}>
 					<Table sx={{ minWidth: { xs: 650, md: "100%" } }}>
-						<TableHead sx={{ bgcolor: "#fafafa" }}>
+						<TableHead sx={{ bgcolor: "action.hover" }}>
 							<TableRow>
 								<TableCell
 									sx={{
@@ -65,7 +67,7 @@ const RecentCampaignsTable: React.FC<RecentCampaignsTableProps> = ({
 										letterSpacing: "1px",
 									}}
 								>
-									Campaign Name
+									{t("campaigns.columns.name")}
 								</TableCell>
 								<TableCell
 									sx={{
@@ -76,7 +78,7 @@ const RecentCampaignsTable: React.FC<RecentCampaignsTableProps> = ({
 										letterSpacing: "1px",
 									}}
 								>
-									Status
+									{t("campaigns.columns.status")}
 								</TableCell>
 								<TableCell
 									sx={{
@@ -87,7 +89,7 @@ const RecentCampaignsTable: React.FC<RecentCampaignsTableProps> = ({
 										letterSpacing: "1px",
 									}}
 								>
-									Sent
+									{t("dashboard.sent")}
 								</TableCell>
 								<TableCell
 									sx={{
@@ -98,7 +100,7 @@ const RecentCampaignsTable: React.FC<RecentCampaignsTableProps> = ({
 										letterSpacing: "1px",
 									}}
 								>
-									Open Rate
+									{t("dashboard.open_rate")}
 								</TableCell>
 								<TableCell
 									sx={{
@@ -109,7 +111,7 @@ const RecentCampaignsTable: React.FC<RecentCampaignsTableProps> = ({
 										letterSpacing: "1px",
 									}}
 								>
-									Created At
+									{t("campaigns.date_created")}
 								</TableCell>
 							</TableRow>
 						</TableHead>
@@ -132,7 +134,7 @@ const RecentCampaignsTable: React.FC<RecentCampaignsTableProps> = ({
 												const styles = getStatusStyles(campaign.status);
 												return (
 													<Chip
-														label={campaign.status}
+														label={t(`campaigns.status.${campaign.status}`)}
 														size="small"
 														sx={{
 															textTransform: "capitalize",
@@ -175,7 +177,7 @@ const RecentCampaignsTable: React.FC<RecentCampaignsTableProps> = ({
 											color="text.secondary"
 											sx={{ fontWeight: 500 }}
 										>
-											No campaigns found.
+											{t("dashboard.no_campaigns")}
 										</Typography>
 									</TableCell>
 								</TableRow>

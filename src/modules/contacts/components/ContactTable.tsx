@@ -39,9 +39,21 @@ const statusStyles: Record<
 	ContactStatus,
 	{ bgcolor: string; color: string; label: string }
 > = {
-	enabled: { bgcolor: "#E8F5E9", color: "#2E7D32", label: "Enabled" },
-	blocklisted: { bgcolor: "#FFEBEE", color: "#D32F2F", label: "Blocklisted" },
-	duplicate: { bgcolor: "#FFF3E0", color: "#EF6C00", label: "Duplicate" },
+	enabled: {
+		bgcolor: "success.light",
+		color: "success.contrastText",
+		label: "Enabled",
+	},
+	blocklisted: {
+		bgcolor: "error.light",
+		color: "error.contrastText",
+		label: "Blocklisted",
+	},
+	duplicate: {
+		bgcolor: "warning.light",
+		color: "warning.contrastText",
+		label: "Duplicate",
+	},
 };
 
 export default function ContactTable({
@@ -108,7 +120,7 @@ export default function ContactTable({
 				sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
 			>
 				<Table>
-					<TableHead sx={{ bgcolor: "#F9FAFB" }}>
+					<TableHead sx={{ bgcolor: "action.hover" }}>
 						<TableRow>
 							<TableCell
 								padding="checkbox"
@@ -128,7 +140,8 @@ export default function ContactTable({
 									sx={{
 										fontWeight: 700,
 										color: "text.secondary",
-										borderBottom: "1px solid #E5E7EB",
+										borderBottom: "1px solid",
+										borderColor: "divider",
 									}}
 								>
 									Mail address
@@ -139,7 +152,8 @@ export default function ContactTable({
 									sx={{
 										fontWeight: 700,
 										color: "text.secondary",
-										borderBottom: "1px solid #E5E7EB",
+										borderBottom: "1px solid",
+										borderColor: "divider",
 									}}
 								>
 									Name
@@ -150,7 +164,8 @@ export default function ContactTable({
 									sx={{
 										fontWeight: 700,
 										color: "text.secondary",
-										borderBottom: "1px solid #E5E7EB",
+										borderBottom: "1px solid",
+										borderColor: "divider",
 									}}
 								>
 									Status
@@ -161,7 +176,8 @@ export default function ContactTable({
 									sx={{
 										fontWeight: 700,
 										color: "text.secondary",
-										borderBottom: "1px solid #E5E7EB",
+										borderBottom: "1px solid",
+										borderColor: "divider",
 									}}
 								>
 									Date created

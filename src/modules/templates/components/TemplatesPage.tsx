@@ -8,12 +8,14 @@ import {
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useTemplates, useTemplatesLoading, fetchTemplates } from "../store";
 import TemplateListTable from "./TemplateListTable";
 import TemplateFilters from "./TemplateFilters";
 
 export default function TemplatesPage() {
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 	const templates = useTemplates();
 	const loading = useTemplatesLoading();
 	const [searchQuery, setSearchQuery] = useState("");
@@ -66,13 +68,19 @@ export default function TemplatesPage() {
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				sx={{ px: 3, py: "20px", bgcolor: "white" }}
+				sx={{
+					px: 3,
+					py: "20px",
+					bgcolor: "background.paper",
+					borderBottom: 1,
+					borderColor: "divider",
+				}}
 			>
 				<Typography
 					variant="h4"
 					sx={{ fontWeight: 600, color: "text.primary" }}
 				>
-					Templates
+					{t("templates.title")}
 				</Typography>
 				<Button
 					variant="contained"
@@ -86,7 +94,7 @@ export default function TemplatesPage() {
 						fontWeight: 700,
 					}}
 				>
-					Create Template
+					{t("templates.create")}
 				</Button>
 			</Stack>
 

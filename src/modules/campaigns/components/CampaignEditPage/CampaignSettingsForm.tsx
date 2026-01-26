@@ -355,8 +355,8 @@ export default function CampaignSettingsForm({
 										boxSizing: "border-box",
 										bgcolor:
 											campaign.sendTime === "now"
-												? "rgba(25, 118, 210, 0.04)"
-												: "grey.50",
+												? "action.selected"
+												: "background.paper",
 										"&:hover": {
 											borderColor: "primary.main",
 										},
@@ -403,8 +403,8 @@ export default function CampaignSettingsForm({
 										boxSizing: "border-box",
 										bgcolor:
 											campaign.sendTime === "schedule"
-												? "rgba(25, 118, 210, 0.04)"
-												: "grey.50",
+												? "action.selected"
+												: "background.paper",
 										"&:hover": {
 											borderColor: "primary.main",
 										},
@@ -447,7 +447,7 @@ export default function CampaignSettingsForm({
 								required
 								sx={{
 									"& .MuiOutlinedInput-root": {
-										bgcolor: "grey.50",
+										bgcolor: "background.paper",
 									},
 								}}
 							/>

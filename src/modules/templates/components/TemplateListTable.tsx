@@ -26,6 +26,7 @@ import {
 } from "@mui/icons-material";
 import { Template } from "../types";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { deleteTemplateAction, duplicateTemplateAction } from "../store";
 
 interface TemplateListTableProps {
@@ -36,6 +37,7 @@ export default function TemplateListTable({
 	templates,
 }: TemplateListTableProps) {
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | number | null>(null);
 	const [selectedRows, setSelectedRows] = useState<(string | number)[]>([]);
@@ -51,7 +53,7 @@ export default function TemplateListTable({
 
 	const handleMenuOpen = (
 		event: React.MouseEvent<HTMLElement>,
-		id: string | number
+		id: string | number,
 	) => {
 		event.stopPropagation();
 		setAnchorEl(event.currentTarget);
@@ -73,7 +75,7 @@ export default function TemplateListTable({
 
 	const handleSelectRow = (
 		event: React.ChangeEvent<HTMLInputElement>,
-		id: string | number
+		id: string | number,
 	) => {
 		event.stopPropagation();
 		if (event.target.checked) {
@@ -85,7 +87,7 @@ export default function TemplateListTable({
 
 	const handleDelete = async () => {
 		if (selectedId) {
-			if (window.confirm("Are you sure you want to delete this template?")) {
+			if (window.confirm(t("templates.confirm_delete"))) {
 				await deleteTemplateAction(selectedId);
 			}
 			handleMenuClose();
@@ -104,7 +106,7 @@ export default function TemplateListTable({
 	};
 
 	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<HTMLInputElement>
+		event: React.ChangeEvent<HTMLInputElement>,
 	) => {
 		setRowsPerPage(parseInt(event.target.value, 10));
 		setPage(0);
@@ -112,179 +114,213 @@ export default function TemplateListTable({
 
 	const paginatedTemplates = templates.slice(
 		page * rowsPerPage,
-		page * rowsPerPage + rowsPerPage
+		page * rowsPerPage + rowsPerPage,
 	);
 
 	return (
 		<>
-			<TableContainer
-				component={Paper}
-				elevation={0}
-				sx={{ border: "1px solid", borderColor: "divider", borderRadius: 0 }}
+			<Box
+				sx={{
+					display: "flex",
+					flexDirection: "column",
+					height: "calc(100vh - 200px)", // Adjust this value based on header/filter height
+					position: "relative",
+				}}
 			>
-				<Table>
-					<TableHead sx={{ bgcolor: "grey.50" }}>
-						<TableRow>
-							<TableCell
-								padding="checkbox"
-								sx={{ paddingX: 3 }}
-							>
-								<Checkbox
-									indeterminate={
-										selectedRows.length > 0 &&
-										selectedRows.length < templates.length
-									}
-									checked={
-										templates.length > 0 &&
-										selectedRows.length === templates.length
-									}
-									onChange={handleSelectAll}
-									size="small"
-								/>
-							</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Campaign ID</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Timestamps</TableCell>
-							<TableCell
-								sx={{ fontWeight: 600, paddingX: 3 }}
-								align="right"
-							>
-								Action
-							</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{paginatedTemplates.map((template) => {
-							const isSelected = selectedRows.includes(template.id);
-							return (
-								<TableRow
-									key={template.id}
-									hover
-									selected={isSelected}
-									sx={{ cursor: "pointer" }}
-									onClick={() => navigate(`/templates/${template.id}`)}
+				<TableContainer
+					component={Paper}
+					elevation={0}
+					sx={{
+						flex: 1,
+						overflow: "auto",
+						border: "1px solid",
+						borderColor: "divider",
+						borderRadius: 0,
+						minHeight: 0, // Important for flex child with overflow
+					}}
+				>
+					<Table stickyHeader>
+						<TableHead sx={{ bgcolor: "action.hover" }}>
+							<TableRow>
+								<TableCell
+									padding="checkbox"
+									sx={{ paddingX: 3 }}
 								>
-									<TableCell
-										padding="checkbox"
-										onClick={(e) => e.stopPropagation()}
-										sx={{ paddingX: 3 }}
+									<Checkbox
+										indeterminate={
+											selectedRows.length > 0 &&
+											selectedRows.length < templates.length
+										}
+										checked={
+											templates.length > 0 &&
+											selectedRows.length === templates.length
+										}
+										onChange={handleSelectAll}
+										size="small"
+									/>
+								</TableCell>
+								<TableCell sx={{ fontWeight: 600 }}>
+									{t("templates.columns.name")}
+								</TableCell>
+								<TableCell sx={{ fontWeight: 600 }}>
+									{t("templates.columns.context")}
+								</TableCell>
+								<TableCell sx={{ fontWeight: 600 }}>
+									{t("templates.columns.timestamps")}
+								</TableCell>
+								<TableCell
+									sx={{ fontWeight: 600, paddingX: 3 }}
+									align="right"
+								>
+									{t("templates.columns.actions")}
+								</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{paginatedTemplates.map((template) => {
+								const isSelected = selectedRows.includes(template.id);
+								return (
+									<TableRow
+										key={template.id}
+										hover
+										selected={isSelected}
+										sx={{ cursor: "pointer" }}
+										onClick={() => navigate(`/templates/${template.id}`)}
 									>
-										<Checkbox
-											checked={isSelected}
-											onChange={(e) => handleSelectRow(e, template.id)}
-											size="small"
-										/>
-									</TableCell>
-									<TableCell>
-										<Box sx={{ display: "flex", alignItems: "center" }}>
-											{template.thumbnail && (
-												<Box
-													component="img"
-													src={template.thumbnail}
-													sx={{
-														width: 40,
-														height: 40,
-														borderRadius: 1,
-														mr: 2,
-														objectFit: "cover",
-														border: "1px solid",
-														borderColor: "divider",
-													}}
-												/>
-											)}
-											<Box>
-												<Typography
-													variant="body2"
-													sx={{ fontWeight: 600, color: "primary.main" }}
-												>
-													{template.name}
-												</Typography>
-												<Typography
-													variant="caption"
-													color="text.secondary"
-													sx={{ display: "block" }}
-												>
-													{template.description || "No description"}
-												</Typography>
-											</Box>
-										</Box>
-									</TableCell>
-									<TableCell>
-										<Typography
-											variant="body2"
-											color="text.secondary"
+										<TableCell
+											padding="checkbox"
+											onClick={(e) => e.stopPropagation()}
+											sx={{ paddingX: 3 }}
 										>
-											{template.campaignId || "Global"}
-										</Typography>
-									</TableCell>
-									<TableCell>
-										<Box sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
-											<Box>
-												Created:{" "}
-												{template.createdAt
-													? new Date(template.createdAt).toLocaleDateString()
-													: "-"}
+											<Checkbox
+												checked={isSelected}
+												onChange={(e) => handleSelectRow(e, template.id)}
+												size="small"
+											/>
+										</TableCell>
+										<TableCell>
+											<Box sx={{ display: "flex", alignItems: "center" }}>
+												{template.thumbnail && (
+													<Box
+														component="img"
+														src={template.thumbnail}
+														sx={{
+															width: 40,
+															height: 40,
+															borderRadius: 1,
+															mr: 2,
+															objectFit: "cover",
+															border: "1px solid",
+															borderColor: "divider",
+														}}
+													/>
+												)}
+												<Box>
+													<Typography
+														variant="body2"
+														sx={{ fontWeight: 600, color: "primary.main" }}
+													>
+														{template.name}
+													</Typography>
+													<Typography
+														variant="caption"
+														color="text.secondary"
+														sx={{ display: "block" }}
+													>
+														{template.description || "No description"}
+													</Typography>
+												</Box>
 											</Box>
-											<Box>
-												Updated:{" "}
-												{template.updatedAt
-													? new Date(template.updatedAt).toLocaleDateString()
-													: "-"}
+										</TableCell>
+										<TableCell>
+											<Typography
+												variant="body2"
+												color="text.secondary"
+											>
+												{template.campaignId || "Global"}
+											</Typography>
+										</TableCell>
+										<TableCell>
+											<Box
+												sx={{ fontSize: "0.75rem", color: "text.secondary" }}
+											>
+												<Box>
+													{t("common.created_at")}{" "}
+													{template.createdAt
+														? new Date(template.createdAt).toLocaleDateString()
+														: "-"}
+												</Box>
+												<Box>
+													{t("common.updated_at")}{" "}
+													{template.updatedAt
+														? new Date(template.updatedAt).toLocaleDateString()
+														: "-"}
+												</Box>
 											</Box>
-										</Box>
-									</TableCell>
-									<TableCell
-										align="right"
-										sx={{ paddingX: 3 }}
-									>
-										<Stack
-											direction="row"
-											spacing={0.5}
-											justifyContent="flex-end"
+										</TableCell>
+										<TableCell
+											align="right"
+											sx={{ paddingX: 3 }}
 										>
-											<Tooltip title="View Preview">
-												<IconButton size="small">
-													<VisibilityOutlined fontSize="small" />
-												</IconButton>
-											</Tooltip>
-											<Tooltip title="Edit in Legacy Editor">
+											<Stack
+												direction="row"
+												spacing={0.5}
+												justifyContent="flex-end"
+											>
+												<Tooltip title={t("templates.actions.view_preview")}>
+													<IconButton size="small">
+														<VisibilityOutlined fontSize="small" />
+													</IconButton>
+												</Tooltip>
+												<Tooltip title={t("templates.actions.edit_legacy")}>
+													<IconButton
+														size="small"
+														onClick={(e) => {
+															e.stopPropagation();
+															navigate(`/templates/${template.id}`);
+														}}
+													>
+														<Edit
+															fontSize="small"
+															color="primary"
+														/>
+													</IconButton>
+												</Tooltip>
 												<IconButton
 													size="small"
-													onClick={(e) => {
-														e.stopPropagation();
-														navigate(`/templates/${template.id}`);
-													}}
+													onClick={(e) => handleMenuOpen(e, template.id)}
 												>
-													<Edit
-														fontSize="small"
-														color="primary"
-													/>
+													<MoreHoriz fontSize="small" />
 												</IconButton>
-											</Tooltip>
-											<IconButton
-												size="small"
-												onClick={(e) => handleMenuOpen(e, template.id)}
-											>
-												<MoreHoriz fontSize="small" />
-											</IconButton>
-										</Stack>
-									</TableCell>
-								</TableRow>
-							);
-						})}
-					</TableBody>
-				</Table>
-				<TablePagination
-					rowsPerPageOptions={[10, 25, 50]}
-					component="div"
-					count={templates.length}
-					rowsPerPage={rowsPerPage}
-					page={page}
-					onPageChange={handleChangePage}
-					onRowsPerPageChange={handleChangeRowsPerPage}
-					sx={{ px: 3 }}
-				/>
-			</TableContainer>
+											</Stack>
+										</TableCell>
+									</TableRow>
+								);
+							})}
+						</TableBody>
+					</Table>
+				</TableContainer>
+				<Box
+					sx={{
+						bgcolor: "background.paper",
+						borderTop: "1px solid",
+						borderColor: "divider",
+						p: 0,
+						flexShrink: 0,
+					}}
+				>
+					<TablePagination
+						rowsPerPageOptions={[10, 25, 50]}
+						component="div"
+						count={templates.length}
+						rowsPerPage={rowsPerPage}
+						page={page}
+						onPageChange={handleChangePage}
+						onRowsPerPageChange={handleChangeRowsPerPage}
+						sx={{ px: 3 }}
+					/>
+				</Box>
+			</Box>
 
 			<Menu
 				anchorEl={anchorEl}
@@ -297,16 +333,16 @@ export default function TemplateListTable({
 						handleMenuClose();
 					}}
 				>
-					<Edit sx={{ mr: 1, fontSize: 20 }} /> Edit
+					<Edit sx={{ mr: 1, fontSize: 20 }} /> {t("common.edit")}
 				</MenuItem>
 				<MenuItem onClick={handleDuplicate}>
-					<ContentCopy sx={{ mr: 1, fontSize: 20 }} /> Duplicate
+					<ContentCopy sx={{ mr: 1, fontSize: 20 }} /> {t("common.duplicate")}
 				</MenuItem>
 				<MenuItem
 					onClick={handleDelete}
 					sx={{ color: "error.main" }}
 				>
-					<Delete sx={{ mr: 1, fontSize: 20 }} /> Delete
+					<Delete sx={{ mr: 1, fontSize: 20 }} /> {t("common.delete")}
 				</MenuItem>
 			</Menu>
 		</>

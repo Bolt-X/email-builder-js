@@ -30,7 +30,10 @@ import {
 } from "@mui/icons-material";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCreateCampaign, useUpdateCampaign } from "../../../../hooks/useCampaigns";
+import {
+	useCreateCampaign,
+	useUpdateCampaign,
+} from "../../../../hooks/useCampaigns";
 import { useGetAllTags } from "../../../../hooks/useTags";
 import ModalCreateTag from "../../../tags/ModalCreateTag";
 import { useGetAllTemplates } from "../../../../hooks/useTemplates";
@@ -38,6 +41,7 @@ import { sendTestEmail } from "../../service";
 import { Snackbar, Alert } from "@mui/material";
 import SubscriberSelector from "../../../contacts/components/SubscriberSelector";
 import { SubscriberSelection } from "../../types";
+import { setMessage } from "../../../../contexts";
 
 interface CampaignFormValues {
 	name: string;
@@ -81,7 +85,7 @@ export default function CampaignCreatePage() {
 		subscribers: [],
 	});
 	const mutateCreate = useCreateCampaign();
-	const mutateUpdate = useUpdateCampaign()
+	const mutateUpdate = useUpdateCampaign();
 	const handleChange = (prop: keyof CampaignFormValues) => (event: any) => {
 		setValues({ ...values, [prop]: event.target.value });
 	};
@@ -165,24 +169,16 @@ export default function CampaignCreatePage() {
 				subject: values.subject || "No Subject",
 				template: selectedTemplate.html,
 			});
-			setSnackbar({
-				open: true,
-				message: "Test email sent successfully",
-				severity: "success",
-			});
+			setMessage("Test email sent successfully");
 			setTestEmailDialogOpen(false);
 			setTestEmailValue("");
 		} catch (error: any) {
-			setSnackbar({
-				open: true,
-				message: error.message || "Failed to send test email",
-				severity: "error",
-			});
+			setMessage(error.message || "Failed to send test email");
 		}
 	};
 
 	return (
-		<Box bgcolor="white">
+		<Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
 			<ModalCreateTag
 				open={addTagModalOpen}
 				onClose={() => setAddTagModalOpen(false)}
@@ -220,8 +216,8 @@ export default function CampaignCreatePage() {
 						label="Draft"
 						size="small"
 						sx={{
-							backgroundColor: "neutral.black.10",
-							color: "neutral.black.100",
+							backgroundColor: "action.hover",
+							color: "text.secondary",
 							fontWeight: "500",
 							textTransform: "capitalize",
 						}}
@@ -572,8 +568,8 @@ export default function CampaignCreatePage() {
 													boxSizing: "border-box",
 													bgcolor:
 														values.sendType === "now"
-															? "rgba(25, 118, 210, 0.04)"
-															: "grey.50",
+															? "action.selected"
+															: "background.paper",
 													"&:hover": {
 														borderColor: "primary.main",
 													},
@@ -624,8 +620,8 @@ export default function CampaignCreatePage() {
 													boxSizing: "border-box",
 													bgcolor:
 														values.sendType === "schedule"
-															? "rgba(25, 118, 210, 0.04)"
-															: "grey.50",
+															? "action.selected"
+															: "background.paper",
 													"&:hover": {
 														borderColor: "primary.main",
 													},
@@ -672,7 +668,7 @@ export default function CampaignCreatePage() {
 											required
 											sx={{
 												"& .MuiOutlinedInput-root": {
-													bgcolor: "grey.50",
+													bgcolor: "background.paper",
 												},
 											}}
 										/>
@@ -695,7 +691,7 @@ export default function CampaignCreatePage() {
 							display: "flex",
 							flexDirection: "column",
 							height: "100%",
-							bgcolor: "grey.50",
+							bgcolor: "background.default",
 							borderLeft: 1,
 							borderColor: "divider",
 						}}
@@ -705,7 +701,7 @@ export default function CampaignCreatePage() {
 								p: 2,
 								borderBottom: 1,
 								borderColor: "divider",
-								bgcolor: "white",
+								bgcolor: "background.paper",
 							}}
 						>
 							<Stack
@@ -754,7 +750,7 @@ export default function CampaignCreatePage() {
 								<Paper
 									elevation={0}
 									sx={{
-										bgcolor: "white",
+										bgcolor: "background.paper",
 										borderRadius: 1,
 										boxShadow: 2,
 										overflow: "hidden",
@@ -769,7 +765,7 @@ export default function CampaignCreatePage() {
 											p: 2,
 											borderBottom: 1,
 											borderColor: "divider",
-											bgcolor: "#f8f9fa",
+											bgcolor: "action.hover",
 										}}
 									>
 										<Typography

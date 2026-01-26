@@ -40,9 +40,8 @@ import { useDocument } from "../../../../documents/editor/EditorContext";
 import { renderToStaticMarkup } from "@usewaypoint/email-builder";
 import CampaignHeader from "./CampaignHeader";
 import CampaignSettingsForm from "./CampaignSettingsForm";
+import { setMessage } from "../../../../contexts";
 import CampaignPreviewPanel from "./CampaignPreviewPanel";
-import TemplatePanel from "../../../../App/TemplatePanel/index";
-import InspectorDrawer from "../../../../App/InspectorDrawer/index";
 
 // Autosave interval in milliseconds
 const AUTOSAVE_INTERVAL = 30000; // 30 seconds
@@ -161,19 +160,11 @@ export default function CampaignEditPage() {
 				subject: campaign.subject || "No Subject",
 				template: html,
 			});
-			setSnackbar({
-				open: true,
-				message: "Test email sent successfully",
-				severity: "success",
-			});
+			setMessage("Test email sent successfully");
 			setTestEmailDialogOpen(false);
 			setTestEmailValue("");
 		} catch (error: any) {
-			setSnackbar({
-				open: true,
-				message: error.message || "Failed to send test email",
-				severity: "error",
-			});
+			setMessage(error.message || "Failed to send test email");
 		}
 	}, [id, testEmailValue, campaign, html]);
 
@@ -191,11 +182,7 @@ export default function CampaignEditPage() {
 			!campaign.fromAddress ||
 			!hasRecipients
 		) {
-			setSnackbar({
-				open: true,
-				message: "Please fill in all required fields",
-				severity: "warning",
-			});
+			setMessage("Please fill in all required fields");
 			return;
 		}
 
@@ -205,21 +192,15 @@ export default function CampaignEditPage() {
 		try {
 			const sendNow = campaign.sendTime === "now";
 			await startCampaign(id, sendNow);
-			setSnackbar({
-				open: true,
-				message: sendNow
-					? "Campaign started successfully"
-					: "Campaign scheduled successfully",
-				severity: "success",
-			});
+			setMessage(
+				sendNow
+					? `“${campaign.name}” is running`
+					: `“${campaign.name}” is scheduled`,
+			);
 			// Refresh campaign data
 			await fetchCampaignById(id);
 		} catch (error: any) {
-			setSnackbar({
-				open: true,
-				message: error.message || "Failed to start campaign",
-				severity: "error",
-			});
+			setMessage(error.message || "Failed to start campaign");
 		}
 	}, [id, campaign, handleSave]);
 
@@ -242,7 +223,7 @@ export default function CampaignEditPage() {
 				height: "100vh",
 				display: "flex",
 				flexDirection: "column",
-				bgcolor: "white",
+				bgcolor: "background.default",
 			}}
 		>
 			{/* Header */}
@@ -282,7 +263,11 @@ export default function CampaignEditPage() {
 					item
 					xs={12}
 					md={6}
-					sx={{ height: "100%", overflow: "hidden", bgcolor: "grey.50" }}
+					sx={{
+						height: "100%",
+						overflow: "hidden",
+						bgcolor: "background.default",
+					}}
 				>
 					<CampaignPreviewPanel campaignId={id!} />
 				</Grid>

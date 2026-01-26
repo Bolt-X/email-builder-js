@@ -37,6 +37,7 @@ import {
 	Typography,
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
 	useDeleteCampaign,
@@ -83,6 +84,7 @@ const ModalRenameCampaign = ({
 	onClose: () => void;
 	campaign: Campaign;
 }) => {
+	const { t } = useTranslation();
 	const [newName, setNewName] = useState("");
 	const { mutate: updateCampaignMutation } = useUpdateCampaign();
 	const handleRename = async () => {
@@ -115,7 +117,7 @@ const ModalRenameCampaign = ({
 					variant="h6"
 					fontWeight={600}
 				>
-					Rename Campaign
+					{t("campaigns.rename_title")}
 				</Typography>
 				<IconButton onClick={onClose}>
 					<CloseOutlined />
@@ -124,7 +126,7 @@ const ModalRenameCampaign = ({
 
 			<DialogContent sx={{ px: 3, pt: 3 }}>
 				<TextField
-					label="Campaign name"
+					label={t("common.name")}
 					fullWidth
 					size="small"
 					value={newName}
@@ -137,14 +139,14 @@ const ModalRenameCampaign = ({
 					onClick={onClose}
 					color="inherit"
 				>
-					Cancel
+					{t("common.cancel")}
 				</Button>
 				<Button
 					variant="contained"
 					onClick={handleRename}
 					disabled={!newName.trim()}
 				>
-					Rename
+					{t("common.rename")}
 				</Button>
 			</DialogActions>
 		</Dialog>
@@ -160,6 +162,7 @@ const ModalDeleteCampaign = ({
 	onClose: () => void;
 	campaigns: Campaign[];
 }) => {
+	const { t } = useTranslation();
 	const mutateDeleteMutiple = useDeleteMutipleCampaigns();
 	const mutateUpdateMutipleCampaigns = useUpdateMutipleCampaigns();
 
@@ -212,15 +215,16 @@ const ModalDeleteCampaign = ({
 				alignItems="center"
 				sx={{ borderBottom: "1px solid #E5E7EB" }}
 			>
-				<Typography variant="h6">Delete Campaign</Typography>
+				<Typography variant="h6">{t("campaigns.delete_title")}</Typography>
 				<IconButton onClick={onClose}>
 					<CloseOutlined />
 				</IconButton>
 			</Stack>
 			<DialogContent>
 				<Typography variant="body1">
-					Are you sure you want to delete {listCampaigns?.length ?? 0} items?
-					You won't be able to undo this action.
+					{t("campaigns.delete_confirm", { count: listCampaigns?.length ?? 0 })}
+					<br />
+					{t("common.undo_action")}
 				</Typography>
 				<TableContainer
 					sx={{ border: "1px solid #E5E7EB", mt: 2, borderRadius: "4px" }}
@@ -230,9 +234,9 @@ const ModalDeleteCampaign = ({
 							sx={{ bgColor: "#FAFAFA", maxHeight: "480px", overflowY: "auto" }}
 						>
 							<TableRow>
-								<TableCell>Name</TableCell>
-								<TableCell align="right">Status</TableCell>
-								<TableCell align="right">Action</TableCell>
+								<TableCell>{t("common.name")}</TableCell>
+								<TableCell align="right">{t("common.status")}</TableCell>
+								<TableCell align="right">{t("common.actions")}</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
@@ -254,7 +258,7 @@ const ModalDeleteCampaign = ({
 									</TableCell>
 									<TableCell align="right">
 										<Chip
-											label={campaign.status}
+											label={t(`campaigns.status.${campaign.status}`)}
 											size="small"
 											sx={{ ...getStatusStyles(campaign.status) }}
 										/>
@@ -278,14 +282,14 @@ const ModalDeleteCampaign = ({
 					color="inherit"
 					variant="outlined"
 				>
-					Cancel
+					{t("common.cancel")}
 				</Button>
 				<Button
 					onClick={handleDelete}
 					color="error"
 					variant="contained"
 				>
-					Delete
+					{t("common.delete")}
 				</Button>
 			</DialogActions>
 		</Dialog>
@@ -296,6 +300,7 @@ export default function CampaignListTable({
 	campaigns,
 	loading,
 }: CampaignListTableProps) {
+	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const visibleColumns = useVisibleColumns();
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -489,8 +494,11 @@ export default function CampaignListTable({
 							variant="body2"
 							sx={{ fontWeight: 500 }}
 						>
-							{selectedRows.length} item{selectedRows.length > 1 ? "s" : ""}{" "}
-							selected
+							{selectedRows.length}{" "}
+							{selectedRows.length > 1
+								? t("campaigns.items")
+								: t("campaigns.items").slice(0, -1)}{" "}
+							{t("campaigns.selected")}
 						</Typography>
 						<Button
 							size="small"
@@ -505,7 +513,7 @@ export default function CampaignListTable({
 								},
 							}}
 						>
-							Select all
+							{t("common.select_all")}
 						</Button>
 					</Stack>
 					<Stack
@@ -532,7 +540,7 @@ export default function CampaignListTable({
 									},
 								}}
 							>
-								Rename
+								{t("common.rename")}
 							</Button>
 						)}
 						<Button
@@ -553,7 +561,7 @@ export default function CampaignListTable({
 								},
 							}}
 						>
-							Delete
+							{t("common.delete")}
 						</Button>
 						<Button
 							size="small"
@@ -568,7 +576,7 @@ export default function CampaignListTable({
 								},
 							}}
 						>
-							Cancel
+							{t("common.cancel")}
 						</Button>
 					</Stack>
 				</Box>
@@ -602,7 +610,7 @@ export default function CampaignListTable({
 				}}
 			>
 				<Table stickyHeader>
-					<TableHead sx={{ bgcolor: "grey.50" }}>
+					<TableHead sx={{ bgcolor: "action.hover" }}>
 						<TableRow>
 							<TableCell
 								padding="checkbox"
@@ -615,27 +623,39 @@ export default function CampaignListTable({
 									size="small"
 								/>
 							</TableCell>
-							<TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+							<TableCell sx={{ fontWeight: 600 }}>
+								{t("campaigns.columns.name")}
+							</TableCell>
 							{visibleColumns.includes("status") && (
-								<TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+								<TableCell sx={{ fontWeight: 600 }}>
+									{t("campaigns.columns.status")}
+								</TableCell>
 							)}
 							{visibleColumns.includes("contacts") && (
-								<TableCell sx={{ fontWeight: 600 }}>Contacts</TableCell>
+								<TableCell sx={{ fontWeight: 600 }}>
+									{t("campaigns.columns.contacts")}
+								</TableCell>
 							)}
 							{visibleColumns.includes("tags") && (
-								<TableCell sx={{ fontWeight: 600 }}>Tags</TableCell>
+								<TableCell sx={{ fontWeight: 600 }}>
+									{t("campaigns.columns.tags")}
+								</TableCell>
 							)}
 							{visibleColumns.includes("timestamps") && (
-								<TableCell sx={{ fontWeight: 600 }}>Timestamps</TableCell>
+								<TableCell sx={{ fontWeight: 600 }}>
+									{t("campaigns.columns.timestamps")}
+								</TableCell>
 							)}
 							{visibleColumns.includes("stats") && (
-								<TableCell sx={{ fontWeight: 600 }}>Stats</TableCell>
+								<TableCell sx={{ fontWeight: 600 }}>
+									{t("campaigns.columns.stats")}
+								</TableCell>
 							)}
 							<TableCell
 								sx={{ fontWeight: 600, paddingX: 3 }}
 								align="right"
 							>
-								Action
+								{t("campaigns.columns.actions")}
 							</TableCell>
 						</TableRow>
 					</TableHead>
@@ -662,7 +682,7 @@ export default function CampaignListTable({
 									variant="caption"
 									sx={{ fontWeight: 600, color: "text.secondary" }}
 								>
-									Đang tải dữ liệu...
+									{t("campaigns.loading_data")}
 								</Typography>
 							</Box>
 						)}
@@ -676,7 +696,7 @@ export default function CampaignListTable({
 										variant="body2"
 										color="text.secondary"
 									>
-										Không tìm thấy kết quả nào.
+										{t("campaigns.no_results")}
 									</Typography>
 								</TableCell>
 							</TableRow>
@@ -1072,12 +1092,13 @@ export default function CampaignListTable({
 				justifyContent="space-between"
 				alignItems="center"
 				sx={{
-					backgroundColor: "white",
+					backgroundColor: "background.paper",
+					borderTop: "1px solid",
+					borderColor: "divider",
 					paddingY: 1,
 					paddingX: 3,
 					flexShrink: 0,
-					boxShadow:
-						"0 1px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 4px 0 rgba(0, 0, 0, 0.14), 0 3px 3px -2px rgba(0, 0, 0, 0.20)",
+					// boxShadow: "0 -2px 10px rgba(0,0,0,0.05)",
 				}}
 			>
 				{/* Rows per page */}

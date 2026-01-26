@@ -227,7 +227,9 @@ export default function ContactListTable({
 				elevation={0}
 				sx={{
 					mb: 2,
-					bgcolor: isBatchMode ? "primary.main" : "none",
+					bgcolor: isBatchMode ? "primary.main" : "background.paper",
+					border: 1,
+					borderColor: "divider",
 					borderRadius: 2,
 					overflow: "hidden",
 					height: 60,
@@ -349,7 +351,7 @@ export default function ContactListTable({
 									width: 320,
 									"& .MuiOutlinedInput-root": {
 										borderRadius: "6px",
-										bgcolor: "white",
+										bgcolor: "background.paper",
 										height: 40,
 										"& fieldset": {
 											borderColor: "rgba(0, 0, 0, 0.12)",
@@ -367,8 +369,8 @@ export default function ContactListTable({
 									height: 40,
 									textTransform: "none",
 									color: "text.primary",
-									borderColor: "rgba(0, 0, 0, 0.12)",
-									bgcolor: "white",
+									borderColor: "divider",
+									bgcolor: "background.paper",
 									borderRadius: "6px",
 									px: 2,
 									minWidth: 140,
@@ -483,7 +485,7 @@ export default function ContactListTable({
 				sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
 			>
 				<Table>
-					<TableHead sx={{ bgcolor: "#F9FAFB" }}>
+					<TableHead sx={{ bgcolor: "action.hover" }}>
 						<TableRow>
 							<TableCell
 								padding="checkbox"
@@ -603,8 +605,8 @@ export default function ContactListTable({
 											{list.is_default && (
 												<Box
 													sx={{
-														bgcolor: "#F0F7FF",
-														color: "#0070E0",
+														bgcolor: "action.selected",
+														color: "primary.main",
 														px: 1.2,
 														py: 0.4,
 														borderRadius: "6px",

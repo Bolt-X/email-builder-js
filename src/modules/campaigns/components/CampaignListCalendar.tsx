@@ -85,10 +85,10 @@ export default function CampaignListCalendar({
 			sx={{
 				borderRadius: 4,
 				overflow: "hidden",
-				bgcolor: "white",
-				boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
+				bgcolor: "background.paper",
+				boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
 				border: "1px solid",
-				borderColor: "rgba(0,0,0,0.05)",
+				borderColor: "divider",
 			}}
 		>
 			{/* Calendar Header */}
@@ -128,8 +128,8 @@ export default function CampaignListCalendar({
 								size="small"
 								onClick={prevMonth}
 								sx={{
-									bgcolor: "#f8fafc",
-									"&:hover": { bgcolor: "#f1f5f9" },
+									bgcolor: "action.hover",
+									"&:hover": { bgcolor: "action.selected" },
 								}}
 							>
 								<ChevronLeft fontSize="small" />
@@ -141,7 +141,7 @@ export default function CampaignListCalendar({
 									textTransform: "none",
 									fontWeight: 700,
 									color: "text.secondary",
-									"&:hover": { bgcolor: "#f8fafc" },
+									"&:hover": { bgcolor: "action.hover" },
 								}}
 							>
 								Today
@@ -150,8 +150,8 @@ export default function CampaignListCalendar({
 								size="small"
 								onClick={nextMonth}
 								sx={{
-									bgcolor: "#f8fafc",
-									"&:hover": { bgcolor: "#f1f5f9" },
+									bgcolor: "action.hover",
+									"&:hover": { bgcolor: "action.selected" },
 								}}
 							>
 								<ChevronRight fontSize="small" />
@@ -165,7 +165,7 @@ export default function CampaignListCalendar({
 			<Grid
 				container
 				sx={{
-					bgcolor: "#3DB5AD",
+					bgcolor: "primary.main",
 				}}
 			>
 				{DAYS.map((day) => (
@@ -213,13 +213,13 @@ export default function CampaignListCalendar({
 								p: 1.5,
 								borderRight: (idx + 1) % 7 !== 0 ? "1px solid" : "none",
 								borderBottom: "1px solid",
-								borderColor: "rgba(0,0,0,0.05)",
-								bgcolor: cell.day ? "white" : "#fbfcfd",
+								borderColor: "divider",
+								bgcolor: cell.day ? "background.paper" : "action.hover",
 								position: "relative",
 								transition: "all 0.2s ease",
 								"&:hover": cell.day
 									? {
-											bgcolor: "#f8fafc",
+											bgcolor: "action.hover",
 											"& .create-btn": { opacity: 1 },
 										}
 									: {},
@@ -257,11 +257,11 @@ export default function CampaignListCalendar({
 												opacity: 0,
 												transition: "opacity 0.2s",
 												color: "primary.main",
-												bgcolor: "primary.main",
+												bgcolor: "action.selected",
 												"&.MuiIconButton-root": {
-													bgcolor: "rgba(61, 181, 173, 0.1)",
+													bgcolor: "action.selected",
 												},
-												"&:hover": { bgcolor: "rgba(61, 181, 173, 0.2)" },
+												"&:hover": { bgcolor: "action.focus" },
 											}}
 										>
 											<AddIcon sx={{ fontSize: 18 }} />
@@ -285,9 +285,10 @@ export default function CampaignListCalendar({
 														px: 1,
 														py: 0.8,
 														borderRadius: "8px",
-														bgcolor: "#e0f2f1",
-														color: "#00695c",
-														borderLeft: "3px solid #3db5ad",
+														bgcolor: "primary.light",
+														color: "primary.contrastText",
+														borderLeft: "3px solid",
+														borderColor: "primary.dark",
 														fontSize: "0.7rem",
 														fontWeight: 700,
 														cursor: "pointer",

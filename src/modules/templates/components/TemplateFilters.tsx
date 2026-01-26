@@ -6,6 +6,7 @@ import {
 	Stack,
 	TextField,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface TemplateFiltersProps {
 	searchQuery: string;
@@ -18,6 +19,7 @@ export default function TemplateFilters({
 	onSearchChange,
 	disabled,
 }: TemplateFiltersProps) {
+	const { t } = useTranslation();
 	const commonSx = {
 		borderRadius: "6px",
 		backgroundColor: "background.paper",
@@ -31,7 +33,13 @@ export default function TemplateFilters({
 
 	return (
 		<Box
-			sx={{ borderBottom: "1px solid #e0e0e0", pb: 2, px: 3, bgcolor: "white" }}
+			sx={{
+				borderBottom: "1px solid",
+				borderColor: "divider",
+				py: 2,
+				px: 3,
+				bgcolor: "background.paper",
+			}}
 		>
 			<Stack
 				direction="row"
@@ -50,7 +58,7 @@ export default function TemplateFilters({
 						size="small"
 					>
 						<TextField
-							placeholder="Search templates..."
+							placeholder={t("templates.search_placeholder")}
 							size="small"
 							value={searchQuery}
 							onChange={(e) => onSearchChange(e.target.value)}

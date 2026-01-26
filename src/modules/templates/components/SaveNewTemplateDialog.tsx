@@ -14,6 +14,7 @@ import { createTemplateAction } from "../store";
 import { renderToStaticMarkup } from "@usewaypoint/email-builder";
 import { useNavigate } from "react-router-dom";
 import { setMessage } from "../../../contexts";
+import { useTranslation } from "react-i18next";
 
 interface SaveNewTemplateDialogProps {
 	open: boolean;
@@ -26,6 +27,7 @@ export default function SaveNewTemplateDialog({
 	onClose,
 	campaignId,
 }: SaveNewTemplateDialogProps) {
+	const { t } = useTranslation();
 	const [name, setName] = useState("");
 	const [error, setError] = useState("");
 	const document = useDocument();
@@ -33,7 +35,7 @@ export default function SaveNewTemplateDialog({
 
 	const handleSave = async () => {
 		if (!name.trim()) {
-			setError("Template name is required");
+			setError(t("templates.save_dialog.error_required"));
 			return;
 		}
 
@@ -45,12 +47,12 @@ export default function SaveNewTemplateDialog({
 				html,
 				json: document,
 			});
-			setMessage("Template created successfully!");
+			setMessage(t("templates.save_dialog.success"));
 			navigate("/templates");
 			onClose();
 		} catch (err: any) {
 			console.error(err);
-			setMessage("Error: " + err.message);
+			setMessage(t("templates.save_dialog.error") + err.message);
 		}
 	};
 
@@ -61,7 +63,7 @@ export default function SaveNewTemplateDialog({
 			fullWidth
 			maxWidth="xs"
 		>
-			<DialogTitle>Save New Template</DialogTitle>
+			<DialogTitle>{t("templates.save_dialog.title")}</DialogTitle>
 			<DialogContent>
 				<Box sx={{ mt: 1 }}>
 					<Typography
@@ -69,12 +71,12 @@ export default function SaveNewTemplateDialog({
 						color="text.secondary"
 						gutterBottom
 					>
-						Enter a name for your new email template.
+						{t("templates.save_dialog.description")}
 					</Typography>
 					<TextField
 						autoFocus
 						margin="dense"
-						label="Template Name"
+						label={t("templates.save_dialog.name_label")}
 						fullWidth
 						value={name}
 						onChange={(e) => {
@@ -92,14 +94,14 @@ export default function SaveNewTemplateDialog({
 					onClick={onClose}
 					color="inherit"
 				>
-					Cancel
+					{t("common.cancel")}
 				</Button>
 				<Button
 					onClick={handleSave}
 					variant="contained"
 					disabled={!name.trim()}
 				>
-					Save Template
+					{t("templates.save_dialog.save_btn")}
 				</Button>
 			</DialogActions>
 		</Dialog>

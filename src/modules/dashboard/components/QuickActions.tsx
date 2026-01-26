@@ -2,9 +2,11 @@ import React from "react";
 import { Card, CardContent, Typography, Button, Stack } from "@mui/material";
 import { Add, PersonAdd, ColorLens } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const QuickActions: React.FC = () => {
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 
 	return (
 		<Card
@@ -21,7 +23,7 @@ const QuickActions: React.FC = () => {
 					variant="h6"
 					sx={{ fontWeight: 700, mb: 3, fontSize: "1.1rem" }}
 				>
-					Quick Actions
+					{t("dashboard.quick_actions")}
 				</Typography>
 				<Stack spacing={1.5}>
 					<Button
@@ -41,16 +43,16 @@ const QuickActions: React.FC = () => {
 							"&:hover": { bgcolor: "primary.dark" },
 						}}
 					>
-						Create New Campaign
+						{t("dashboard.actions.create_campaign")}
 					</Button>
 					{[
 						{
-							label: "Design New Template",
+							label: t("dashboard.actions.design_template"),
 							icon: <ColorLens />,
 							path: "/templates",
 						},
 						{
-							label: "Import Contacts",
+							label: t("dashboard.actions.import_contacts"),
 							icon: <PersonAdd />,
 							path: "/contacts",
 						},

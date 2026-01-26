@@ -114,8 +114,8 @@ export default function CampaignHeader({
 							label={campaign.status}
 							size="small"
 							sx={{
-								backgroundColor: "neutral.black.10",
-								color: "neutral.black.100",
+								backgroundColor: "action.hover",
+								color: "text.secondary",
 								fontWeight: "500",
 								textTransform: "capitalize",
 							}}

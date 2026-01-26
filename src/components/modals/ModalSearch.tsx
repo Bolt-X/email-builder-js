@@ -36,7 +36,8 @@ const ModalSearch = () => {
 					sx={{
 						display: "flex",
 						alignItems: "center",
-						border: "1px solid #eee",
+						border: "1px solid",
+						borderColor: "divider",
 						borderRadius: 2,
 						px: 1,
 						py: 0.25,
@@ -80,9 +81,9 @@ const ModalSearch = () => {
 				<Box
 					sx={{
 						height: 400,
-						bgcolor: "white",
+						bgcolor: "background.default",
 						borderRadius: 2,
-						boxShadow: "inset 0 1px 2px rgba(0,0,0,0.05)",
+						boxShadow: "inset 0 1px 2px rgba(0,0,0,0.1)",
 					}}
 				/>
 			</DialogContent>

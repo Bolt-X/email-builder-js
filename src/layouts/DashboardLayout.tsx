@@ -20,7 +20,9 @@ import {
 	Divider,
 	Typography,
 	Stack,
+	Popover,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import {
 	BarChart as DashboardIcon,
 	Campaign as CampaignsIcon,
@@ -36,12 +38,14 @@ import {
 	Logout,
 	Check as CheckIcon,
 	MenuBook as ToggleIcon,
+	PersonAdd,
 } from "@mui/icons-material";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../contexts/auth";
+import GlobalToast from "../components/GlobalToast";
 
 const DRAWER_WIDTH = 272;
-const COLLAPSED_WIDTH = 80; // Adjust based on design
+const COLLAPSED_WIDTH = 80;
 
 const openedMixin = (theme: Theme): CSSObject => ({
 	width: DRAWER_WIDTH,
@@ -74,67 +78,71 @@ const Drawer = styled(MuiDrawer, {
 	...(open && {
 		...openedMixin(theme),
 		"& .MuiDrawer-paper": openedMixin(theme),
-		"& .MuiDrawer-paper::-webkit-scrollbar": {
-			display: "none",
-		},
 	}),
 	...(!open && {
 		...closedMixin(theme),
 		"& .MuiDrawer-paper": closedMixin(theme),
-		"& .MuiDrawer-paper::-webkit-scrollbar": {
+	}),
+	"& .MuiDrawer-paper": {
+		backgroundColor: theme.palette.background.paper,
+		borderRight: `1px solid ${theme.palette.divider}`,
+		...(open ? openedMixin(theme) : closedMixin(theme)),
+		"&::-webkit-scrollbar": {
 			display: "none",
 		},
-	}),
+	},
 }));
 
-const navigationItems = [
-	{
-		label: "Dashboard",
-		icon: <DashboardIcon />,
-		path: "/",
-	},
-	{
-		label: "Campaigns",
-		icon: <CampaignsIcon />,
-		path: "/campaigns",
-		children: [
-			{
-				label: "All Campaigns",
-				path: "/campaigns",
-			},
-			{
-				label: "Templates",
-				path: "/templates",
-			},
-			{
-				label: "Media",
-				path: "/media",
-			},
-		],
-	},
-	{
-		label: "Contacts",
-		icon: <ContactsIcon />,
-		path: "/contacts",
-		children: [
-			{
-				label: "All contacts",
-				path: "/contacts",
-			},
-			{
-				label: "Segments",
-				path: "/segments",
-			},
-		],
-	},
-	{
-		label: "Settings",
-		icon: <SettingsIcon />,
-		path: "/settings",
-	},
-];
-
 export default function DashboardLayout() {
+	const { t } = useTranslation();
+
+	const navigationItems = [
+		{
+			label: t("sidebar.dashboard"),
+			icon: <DashboardIcon />,
+			path: "/",
+		},
+		{
+			label: t("sidebar.campaigns"),
+			icon: <CampaignsIcon />,
+			path: "/campaigns",
+			children: [
+				{
+					label: t("sidebar.all_campaigns"),
+					path: "/campaigns",
+				},
+				{
+					label: t("sidebar.templates"),
+					path: "/templates",
+				},
+				{
+					label: t("sidebar.media"),
+					path: "/media",
+				},
+			],
+		},
+		{
+			label: t("sidebar.contacts"),
+			icon: <ContactsIcon />,
+			path: "/contacts",
+			children: [
+				{
+					label: t("sidebar.all_contacts"),
+					path: "/contacts",
+				},
+				{
+					label: t("sidebar.segments"),
+					path: "/segments",
+				},
+			],
+		},
+		{
+			label: t("sidebar.settings"),
+			icon: <SettingsIcon />,
+			path: "/settings",
+		},
+	];
+
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const [open, setOpen] = useState(true);
@@ -142,10 +150,12 @@ export default function DashboardLayout() {
 	const [loggingOut, setLoggingOut] = useState(false);
 	// State to track open menus (e.g. Campaigns)
 	const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-		Campaigns: true, // Default open or closed? Let's default open for visibility
 		Contacts: true,
 	});
 	const [solutionOpen, setSolutionOpen] = useState(true);
+	const [profileAnchorEl, setProfileAnchorEl] = useState<HTMLElement | null>(
+		null,
+	);
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { user, restoreSession, logout } = useAuthStore((s) => ({
@@ -153,6 +163,16 @@ export default function DashboardLayout() {
 		restoreSession: s.restoreSession,
 		logout: s.logout,
 	}));
+
+	const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+		setProfileAnchorEl(event.currentTarget);
+	};
+
+	const handleProfileClose = () => {
+		setProfileAnchorEl(null);
+	};
+
+	const profileOpen = Boolean(profileAnchorEl);
 
 	useEffect(() => {
 		if (!user) {
@@ -163,7 +183,10 @@ export default function DashboardLayout() {
 	const userFullName = user
 		? (user.first_name || "") + " " + (user.last_name || "")
 		: "BoltX Digital";
-	const userFirstLetter = userFullName.trim().charAt(0) || "B";
+	const userFirstLetter =
+		userFullName === "BoltX Digital"
+			? "BO"
+			: userFullName.trim().charAt(0) || "B";
 
 	const handleDrawerToggle = () => {
 		if (isMobile) {
@@ -251,20 +274,20 @@ export default function DashboardLayout() {
 					<ListItemButton
 						onClick={() => navigate("/campaigns/new")}
 						sx={{
-							bgcolor: "#f3f4f6",
+							bgcolor: "action.hover",
 							borderRadius: 10,
 							py: 1.5,
 							width: "100%",
 							justifyContent: "center",
 							alignItems: "center",
-							"&:hover": { bgcolor: "#e5e7eb" },
+							"&:hover": { bgcolor: "action.selected" },
 						}}
 					>
 						<ListItemIcon sx={{ minWidth: 0, mr: 1, color: "text.primary" }}>
 							<AddIcon />
 						</ListItemIcon>
 						<ListItemText
-							primary="Create"
+							primary={t("sidebar.create")}
 							primaryTypographyProps={{
 								fontWeight: 700,
 								color: "text.primary",
@@ -280,12 +303,12 @@ export default function DashboardLayout() {
 					<IconButton
 						onClick={() => navigate("/campaigns/new")}
 						sx={{
-							bgcolor: "#f3f4f6",
+							bgcolor: "action.hover",
 							width: 54,
 							height: 54,
 							mx: "auto",
 							display: "flex",
-							"&:hover": { bgcolor: "#e5e7eb" },
+							"&:hover": { bgcolor: "action.selected" },
 						}}
 					>
 						<AddIcon />
@@ -428,9 +451,9 @@ export default function DashboardLayout() {
 							sx={{
 								p: 1.5,
 								borderRadius: 2,
-								bgcolor: "#f8faff",
+								bgcolor: "background.paper",
 								border: "1px solid",
-								borderColor: "#e0e7ff",
+								borderColor: "divider",
 								position: "relative",
 							}}
 						>
@@ -446,10 +469,10 @@ export default function DashboardLayout() {
 							>
 								<Box
 									sx={{
-										bgcolor: "white",
+										bgcolor: "background.default",
 										p: 0.5,
 										borderRadius: 1,
-										boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+										boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
 										display: "flex",
 									}}
 								>
@@ -471,14 +494,14 @@ export default function DashboardLayout() {
 									noWrap={true}
 									sx={{ fontWeight: 700, mb: 1.5, lineHeight: 1.2, mt: 1 }}
 								>
-									Giải pháp rút ngắn thời gian soạn & gửi email
+									{t("sidebar.solution_title")}
 								</Typography>
 								<Stack spacing={0.8}>
 									{[
-										"Gói gọn quy trình trong 5 thao tác.",
-										"Giao diện tối giản, dễ dùng.",
-										"Tiết kiệm thời gian & nâng cao hiệu quả công việc.",
-										"Trải nghiệm mượt, tốc độ xử lý nhanh.",
+										t("sidebar.solution_step1"),
+										t("sidebar.solution_step2"),
+										t("sidebar.solution_step3"),
+										t("sidebar.solution_step4"),
 									].map((text, i) => (
 										<Stack
 											key={i}
@@ -512,7 +535,7 @@ export default function DashboardLayout() {
 										textDecoration: "none",
 									}}
 								>
-									Tìm hiểu thêm
+									{t("sidebar.learn_more")}
 								</Typography>
 							</Collapse>
 						</Box>
@@ -521,12 +544,13 @@ export default function DashboardLayout() {
 					<Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
 						<Box
 							sx={{
-								bgcolor: "white",
+								bgcolor: "background.paper",
 								p: 1,
 								borderRadius: 1.5,
-								boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+								boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
 								display: "flex",
-								border: "1px solid #f3f4f6",
+								border: "1px solid",
+								borderColor: "divider",
 							}}
 						>
 							<SolutionIcon sx={{ color: "#ef4444" }} />
@@ -537,17 +561,26 @@ export default function DashboardLayout() {
 			</Box>
 
 			{/* User Profile Section moved to bottom Box with margin auto */}
-			<Box sx={{ p: 2, mb: 1 }}>
+			<Box sx={{ p: 1.5, mb: 1 }}>
 				<Stack
 					direction="row"
 					alignItems="center"
 					justifyContent={open ? "space-between" : "center"}
-					sx={{ px: open ? 1 : 0 }}
+					sx={{
+						px: 1.5,
+						py: 1,
+						bgcolor: "action.hover",
+						borderRadius: 2,
+						cursor: "pointer",
+					}}
+					onClick={handleProfileClick}
 				>
 					<Stack
 						direction="row"
 						spacing={1.5}
 						alignItems="center"
+						justifyContent={open ? "start" : "center"}
+						sx={{ flexGrow: 1, minWidth: 0 }}
 					>
 						<Avatar
 							sx={{
@@ -637,27 +670,179 @@ export default function DashboardLayout() {
 				component="main"
 				sx={{
 					flexGrow: 1,
+					minWidth: 0, // Prevents flex child from overflowing
 					// p:
 					// 	location.pathname.includes("/templates/") ||
 					// 	(location.pathname.includes("/campaigns/") &&
 					// 		location.pathname.includes("/templates/"))
 					// 		? 0
 					// 		: 3,
-					width: {
-						md: `calc(100% - ${open ? DRAWER_WIDTH : COLLAPSED_WIDTH}px)`,
-					},
 					height: "100vh",
 					overflow: "auto",
 					display: "flex",
 					flexDirection: "column",
-					transition: theme.transitions.create("width", {
-						easing: theme.transitions.easing.sharp,
-						duration: theme.transitions.duration.enteringScreen,
-					}),
 				}}
 			>
 				<Outlet />
 			</Box>
+			<GlobalToast />
+			<Popover
+				open={profileOpen}
+				anchorEl={profileAnchorEl}
+				onClose={handleProfileClose}
+				anchorOrigin={{
+					vertical: "top",
+					horizontal: "left",
+				}}
+				transformOrigin={{
+					vertical: "bottom",
+					horizontal: "left",
+				}}
+				PaperProps={{
+					sx: {
+						width: 320,
+						mt: -1,
+						borderRadius: 2,
+						boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+						border: "1px solid",
+						borderColor: "divider",
+					},
+				}}
+			>
+				<Box sx={{ p: 2 }}>
+					{/* Main Account Info */}
+					<Stack
+						direction="row"
+						spacing={2}
+						alignItems="center"
+						sx={{ mb: 2 }}
+					>
+						<Avatar
+							sx={{
+								width: 48,
+								height: 48,
+								bgcolor: "#f97316",
+								fontSize: "1.2rem",
+								fontWeight: 600,
+							}}
+						>
+							{user ? userFirstLetter : "RH"}
+						</Avatar>
+						<Box sx={{ flexGrow: 1, minWidth: 0 }}>
+							<Typography
+								variant="subtitle1"
+								sx={{ fontWeight: 700, lineHeight: 1.2 }}
+							>
+								{user ? userFullName : "MKT Ramond Holdings"}
+							</Typography>
+							<Typography
+								variant="caption"
+								color="text.secondary"
+								sx={{ display: "block" }}
+							>
+								{user?.email || "phuctd@f1eco.com"}
+							</Typography>
+						</Box>
+					</Stack>
+
+					{/* Sign Out */}
+					<ListItemButton
+						onClick={() => {
+							handleProfileClose();
+							logout();
+						}}
+						sx={{
+							borderRadius: 1.5,
+							mb: 1,
+							color: "text.primary",
+						}}
+					>
+						<ListItemIcon sx={{ minWidth: 32, mr: 1, color: "inherit" }}>
+							<Logout fontSize="small" />
+						</ListItemIcon>
+						<ListItemText
+							primary="Sign out"
+							primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
+						/>
+					</ListItemButton>
+
+					<Divider sx={{ my: 1.5 }} />
+
+					{/* Other Accounts */}
+					<Stack spacing={0.5}>
+						{[
+							{
+								name: "HR Finra",
+								email: "phuctd@f1eco.com",
+								initials: "FI",
+							},
+							{
+								name: "HR Bolt Holdings",
+								email: "thuydh@boltholdings.com.vn",
+								initials: "FI",
+							},
+							{
+								name: "Môi giới UPSC",
+								email: "thanhnt@upsc.com.vn",
+								initials: "FI",
+							},
+							{
+								name: "Môi giới Bất Động Sản",
+								email: "kiennt@boltx.com.vn",
+								initials: "FI",
+							},
+						].map((acc, idx) => (
+							<ListItemButton
+								key={idx}
+								sx={{ borderRadius: 1.5 }}
+							>
+								<ListItemIcon sx={{ minWidth: 32, mr: 1 }}>
+									<Avatar
+										sx={{
+											width: 32,
+											height: 32,
+											fontSize: "0.75rem",
+											bgcolor: "rgba(249, 115, 22, 0.15)",
+											color: "#f97316",
+										}}
+									>
+										{acc.initials}
+									</Avatar>
+								</ListItemIcon>
+								<Box sx={{ minWidth: 0 }}>
+									<Typography
+										variant="body2"
+										sx={{ fontWeight: 700, lineHeight: 1.2 }}
+									>
+										{acc.name}
+									</Typography>
+									<Typography
+										variant="caption"
+										color="text.secondary"
+									>
+										{acc.email}
+									</Typography>
+								</Box>
+							</ListItemButton>
+						))}
+					</Stack>
+
+					{/* Add Account */}
+					<ListItemButton sx={{ mt: 1, borderRadius: 1.5 }}>
+						<ListItemIcon sx={{ minWidth: 32, mr: 1, color: "primary.main" }}>
+							<PersonAdd fontSize="small" />
+						</ListItemIcon>
+						<ListItemText
+							primary="Add another account"
+							primaryTypographyProps={{
+								variant: "body2",
+								fontWeight: 700,
+								color: "primary.main",
+							}}
+						/>
+					</ListItemButton>
+				</Box>
+			</Popover>
 		</Box>
 	);
 }

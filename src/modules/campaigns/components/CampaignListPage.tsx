@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
 	useCampaigns,
 	useCampaignsLoading,
@@ -22,6 +23,7 @@ import CampaignActionsToolbar from "./CampaignActionsToolbar";
 import { useGetAllCampaigns } from "../../../hooks/useCampaigns";
 
 export default function CampaignListPage() {
+	const { t } = useTranslation();
 	const navigate = useNavigate();
 	// const campaigns = useCampaigns();
 	// const loading = useCampaignsLoading();
@@ -85,13 +87,19 @@ export default function CampaignListPage() {
 				direction="row"
 				justifyContent="space-between"
 				alignItems="center"
-				sx={{ px: 3, py: "20px", bgcolor: "white" }}
+				sx={{
+					px: 3,
+					py: "20px",
+					bgcolor: "background.paper",
+					borderBottom: 1,
+					borderColor: "divider",
+				}}
 			>
 				<Typography
 					variant="h4"
 					sx={{ fontWeight: 600, color: "text.primary" }}
 				>
-					Campaigns
+					{t("campaigns.title")}
 				</Typography>
 				<Button
 					variant="contained"
@@ -105,7 +113,7 @@ export default function CampaignListPage() {
 						fontWeight: 700,
 					}}
 				>
-					Create Campaign
+					{t("campaigns.create")}
 				</Button>
 			</Stack>
 
@@ -150,15 +158,14 @@ export default function CampaignListPage() {
 							variant="h6"
 							sx={{ fontWeight: 600, mb: 1 }}
 						>
-							No campaigns found
+							{t("campaigns.no_campaigns")}
 						</Typography>
 						<Typography
 							variant="body2"
 							color="text.secondary"
 							sx={{ mb: 3 }}
 						>
-							Try adjusting your search or filters to find what you're looking
-							for.
+							{t("campaigns.filter_desc")}
 						</Typography>
 						<Button
 							variant="outlined"
@@ -168,7 +175,7 @@ export default function CampaignListPage() {
 								)
 							}
 						>
-							Clear all filters
+							{t("campaigns.clear_filters")}
 						</Button>
 					</Box>
 				)}
@@ -205,15 +212,14 @@ export default function CampaignListPage() {
 							variant="h6"
 							sx={{ fontWeight: 600, mb: 1 }}
 						>
-							You have not created any email campaigns
+							{t("campaigns.empty_state_title")}
 						</Typography>
 						<Typography
 							variant="body1"
 							color="text.secondary"
 							sx={{ mb: 3 }}
 						>
-							Click on "Create campaign" and start designing your first email
-							campaign.
+							{t("campaigns.empty_state_desc")}
 						</Typography>
 						<Button
 							variant="outlined"
@@ -221,7 +227,7 @@ export default function CampaignListPage() {
 							onClick={() => navigate("/campaigns/new")}
 							sx={{ borderRadius: 20, px: 3 }}
 						>
-							Create campaign
+							{t("campaigns.create")}
 						</Button>
 					</Box>
 				)}

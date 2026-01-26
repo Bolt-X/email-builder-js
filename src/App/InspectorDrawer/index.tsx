@@ -31,6 +31,13 @@ export default function InspectorDrawer() {
 			variant="persistent"
 			anchor="right"
 			open={inspectorDrawerOpen}
+			PaperProps={{
+				sx: {
+					bgcolor: "background.paper",
+					borderLeft: 1,
+					borderColor: "divider",
+				},
+			}}
 			sx={{
 				width: inspectorDrawerOpen ? INSPECTOR_DRAWER_WIDTH : 0,
 			}}
@@ -41,6 +48,7 @@ export default function InspectorDrawer() {
 					height: 49,
 					borderBottom: 1,
 					borderColor: "divider",
+					bgcolor: "background.paper",
 				}}
 			>
 				<Box px={2}>

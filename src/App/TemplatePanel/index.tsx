@@ -142,7 +142,7 @@ export default function TemplatePanel() {
 					height: 49,
 					borderBottom: 1,
 					borderColor: "divider",
-					backgroundColor: "white",
+					backgroundColor: "background.paper",
 					position: "sticky",
 					top: 0,
 					zIndex: "appBar",
