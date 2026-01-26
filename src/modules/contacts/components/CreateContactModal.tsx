@@ -1,93 +1,171 @@
-import React, { useState } from "react";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { CalendarMonth, Close, Remove } from "@mui/icons-material";
 import {
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
+	Autocomplete,
+	Box,
 	Button,
+	Chip,
+	Collapse,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
 	IconButton,
-	Typography,
+	MenuItem,
+	Select,
 	Stack,
 	TextField,
-	MenuItem,
-	Box,
-	Chip,
-	Select,
-	FormControl,
-	Collapse,
+	Typography
 } from "@mui/material";
-import { Close, Remove, CalendarMonth } from "@mui/icons-material";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useParams } from "react-router-dom";
+import * as yup from "yup";
+import { useCreateContact, useGetProvinces } from "../../../hooks/useContact";
+import { useGetAllTags } from "../../../hooks/useTags";
+import ModalCreateTag from "../../tags/ModalCreateTag";
+import { getContactListBySlugWithSubscribers } from "../service";
+import { getWardsByProvinceId } from "../../../services/contact";
 
 interface CreateContactModalProps {
 	open: boolean;
 	onClose: () => void;
 }
 
+const formContactSchema = yup.object().shape({
+	contact_lists: yup.array().of(yup.number()).required("Contact list is required"),
+	email: yup.string().email("Invalid email address").required("Email is required"),
+	status: yup.string().required("Status is required"),
+	first_name: yup.string().required("First name is required"),
+	last_name: yup.string().required("Last name is required"),
+	address: yup.string().required("Address is required"),
+	phone_number: yup.string().required("Phone is required"),
+	province: yup.string().nullable().notRequired(),
+	ward: yup.string().nullable().notRequired(),
+	birthday: yup.string().nullable().notRequired(),
+	company: yup.string().nullable().notRequired(),
+	tags: yup.array().of(yup.string()).nullable().notRequired(),
+});
+
 export default function CreateContactModal({
 	open,
 	onClose,
 }: CreateContactModalProps) {
-	const [formData, setFormData] = useState({
-		contacts: "default",
-		email: "",
-		status: "enabled",
-		name: "",
-		address: "",
-		city: "Hà Nội",
-		district: "Phường Ô Chợ Dừa",
-		phone: "",
-		birthday: "2003-01-06",
-		company: "BoltX",
-		tags: [],
+	const { id } = useParams();
+	const mutateCreateContact = useCreateContact();
+	const { data: tags } = useGetAllTags();
+
+	const [contactList, setContactList] = useState<any | null>(null);
+	const [addTagModalOpen, setAddTagModalOpen] = useState(false);
+	const [wards, setWards] = useState<any[]>([]);
+
+	useEffect(() => {
+		const fetchContactList = async () => {
+			const res = await getContactListBySlugWithSubscribers(id);
+			console.log("res", res);
+
+			setContactList(res[0].id);
+		}
+		fetchContactList();
+	}, [id]);
+
+	const form = useForm({
+		resolver: yupResolver(formContactSchema),
+		defaultValues: {
+			contact_lists: [contactList || ""],
+			email: "",
+			status: "subscribed",
+			first_name: "",
+			last_name: "",
+			address: "",
+			phone_number: "",
+		},
 	});
 
-	const [errors, setErrors] = useState<Record<string, string>>({});
+	useEffect(() => {
+		if (contactList) {
+			form.reset({
+				contact_lists: [contactList],
+				email: "",
+				status: "subscribed",
+				first_name: "",
+				last_name: "",
+				address: "",
+				phone_number: "",
+			});
+		}
+	}, [contactList]);
+
+	const { data: provinces } = useGetProvinces();
+
 	const [generalOpen, setGeneralOpen] = useState(true);
 	const [additionalOpen, setAdditionalOpen] = useState(true);
 
-	const validate = () => {
-		const newErrors: Record<string, string> = {};
-		if (!formData.email) newErrors.email = "Email is required";
-		else if (!/\S+@\S+\.\S+/.test(formData.email))
-			newErrors.email = "Invalid email format";
-
-		if (!formData.name) newErrors.name = "Name is required";
-		if (!formData.address) newErrors.address = "Address is required";
-		if (!formData.contacts) newErrors.contacts = "Contact list is required";
-		if (!formData.status) newErrors.status = "Marketing status is required";
-
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
+	const handleAddTag = () => {
+		setAddTagModalOpen(true);
 	};
 
-	const handleAdd = () => {
-		if (validate()) {
-			console.log("Adding contact:", formData);
+	useEffect(() => {
+		const fetchWards = async () => {
+			if (form.watch("province")) {
+				const res = await getWardsByProvinceId(form.watch("province"));
+				setWards(res);
+			}
+		}
+		fetchWards();
+	}, [form.watch("province")]);
+
+	const handleSubmit = async (data: any) => {
+		try {
+			await mutateCreateContact.mutateAsync(data);
+		} catch (error) {
+			console.error("Failed to create contact:", error);
+		}
+	}
+
+	const handleSaveAndAdd = async () => {
+		try {
+			const data = form.getValues();
+			delete data.province;
+			delete data.contact_lists;
+			await handleSubmit({ contact: data, slug: id });
+		} catch (error) {
+			console.error("Failed to create contact:", error);
+		}
+		finally {
+			// form.reset();
+		}
+	}
+
+	const handleAddContact = async () => {
+		try {
+			const data = form.getValues();
+			delete data.province;
+			delete data.contact_lists;
+			await handleSubmit({ contact: data, slug: id });
+		} catch (error) {
+			console.error("Failed to create contact:", error);
+		} finally {
 			onClose();
+			form.reset();
 		}
-	};
-
-	const handleFieldChange = (field: string, value: any) => {
-		setFormData((prev) => ({ ...prev, [field]: value }));
-		if (errors[field]) {
-			setErrors((prev) => {
-				const newErrors = { ...prev };
-				delete newErrors[field];
-				return newErrors;
-			});
-		}
-	};
+	}
 
 	return (
 		<Dialog
 			open={open}
-			onClose={onClose}
+			// onClose={onClose}
 			maxWidth="md"
 			fullWidth
 			PaperProps={{
 				sx: { borderRadius: "12px", p: 0 },
 			}}
+			disableEscapeKeyDown
 		>
+			<ModalCreateTag
+				open={addTagModalOpen}
+				onClose={() => setAddTagModalOpen(false)}
+			/>
 			<DialogTitle
 				sx={{
 					m: 0,
@@ -105,7 +183,10 @@ export default function CreateContactModal({
 					New contact
 				</Typography>
 				<IconButton
-					onClick={onClose}
+					onClick={() => {
+						onClose();
+						form.reset();
+					}}
 					size="small"
 					sx={{ color: "text.secondary" }}
 				>
@@ -138,11 +219,16 @@ export default function CreateContactModal({
 				</Box>
 
 				<Collapse in={generalOpen}>
-					<Stack
-						spacing={2.5}
-						sx={{ p: 3 }}
-					>
-						<Box sx={{ width: "50%" }}>
+					<ModalCreateTag
+						open={addTagModalOpen}
+						onClose={() => setAddTagModalOpen(false)}
+					/>
+					<form onSubmit={(e) => e.preventDefault()}>
+						<Stack
+							spacing={2.5}
+							sx={{ p: 3 }}
+						>
+							{/* <Box sx={{ width: "50%" }}>
 							<Typography
 								variant="body2"
 								sx={{ mb: 1, fontWeight: 600 }}
@@ -167,132 +253,164 @@ export default function CreateContactModal({
 									{errors.contacts}
 								</Typography>
 							)}
-						</Box>
+						</Box> */}
 
-						<Stack
-							direction="row"
-							spacing={3}
-						>
-							<Box sx={{ flex: 1 }}>
+							<Stack
+								direction="row"
+								spacing={3}
+								alignItems="flex-end"
+							>
+								<Box sx={{ flex: 1 }}>
+									<Typography
+										variant="body2"
+										sx={{ mb: 1, fontWeight: 600 }}
+									>
+										Email Address <span style={{ color: "red" }}>*</span>
+									</Typography>
+									<TextField
+										fullWidth
+										size="small"
+										placeholder="e.g. email@gmail.com"
+										{...form.register("email")}
+										error={!!form.formState.errors.email}
+										helperText={form.formState.errors.email?.message}
+										sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+									/>
+								</Box>
+								<Box sx={{ flex: 1 }}>
+									<Select
+										fullWidth
+										size="small"
+										value={form.watch("status") || ""}
+										onChange={(e) => {
+											form.setValue("status", e.target.value)
+										}}
+										error={!!form.formState.errors.status}
+										sx={{ borderRadius: "8px" }}
+										displayEmpty
+									>
+										<MenuItem value="">
+											<em>Select status</em>
+										</MenuItem>
+										<MenuItem value="subscribed">Subscribed</MenuItem>
+										<MenuItem value="non_subscribed">Non subscribed</MenuItem>
+										<MenuItem value="unsubscribed">Unsubscribed</MenuItem>
+									</Select>
+									{form.formState.errors.status && (
+										<Typography
+											variant="caption"
+											color="error"
+										>
+											{form.formState.errors.status?.message}
+										</Typography>
+									)}
+								</Box>
+							</Stack>
+
+							<Box>
 								<Typography
 									variant="body2"
 									sx={{ mb: 1, fontWeight: 600 }}
 								>
-									Email Address <span style={{ color: "red" }}>*</span>
+									Full Name <span style={{ color: "red" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth
 									size="small"
-									placeholder="e.g. email@gmail.com"
-									value={formData.email}
-									onChange={(e) => handleFieldChange("email", e.target.value)}
-									error={!!errors.email}
-									helperText={errors.email}
+									{...form.register("first_name")}
+									error={!!form.formState.errors.first_name}
+									helperText={form.formState.errors.first_name?.message}
 									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+									placeholder="Enter full name"
+								/>
+								<TextField
+									fullWidth
+									size="small"
+									{...form.register("last_name")}
+									error={!!form.formState.errors.last_name}
+									helperText={form.formState.errors.last_name?.message}
+									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+									placeholder="Enter last name"
 								/>
 							</Box>
-							<Box sx={{ flex: 1 }}>
-								<Select
+
+							<Box>
+								<Typography
+									variant="body2"
+									sx={{ mb: 1, fontWeight: 600 }}
+								>
+									Address
+								</Typography>
+								<TextField
 									fullWidth
 									size="small"
-									value={formData.status}
-									onChange={(e) => handleFieldChange("status", e.target.value)}
-									error={!!errors.status}
-									sx={{ borderRadius: "8px" }}
-								>
-									<MenuItem value="enabled">Enabled</MenuItem>
-									<MenuItem value="blocklisted">Blocklisted</MenuItem>
-									<MenuItem value="duplicate">Duplicate</MenuItem>
-								</Select>
-								{errors.status && (
+									{...form.register("address")}
+									// error={!!form.formState.errors.address}
+									// helperText={form.formState.errors.address?.message}
+									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+									placeholder="Enter address"
+								/>
+							</Box>
+
+							<Stack
+								direction="row"
+								spacing={3}
+							>
+								<Box sx={{ flex: 1 }}>
 									<Typography
-										variant="caption"
-										color="error"
+										variant="body2"
+										sx={{ mb: 1, fontWeight: 600 }}
 									>
-										{errors.status}
+										City/ Province
 									</Typography>
-								)}
-							</Box>
+									<Select
+										fullWidth
+										size="small"
+										value={form.watch("province") || ""}
+										onChange={(e) => {
+											form.setValue("province", e.target.value)
+											form.setValue("ward", "") // reset district nếu có
+										}}
+										displayEmpty
+										sx={{ borderRadius: "8px" }}
+									>
+										<MenuItem value="">
+											<em>Select province</em>
+										</MenuItem>
+										{provinces?.map((province: any) => (
+											<MenuItem key={province.slug} value={province.slug}>{province.name}</MenuItem>
+										))}
+									</Select>
+								</Box>
+								<Box sx={{ flex: 1 }}>
+									<Typography
+										variant="body2"
+										sx={{ mb: 1, fontWeight: 600 }}
+									>
+										District
+									</Typography>
+									<Select
+										fullWidth
+										size="small"
+										value={form.watch("ward") || ""}
+										onChange={(e) => {
+											form.setValue("ward", e.target.value)
+										}}
+										displayEmpty
+										sx={{ borderRadius: "8px" }}
+										disabled={!form.watch("province")}
+									>
+										<MenuItem value="">
+											<em>Select district</em>
+										</MenuItem>
+										{wards?.map((ward: any) => (
+											<MenuItem key={ward.slug} value={ward.slug}>{ward.name}</MenuItem>
+										))}
+									</Select>
+								</Box>
+							</Stack>
 						</Stack>
-
-						<Box>
-							<Typography
-								variant="body2"
-								sx={{ mb: 1, fontWeight: 600 }}
-							>
-								Full Name <span style={{ color: "red" }}>*</span>
-							</Typography>
-							<TextField
-								fullWidth
-								size="small"
-								value={formData.name}
-								onChange={(e) => handleFieldChange("name", e.target.value)}
-								error={!!errors.name}
-								helperText={errors.name}
-								sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-							/>
-						</Box>
-
-						<Box>
-							<Typography
-								variant="body2"
-								sx={{ mb: 1, fontWeight: 600 }}
-							>
-								Address <span style={{ color: "red" }}>*</span>
-							</Typography>
-							<TextField
-								fullWidth
-								size="small"
-								value={formData.address}
-								onChange={(e) => handleFieldChange("address", e.target.value)}
-								error={!!errors.address}
-								helperText={errors.address}
-								sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-							/>
-						</Box>
-
-						<Stack
-							direction="row"
-							spacing={3}
-						>
-							<Box sx={{ flex: 1 }}>
-								<Typography
-									variant="body2"
-									sx={{ mb: 1, fontWeight: 600 }}
-								>
-									City/ Province
-								</Typography>
-								<Select
-									fullWidth
-									size="small"
-									value={formData.city}
-									onChange={(e) => handleFieldChange("city", e.target.value)}
-									sx={{ borderRadius: "8px" }}
-								>
-									<MenuItem value="Hà Nội">Thành phố Hà Nội</MenuItem>
-								</Select>
-							</Box>
-							<Box sx={{ flex: 1 }}>
-								<Typography
-									variant="body2"
-									sx={{ mb: 1, fontWeight: 600 }}
-								>
-									District
-								</Typography>
-								<Select
-									fullWidth
-									size="small"
-									value={formData.district}
-									onChange={(e) =>
-										handleFieldChange("district", e.target.value)
-									}
-									sx={{ borderRadius: "8px" }}
-								>
-									<MenuItem value="Phường Ô Chợ Dừa">Phường Ô Chợ Dừa</MenuItem>
-								</Select>
-							</Box>
-						</Stack>
-					</Stack>
+					</form>
 				</Collapse>
 
 				{/* Additional Information Section */}
@@ -330,38 +448,56 @@ export default function CreateContactModal({
 							>
 								Tags
 							</Typography>
-							<TextField
-								fullWidth
+							<Autocomplete
+								multiple
 								size="small"
-								placeholder="Choose tags"
-								InputProps={{
-									endAdornment: (
-										<Typography sx={{ fontSize: 10 }}>▼</Typography>
-									),
+								options={tags ?? []}
+								getOptionLabel={(option) => option.title}
+								isOptionEqualToValue={(option, value) => {
+									const optionSlug = option?.slug || option;
+									const valueSlug = value?.slug || value;
+									return optionSlug === valueSlug;
 								}}
-								sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+								value={form.watch("tags")?.map((v: string) => tags?.find((t: any) => t.slug === v)) || []}
+								onChange={(_, newValue) =>
+									form.setValue("tags", newValue.map((v: any) => v.slug))
+								}
+								renderTags={() => null}
+								noOptionsText={
+									<div style={{ padding: 16, textAlign: "center" }}>
+										<Typography>No tags found</Typography>
+										<Button
+											onClick={handleAddTag}
+											variant="outlined"
+											size="small"
+										>
+											Add new tag
+										</Button>
+									</div>
+								}
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										variant="outlined"
+										placeholder="Select tags"
+									/>
+								)}
 							/>
-							<Stack
-								direction="row"
-								spacing={1}
+							<Box
+								display="flex"
+								flexDirection={"row"}
+								gap={1}
 								flexWrap="wrap"
 								mt={1}
-								useFlexGap
 							>
-								{formData.tags.map((tag) => (
+								{form.watch("tags")?.map((tag: any) => (
 									<Chip
 										key={tag}
 										label={tag}
-										size="small"
-										onDelete={() => {}}
-										sx={{
-											bgcolor: "#F3F4F6",
-											borderRadius: "4px",
-											"& .MuiChip-deleteIcon": { fontSize: 14 },
-										}}
+										onDelete={() => form.setValue("tags", form.watch("tags")?.filter((t: string) => t !== tag))}
 									/>
 								))}
-							</Stack>
+							</Box>
 						</Box>
 
 						<Stack
@@ -378,8 +514,7 @@ export default function CreateContactModal({
 								<TextField
 									fullWidth
 									size="small"
-									value={formData.phone}
-									onChange={(e) => handleFieldChange("phone", e.target.value)}
+									{...form.register("phone_number")}
 									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
 								/>
 							</Box>
@@ -394,10 +529,7 @@ export default function CreateContactModal({
 									fullWidth
 									size="small"
 									type="date"
-									value={formData.birthday}
-									onChange={(e) =>
-										handleFieldChange("birthday", e.target.value)
-									}
+									{...form.register("birthday")}
 									InputProps={{
 										endAdornment: (
 											<CalendarMonth
@@ -420,8 +552,7 @@ export default function CreateContactModal({
 							<TextField
 								fullWidth
 								size="small"
-								value={formData.company}
-								onChange={(e) => handleFieldChange("company", e.target.value)}
+								{...form.register("company")}
 								sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
 							/>
 						</Box>
@@ -448,14 +579,14 @@ export default function CreateContactModal({
 					spacing={2}
 				>
 					<Button
-						onClick={handleAdd}
+						onClick={handleSaveAndAdd}
 						sx={{ textTransform: "none", color: "#2196F3", fontWeight: 700 }}
 					>
 						Save & Add Another
 					</Button>
 					<Button
 						variant="contained"
-						onClick={handleAdd}
+						onClick={handleAddContact}
 						sx={{
 							textTransform: "none",
 							fontWeight: 700,

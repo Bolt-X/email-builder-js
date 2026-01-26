@@ -40,7 +40,7 @@ export const useUpdateContactList = () => {
 export const useDeleteContactList = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (slug: string) => deleteContactList(slug),
+		mutationFn: (slugs: string[]) => deleteContactList(slugs),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["contact_lists"] });
 		},
@@ -50,8 +50,7 @@ export const useDeleteContactList = () => {
 export const useDuplicateContactList = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: ({ slug, newName }: { slug: string; newName?: string }) =>
-			duplicateContactList(slug, newName),
+		mutationFn: ({ slug, newName }: { slug: string, newName?: string }) => duplicateContactList(slug, newName),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["contact_lists"] });
 		},

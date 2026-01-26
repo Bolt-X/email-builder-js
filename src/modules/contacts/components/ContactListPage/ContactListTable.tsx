@@ -34,15 +34,12 @@ import {
 	Tooltip,
 	Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetAllContactLists } from "../../../../hooks/useContactLists";
-import { duplicateContactList } from "../../service";
+import { useDeleteContactList, useGetAllContactLists } from "../../../../hooks/useContactLists";
 import {
 	clearSelection,
-	deleteContactListAction,
 	exportContactListAction,
-	fetchContactLists,
 	selectAllContactLists,
 	setPage,
 	setRowsPerPage,
@@ -52,11 +49,10 @@ import {
 	toggleSelectContactList,
 	useContactListFilters,
 	useContactListPagination,
-	useSelectedContactLists,
+	useSelectedContactLists
 } from "../../stores/contactList.store";
 import { ContactList } from "../../types";
-import { c } from "vite/dist/node/types.d-aGj9QkWt";
-import { set } from "zod";
+import ModalCustomDelete from "../base/ModalCustomDelete";
 import ModalDuplicate from "./ModalDuplicate";
 
 interface ContactListTableProps {
@@ -78,6 +74,7 @@ export default function ContactListTable({
 	setEditingList,
 	onEdit,
 }: ContactListTableProps) {
+	const { mutateAsync: deleteContactList, isPending: isDeleting } = useDeleteContactList();
 	const navigate = useNavigate();
 	const [startDate, setStartDate] = useState<undefined | string>(undefined);
 	const [endDate, setEndDate] = useState<undefined | string>(undefined);
@@ -98,13 +95,15 @@ export default function ContactListTable({
 		to: undefined,
 	});
 
+	const [confirmDelete, setConfirmDelete] = useState(false);
+
 	const handleFiltered = () => {
 		setFiltered({
 			from: startDate,
-			to: endDate,
-		});
+			to: endDate
+		})
 		setDateAnchorEl(null);
-	};
+	}
 
 	const handleClearFilter = () => {
 		setFiltered({
@@ -157,23 +156,18 @@ export default function ContactListTable({
 	};
 
 	const handleDelete = async () => {
-		if (selectedId) {
-			const list = contactLists?.find((l) => l.slug === selectedId);
-			if (list?.is_default) {
-				alert("Cannot delete default list");
-				handleMenuClose();
-				return;
+		try {
+			if (selectedIds.length > 0) {
+				deleteContactList(selectedIds as string[]);
+			} else {
+				deleteContactList([selectedId as string]);
 			}
-			if (
-				window.confirm("Are you sure you want to delete this contact list?")
-			) {
-				try {
-					await deleteContactListAction(selectedId);
-				} catch (error) {
-					console.error("Failed to delete list:", error);
-				}
-			}
+		} catch (error) {
+			console.error("Failed to delete contact list:", error);
+		}
+		finally {
 			handleMenuClose();
+			setConfirmDelete(false);
 		}
 	};
 
@@ -214,14 +208,8 @@ export default function ContactListTable({
 
 	return (
 		<>
-			<ModalDuplicate
-				open={openModalDuplicate}
-				onClose={() => {
-					setOpenModalDuplicate(false);
-					setSelectedId(null);
-				}}
-				slug={selectedId}
-			/>
+			<ModalDuplicate open={openModalDuplicate} onClose={() => { setOpenModalDuplicate(false); setSelectedId(null) }} slug={selectedId} />
+			<ModalCustomDelete open={confirmDelete} isPending={isDeleting} onClose={() => setConfirmDelete(false)} onOk={handleDelete} title="Delete Contact List" content={<Typography>Are you sure you want to delete {selectedIds.length > 1 ? `${selectedIds.length} items` : "this item"}? You won't be able to undo this action.</Typography>} />
 			{/* Toolbar / Batch Action Bar */}
 			<Paper
 				elevation={0}
@@ -245,15 +233,8 @@ export default function ContactListTable({
 						sx={{ width: "100%", px: 3, color: "white" }}
 						justifyContent="space-between"
 					>
-						<Stack
-							direction="row"
-							spacing={3}
-							alignItems="center"
-						>
-							<Typography
-								variant="body2"
-								sx={{ fontWeight: 600 }}
-							>
+						<Stack direction="row" spacing={3} alignItems="center">
+							<Typography variant="body2" sx={{ fontWeight: 600 }}>
 								{selectedIds.length} item{selectedIds.length > 1 ? "s" : ""}{" "}
 								selected
 							</Typography>
@@ -270,27 +251,23 @@ export default function ContactListTable({
 							</Typography>
 						</Stack>
 
-						<Stack
-							direction="row"
-							spacing={2}
-							alignItems="center"
-						>
-							<Button
-								variant="text"
-								color="inherit"
-								startIcon={<Campaign />}
-								sx={{ textTransform: "none", fontWeight: 600 }}
-							>
-								Send campaigns
-							</Button>
-							<Button
-								variant="text"
-								color="inherit"
-								startIcon={<ContentCopy />}
-								sx={{ textTransform: "none", fontWeight: 600 }}
-							>
-								Duplicate
-							</Button>
+						<Stack direction="row" spacing={2} alignItems="center">
+							{/* <Button
+                variant="text"
+                color="inherit"
+                startIcon={<Campaign />}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+              >
+                Send campaigns
+              </Button>
+              <Button
+                variant="text"
+                color="inherit"
+                startIcon={<ContentCopy />}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+              >
+                Duplicate
+              </Button> */}
 							<Button
 								variant="text"
 								color="inherit"
@@ -304,6 +281,7 @@ export default function ContactListTable({
 								color="inherit"
 								startIcon={<Delete />}
 								sx={{ textTransform: "none", fontWeight: 600 }}
+								onClick={() => setConfirmDelete(true)}
 							>
 								Delete
 							</Button>
@@ -329,11 +307,7 @@ export default function ContactListTable({
 							justifyContent: "space-between",
 						}}
 					>
-						<Stack
-							direction="row"
-							spacing={2}
-							alignItems="center"
-						>
+						<Stack direction="row" spacing={2} alignItems="center">
 							{/* Search */}
 							<TextField
 								size="small"
@@ -646,13 +620,13 @@ export default function ContactListTable({
 										>
 											{list.date_created
 												? new Date(list.date_created).toLocaleDateString(
-														"en-GB",
-														{
-															day: "2-digit",
-															month: "2-digit",
-															year: "numeric",
-														},
-													)
+													"en-GB",
+													{
+														day: "2-digit",
+														month: "2-digit",
+														year: "numeric",
+													},
+												)
 												: "25/10/2025"}
 										</Typography>
 									</TableCell>
@@ -725,7 +699,7 @@ export default function ContactListTable({
 					Duplicate list
 				</MenuItem>
 				<MenuItem
-					onClick={handleDelete}
+					onClick={() => setConfirmDelete(true)}
 					sx={{ color: "error.main" }}
 					disabled={selectedList?.is_default}
 				>

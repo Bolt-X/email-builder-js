@@ -39,20 +39,20 @@ const statusStyles: Record<
 	ContactStatus,
 	{ bgcolor: string; color: string; label: string }
 > = {
-	enabled: {
+	subscribed: {
 		bgcolor: "success.light",
 		color: "success.contrastText",
-		label: "Enabled",
+		label: "Subscribed",
 	},
-	blocklisted: {
+	unsubscribed: {
 		bgcolor: "error.light",
 		color: "error.contrastText",
-		label: "Blocklisted",
+		label: "Unsubscribed",
 	},
-	duplicate: {
-		bgcolor: "warning.light",
-		color: "warning.contrastText",
-		label: "Duplicate",
+	non_subscribed: {
+		bgcolor: "action.hover", // Neutral/Gray
+		color: "text.primary",
+		label: "Non-subscribed",
 	},
 };
 
@@ -202,7 +202,7 @@ export default function ContactTable({
 						{contacts.map((contact) => {
 							const isSelected = selectedContacts.includes(contact.id);
 							const style =
-								statusStyles[contact.status] || statusStyles.enabled;
+								statusStyles[contact.status] || statusStyles.subscribed;
 
 							return (
 								<TableRow
