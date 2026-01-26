@@ -9,7 +9,7 @@ import {
 	Tooltip,
 	Button,
 } from "@mui/material";
-import { ChevronLeft, ChevronRight, CalendarMonth } from "@mui/icons-material";
+import { ChevronLeft, ChevronRight, Add as AddIcon } from "@mui/icons-material";
 import { Campaign } from "../types";
 import { useNavigate } from "react-router-dom";
 
@@ -49,6 +49,12 @@ export default function CampaignListCalendar({
 		setViewDate(new Date());
 	};
 
+	const handleCreateFromDate = (date: Date) => {
+		// Format date as YYYY-MM-DD
+		const formattedDate = date.toISOString().split("T")[0];
+		navigate(`/campaigns/new?date=${formattedDate}`);
+	};
+
 	// Generate day cells
 	const dayCells = [];
 	// Padding for previous month
@@ -77,19 +83,20 @@ export default function CampaignListCalendar({
 		<Paper
 			elevation={0}
 			sx={{
-				border: "1px solid",
-				borderColor: "divider",
-				borderRadius: 2,
+				borderRadius: 4,
 				overflow: "hidden",
+				bgcolor: "white",
+				boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
+				border: "1px solid",
+				borderColor: "rgba(0,0,0,0.05)",
 			}}
 		>
 			{/* Calendar Header */}
 			<Box
 				sx={{
-					p: 2,
+					p: 3,
 					borderBottom: "1px solid",
-					borderColor: "divider",
-					bgcolor: "white",
+					borderColor: "rgba(0,0,0,0.05)",
 				}}
 			>
 				<Stack
@@ -99,62 +106,66 @@ export default function CampaignListCalendar({
 				>
 					<Stack
 						direction="row"
-						spacing={1}
+						spacing={2}
 						alignItems="center"
 					>
-						<IconButton
-							size="small"
-							onClick={prevMonth}
-							sx={{ border: "1px solid #e0e0e0" }}
-						>
-							<ChevronLeft />
-						</IconButton>
-						<Button
-							size="small"
-							variant="outlined"
-							onClick={goToToday}
+						<Typography
+							variant="h5"
 							sx={{
-								borderRadius: 20,
-								px: 2,
-								height: 34,
-								textTransform: "none",
-								borderColor: "#e0e0e0",
-								color: "text.secondary",
-								fontWeight: 600,
+								fontWeight: 800,
+								color: "text.primary",
+								minWidth: 180,
 							}}
 						>
-							Today
-						</Button>
-						<IconButton
-							size="small"
-							onClick={nextMonth}
-							sx={{ border: "1px solid #e0e0e0" }}
+							{monthYearString}
+						</Typography>
+						<Stack
+							direction="row"
+							spacing={1}
+							alignItems="center"
 						>
-							<ChevronRight />
-						</IconButton>
+							<IconButton
+								size="small"
+								onClick={prevMonth}
+								sx={{
+									bgcolor: "#f8fafc",
+									"&:hover": { bgcolor: "#f1f5f9" },
+								}}
+							>
+								<ChevronLeft fontSize="small" />
+							</IconButton>
+							<Button
+								size="small"
+								onClick={goToToday}
+								sx={{
+									textTransform: "none",
+									fontWeight: 700,
+									color: "text.secondary",
+									"&:hover": { bgcolor: "#f8fafc" },
+								}}
+							>
+								Today
+							</Button>
+							<IconButton
+								size="small"
+								onClick={nextMonth}
+								sx={{
+									bgcolor: "#f8fafc",
+									"&:hover": { bgcolor: "#f1f5f9" },
+								}}
+							>
+								<ChevronRight fontSize="small" />
+							</IconButton>
+						</Stack>
 					</Stack>
-					<Typography
-						variant="h5"
-						sx={{
-							fontWeight: 800,
-							color: "text.primary",
-							textAlign: "center",
-							minWidth: 200,
-						}}
-					>
-						{monthYearString}
-					</Typography>
-					<Box sx={{ width: 140 }} /> {/* Spacer to center the title */}
 				</Stack>
 			</Box>
 
-			{/* Day Headers (Matching Reference Image Layout) */}
+			{/* Day Headers */}
 			<Grid
 				container
 				sx={{
 					bgcolor: "#3DB5AD",
-					borderBottom: "1px solid",
-					borderColor: "rgba(0,0,0,0.1)",
 				}}
 			>
 				{DAYS.map((day) => (
@@ -163,18 +174,17 @@ export default function CampaignListCalendar({
 						xs={12 / 7}
 						key={day}
 						sx={{
-							p: 2,
+							py: 2,
 							textAlign: "center",
-							borderRight:
-								day !== "Sat" ? "1px solid rgba(255,255,255,0.2)" : "none",
 						}}
 					>
 						<Typography
-							variant="subtitle1"
+							variant="caption"
 							sx={{
-								fontWeight: 700,
+								fontWeight: 800,
 								color: "white",
-								textTransform: "capitalize",
+								textTransform: "uppercase",
+								letterSpacing: "1px",
 							}}
 						>
 							{day}
@@ -203,66 +213,91 @@ export default function CampaignListCalendar({
 								p: 1.5,
 								borderRight: (idx + 1) % 7 !== 0 ? "1px solid" : "none",
 								borderBottom: "1px solid",
-								borderColor: "divider",
-								bgcolor: cell.day ? "white" : "#fafafa",
+								borderColor: "rgba(0,0,0,0.05)",
+								bgcolor: cell.day ? "white" : "#fbfcfd",
 								position: "relative",
 								transition: "all 0.2s ease",
 								"&:hover": cell.day
 									? {
-											transform: "translateY(-2px)",
-											boxShadow: "inset 0 0 10px rgba(0,0,0,0.02)",
-											zIndex: 1,
+											bgcolor: "#f8fafc",
+											"& .create-btn": { opacity: 1 },
 										}
 									: {},
 							}}
 						>
 							{cell.day && (
 								<>
-									<Typography
-										variant="body1"
-										sx={{
-											fontWeight: isToday ? 800 : 700,
-											color: isToday ? "white" : "text.primary",
-											mb: 1.5,
-											display: "inline-block",
-											width: 28,
-											height: 28,
-											lineHeight: "28px",
-											textAlign: "center",
-											borderRadius: isToday ? "8px" : "0",
-											bgcolor: isToday ? "primary.main" : "transparent",
-										}}
+									<Stack
+										direction="row"
+										justifyContent="space-between"
+										alignItems="center"
+										sx={{ mb: 1.5 }}
 									>
-										{cell.day}
-									</Typography>
-									<Stack spacing={1}>
+										<Typography
+											variant="body2"
+											sx={{
+												fontWeight: isToday ? 800 : 700,
+												color: isToday ? "white" : "text.secondary",
+												width: 28,
+												height: 28,
+												lineHeight: "28px",
+												textAlign: "center",
+												borderRadius: "8px",
+												bgcolor: isToday ? "primary.main" : "transparent",
+											}}
+										>
+											{cell.day}
+										</Typography>
+
+										<IconButton
+											className="create-btn"
+											size="small"
+											onClick={() => handleCreateFromDate(cell.date!)}
+											sx={{
+												opacity: 0,
+												transition: "opacity 0.2s",
+												color: "primary.main",
+												bgcolor: "primary.main",
+												"&.MuiIconButton-root": {
+													bgcolor: "rgba(61, 181, 173, 0.1)",
+												},
+												"&:hover": { bgcolor: "rgba(61, 181, 173, 0.2)" },
+											}}
+										>
+											<AddIcon sx={{ fontSize: 18 }} />
+										</IconButton>
+									</Stack>
+
+									<Stack spacing={0.8}>
 										{dayCampaigns.map((campaign) => (
 											<Tooltip
-												key={campaign.id}
+												key={campaign.id || campaign.slug}
 												title={campaign.name}
 												arrow
 											>
 												<Box
 													onClick={(e) => {
 														e.stopPropagation();
-														navigate(`/campaigns/${campaign.id}`);
+														const id = campaign.slug || campaign.id;
+														navigate(`/campaigns/${id}`);
 													}}
 													sx={{
-														p: 1.2,
-														borderRadius: "6px",
-														bgcolor: "#E0F2F1", // Very light teal
-														color: "#00695C", // Dark teal text
-														borderLeft: "4px solid #3DB5AD",
-														fontSize: "0.75rem",
-														fontWeight: 600,
+														px: 1,
+														py: 0.8,
+														borderRadius: "8px",
+														bgcolor: "#e0f2f1",
+														color: "#00695c",
+														borderLeft: "3px solid #3db5ad",
+														fontSize: "0.7rem",
+														fontWeight: 700,
 														cursor: "pointer",
 														whiteSpace: "nowrap",
 														overflow: "hidden",
 														textOverflow: "ellipsis",
-														boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+														transition: "all 0.2s",
 														"&:hover": {
-															bgcolor: "#B2DFDB",
-															transform: "scale(1.02)",
+															bgcolor: "#b2dfdb",
+															boxShadow: "0 2px 4px rgba(0,105,92,0.1)",
 														},
 													}}
 												>

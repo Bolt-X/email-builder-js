@@ -17,20 +17,29 @@ export default function TemplatesPage() {
 	const templates = useTemplates();
 	const loading = useTemplatesLoading();
 	const [searchQuery, setSearchQuery] = useState("");
+	const [debouncedQuery, setDebouncedQuery] = useState("");
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedQuery(searchQuery);
+		}, 300); // 300ms delay
+
+		return () => clearTimeout(timer);
+	}, [searchQuery]);
 
 	useEffect(() => {
 		fetchTemplates();
 	}, []);
 
 	const filteredTemplates = useMemo(() => {
-		if (!searchQuery) return templates;
-		const query = searchQuery.toLowerCase();
+		if (!debouncedQuery) return templates;
+		const query = debouncedQuery.toLowerCase();
 		return templates.filter(
 			(t) =>
 				t.name.toLowerCase().includes(query) ||
 				(t.description && t.description.toLowerCase().includes(query)),
 		);
-	}, [templates, searchQuery]);
+	}, [templates, debouncedQuery]);
 
 	const handleCreateTemplate = () => {
 		navigate("/templates/new");
@@ -90,6 +99,43 @@ export default function TemplatesPage() {
 
 				{!isEmpty ? (
 					<TemplateListTable templates={filteredTemplates} />
+				) : searchQuery ? (
+					<Box
+						display="flex"
+						flexDirection="column"
+						alignItems="center"
+						justifyContent="center"
+						minHeight="40vh"
+						textAlign="center"
+						sx={{
+							bgcolor: "background.paper",
+							borderRadius: 2,
+							p: 4,
+							border: "1px solid",
+							borderColor: "divider",
+							mx: 3,
+						}}
+					>
+						<Typography
+							variant="h6"
+							sx={{ fontWeight: 600, mb: 1 }}
+						>
+							No templates found
+						</Typography>
+						<Typography
+							variant="body2"
+							color="text.secondary"
+							sx={{ mb: 3 }}
+						>
+							Try adjusting your search query to find what you're looking for.
+						</Typography>
+						<Button
+							variant="outlined"
+							onClick={() => setSearchQuery("")}
+						>
+							Clear search
+						</Button>
+					</Box>
 				) : (
 					<Box sx={{ textAlign: "center", py: 10 }}>
 						<Typography color="text.secondary">

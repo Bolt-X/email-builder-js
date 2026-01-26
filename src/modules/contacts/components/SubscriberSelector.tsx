@@ -118,7 +118,7 @@ export default function SubscriberSelector({
 			>
 				{/* List Selector */}
 				<FormControl fullWidth>
-					{/* <InputLabel>Add Contact List</InputLabel> */}
+					<InputLabel>Add Contact List</InputLabel>
 					<Select
 						value=""
 						label="Add Contact List"
