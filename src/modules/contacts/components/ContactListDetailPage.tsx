@@ -553,7 +553,7 @@ export default function ContactListDetailPage() {
 						variant="subtitle2"
 						sx={{ mb: 2, fontWeight: 700 }}
 					>
-						Filter by Date Created
+						{t("campaigns.date_created")}
 					</Typography>
 					<Stack spacing={2}>
 						<TextField

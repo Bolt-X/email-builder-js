@@ -581,7 +581,7 @@ export default function ContactListTable({
 								)}
 								{visibleColumns.includes("date_created") && (
 									<TableCell sx={{ fontWeight: 700, color: "text.secondary" }}>
-										{t("contacts.filter_by_date")}
+										{t("campaigns.date_created")}
 									</TableCell>
 								)}
 								<TableCell
