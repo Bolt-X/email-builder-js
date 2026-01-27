@@ -48,9 +48,11 @@ import TemplateNameField from "../../components/inputs/TemplateNameField";
 import ShowHTML from "../ShowHTML";
 import SaveNewTemplateDialog from "../../modules/templates/components/SaveNewTemplateDialog";
 import { setMessage } from "../../contexts";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 
 export default function TemplatePanel() {
+	const { t } = useTranslation();
 	const { id } = useParams();
 	const navigate = useNavigate();
 	const document = useDocument();
@@ -123,7 +125,7 @@ export default function TemplatePanel() {
 				return (
 					<Box sx={mainBoxSx}>
 						<Reader
-							document={document}
+							document={document as any}
 							rootBlockId="root"
 						/>
 					</Box>
@@ -164,6 +166,7 @@ export default function TemplatePanel() {
 					<Stack
 						direction="row"
 						spacing={2}
+						alignItems="center"
 					>
 						<Button
 							size="small"
@@ -171,21 +174,27 @@ export default function TemplatePanel() {
 							onClick={() => navigate("/templates")}
 							sx={{ mr: 1 }}
 						>
-							Back
+							{t("templates.editor.back")}
 						</Button>
+						<Divider
+							orientation="vertical"
+							flexItem
+							sx={{ height: 24, alignSelf: "center" }}
+						/>
+						<TemplateNameField />
+						<Divider
+							orientation="vertical"
+							flexItem
+							sx={{ height: 24, alignSelf: "center" }}
+						/>
 						<MainTabsGroup />
 						<Divider
 							orientation="vertical"
 							flexItem
+							sx={{ height: 24, alignSelf: "center" }}
 						/>
 						<UndoButton />
 						<RedoButton />
-						{/* Save button moved to right side */}
-						{/* <Divider
-							orientation="vertical"
-							flexItem
-						/> */}
-						{/* <TemplateNameField /> */}
 					</Stack>
 					<Stack
 						direction="row"
@@ -198,39 +207,28 @@ export default function TemplatePanel() {
 							onChange={handleScreenSizeChange}
 						>
 							<ToggleButton value="desktop">
-								<Tooltip title="Desktop view">
+								<Tooltip title={t("templates.editor.desktop_view")}>
 									<MonitorOutlined fontSize="small" />
 								</Tooltip>
 							</ToggleButton>
 							<ToggleButton value="mobile">
-								<Tooltip title="Mobile view">
+								<Tooltip title={t("templates.editor.mobile_view")}>
 									<PhoneIphoneOutlined fontSize="small" />
 								</Tooltip>
 							</ToggleButton>
 						</ToggleButtonGroup>
 
-						{isNew ? (
-							<Button
-								variant="contained"
-								size="small"
-								startIcon={<SaveOutlined />}
-								onClick={handleManualSaveClick}
-								sx={{ height: 32, alignSelf: "center" }}
-							>
-								Save
-							</Button>
-						) : (
-							<Box sx={{ display: "flex", alignItems: "center" }}>
-								<SaveButton />
-							</Box>
-						)}
+						<Box sx={{ display: "flex", alignItems: "center" }}>
+							<SaveButton />
+						</Box>
+
 						<Divider
 							orientation="vertical"
 							flexItem
 						/>
 
 						{/* Dropdown JSON Menu */}
-						<Tooltip title="Code actions">
+						<Tooltip title={t("templates.editor.code_actions")}>
 							<IconButton
 								size="small"
 								onClick={handleClick}

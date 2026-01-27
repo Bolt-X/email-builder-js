@@ -7,14 +7,14 @@ import {
 } from "../../modules/templates/store";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 
+import { useTranslation } from "react-i18next";
+
 export default function TemplateNameField() {
+	const { t } = useTranslation();
 	const currentTemplate = useCurrentTemplate();
-	console.log(
-		"🚀 ~ TemplateNameField ~ currentTemplate:",
-		currentTemplate
-	);
+	console.log("🚀 ~ TemplateNameField ~ currentTemplate:", currentTemplate);
 	const [editing, setEditing] = useState(false);
-	const [name, setName] = useState("Untitled");
+	const [name, setName] = useState(t("campaigns.untitled"));
 
 	const handleToggle = () => setEditing(true);
 

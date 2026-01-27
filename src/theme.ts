@@ -189,6 +189,11 @@ export const getTheme = (mode: "light" | "dark") => {
 				defaultProps: {
 					fullWidth: true,
 				},
+				styleOverrides: {
+					paper: {
+						minWidth: 480,
+					},
+				},
 			},
 			MuiDialogContent: {
 				styleOverrides: {
@@ -602,8 +607,6 @@ export const getTheme = (mode: "light" | "dark") => {
 				letterSpacing: 0,
 				lineHeight: 1.5,
 			},
-		},
-		components: {
 			MuiTooltip: {
 				styleOverrides: {
 					tooltip: {

@@ -8,11 +8,13 @@ import {
 	useSelectedSidebarTab,
 } from "../../documents/editor/EditorContext";
 
+import { useTranslation } from "react-i18next";
 import ConfigurationPanel from "./ConfigurationPanel";
 import StylesPanel from "./StylesPanel";
 import { useInspectorDrawerWidth } from "../../hooks/useInspectorDrawerWidth";
 
 export default function InspectorDrawer() {
+	const { t } = useTranslation();
 	const selectedSidebarTab = useSelectedSidebarTab();
 	const inspectorDrawerOpen = useInspectorDrawerOpen();
 	const INSPECTOR_DRAWER_WIDTH = useInspectorDrawerWidth();
@@ -58,11 +60,11 @@ export default function InspectorDrawer() {
 					>
 						<Tab
 							value="styles"
-							label="Styles"
+							label={t("templates.editor.tabs.styles")}
 						/>
 						<Tab
 							value="block-configuration"
-							label="Inspect"
+							label={t("templates.editor.tabs.inspect")}
 						/>
 					</Tabs>
 				</Box>

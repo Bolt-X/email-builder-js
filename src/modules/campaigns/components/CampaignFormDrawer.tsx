@@ -16,6 +16,7 @@ import {
 	IconButton,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 import { Campaign, CampaignStatus } from "../types";
 import {
 	createCampaignAction,
@@ -37,6 +38,7 @@ export default function CampaignFormDrawer({
 	campaignId,
 	mode = "create",
 }: CampaignFormDrawerProps) {
+	const { t } = useTranslation();
 	interface CampaignFormData extends Partial<Campaign> {
 		contactListId?: string | number;
 		templateId?: number;
@@ -137,7 +139,7 @@ export default function CampaignFormDrawer({
 			onClose();
 		} catch (error: any) {
 			console.error("Error saving campaign:", error);
-			alert("Error saving campaign: " + error.message);
+			alert(t("campaigns.test_email_failed") + ": " + error.message);
 		} finally {
 			setLoading(false);
 		}
@@ -170,7 +172,9 @@ export default function CampaignFormDrawer({
 					mb={3}
 				>
 					<Typography variant="h5">
-						{mode === "create" ? "Create Campaign" : "Edit Campaign"}
+						{mode === "create"
+							? t("campaigns.create_campaign")
+							: t("campaigns.edit_campaign")}
 					</Typography>
 					<IconButton onClick={onClose}>
 						<Close />
@@ -184,40 +188,48 @@ export default function CampaignFormDrawer({
 					<Stack spacing={3}>
 						{/* Campaign Name */}
 						<TextField
-							label="Campaign Name"
+							label={t("campaigns.form.name_label")}
 							required
 							fullWidth
 							value={formData.name}
 							onChange={(e) => handleChange("name", e.target.value)}
-							placeholder="Enter campaign name"
+							placeholder={t("campaigns.form.name_placeholder")}
 						/>
 
 						{/* Description */}
 						<TextField
-							label="Description"
+							label={t("campaigns.form.description_label")}
 							fullWidth
 							multiline
 							rows={3}
 							value={formData.description || ""}
 							onChange={(e) => handleChange("description", e.target.value)}
-							placeholder="Enter campaign description"
+							placeholder={t("campaigns.form.description_placeholder")}
 						/>
 
 						{/* Status */}
 						<FormControl fullWidth>
-							<InputLabel>Status</InputLabel>
+							<InputLabel>{t("campaigns.columns.status")}</InputLabel>
 							<Select
 								value={formData.status || "draft"}
 								onChange={(e) =>
 									handleChange("status", e.target.value as CampaignStatus)
 								}
-								label="Status"
+								label={t("campaigns.columns.status")}
 							>
-								<MenuItem value="draft">Draft</MenuItem>
-								<MenuItem value="scheduled">Scheduled</MenuItem>
-								<MenuItem value="sending">Sending</MenuItem>
-								<MenuItem value="completed">Completed</MenuItem>
-								<MenuItem value="cancelled">Cancelled</MenuItem>
+								<MenuItem value="draft">{t("campaigns.status.draft")}</MenuItem>
+								<MenuItem value="scheduled">
+									{t("campaigns.status.scheduled")}
+								</MenuItem>
+								<MenuItem value="sending">
+									{t("campaigns.status.running")}
+								</MenuItem>
+								<MenuItem value="completed">
+									{t("campaigns.status.finished")}
+								</MenuItem>
+								<MenuItem value="cancelled">
+									{t("campaigns.status.cancelled")}
+								</MenuItem>
 							</Select>
 						</FormControl>
 
@@ -255,15 +267,15 @@ export default function CampaignFormDrawer({
 							renderInput={(params) => (
 								<TextField
 									{...params}
-									label="Tags"
-									placeholder="Add tags (press Enter)"
+									label={t("campaigns.form.tags_label")}
+									placeholder={t("campaigns.form.tags_placeholder")}
 								/>
 							)}
 						/>
 
 						{/* Schedule Date */}
 						<TextField
-							label="Schedule Date & Time"
+							label={t("campaigns.form.date_time_label")}
 							type="datetime-local"
 							fullWidth
 							value={
@@ -278,7 +290,7 @@ export default function CampaignFormDrawer({
 								handleChange("date_scheduled", dateValue);
 							}}
 							InputLabelProps={{ shrink: true }}
-							helperText="Leave empty to send immediately"
+							helperText={t("campaigns.form.send_now")}
 						/>
 
 						{/* Action Buttons */}
@@ -293,14 +305,15 @@ export default function CampaignFormDrawer({
 								onClick={onClose}
 								disabled={loading}
 							>
-								Cancel
+								{t("common.cancel")}
 							</Button>
 							<Button
 								type="submit"
 								variant="contained"
 								disabled={loading || !formData.name || !formData.contactListId}
 							>
-								{mode === "create" ? "Create" : "Save"} Campaign
+								{mode === "create" ? t("common.create") : t("common.save")}{" "}
+								{t("sidebar.campaigns")}
 							</Button>
 						</Stack>
 					</Stack>

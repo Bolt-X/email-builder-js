@@ -16,6 +16,7 @@ import {
 	FormControlLabel,
 	Radio,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { Campaign, SubscriberSelection, SubscriberType } from "../../types";
 import SubscriberSelector from "../../../contacts/components/SubscriberSelector";
 import { useGetAllTemplates } from "../../../../hooks/useTemplates";
@@ -31,6 +32,7 @@ export default function CampaignSettingsForm({
 	campaign,
 	onChange,
 }: CampaignSettingsFormProps) {
+	const { t } = useTranslation();
 	const { data: templates } = useGetAllTemplates();
 	const { data: tags } = useGetAllTags();
 	const [addTagModalOpen, setAddTagModalOpen] = useState(false);
@@ -102,11 +104,12 @@ export default function CampaignSettingsForm({
 						variant="subtitle2"
 						sx={{ mb: 1 }}
 					>
-						Campaign name <span style={{ color: "red" }}>*</span>
+						{t("campaigns.form.name_label")}{" "}
+						<span style={{ color: "red" }}>*</span>
 					</Typography>
 					<TextField
 						fullWidth
-						placeholder="Enter your campaign name"
+						placeholder={t("campaigns.form.name_placeholder")}
 						variant="outlined"
 						size="small"
 						value={campaign.name || ""}
@@ -121,11 +124,12 @@ export default function CampaignSettingsForm({
 						variant="subtitle2"
 						sx={{ mb: 1 }}
 					>
-						Subject <span style={{ color: "red" }}>*</span>
+						{t("campaigns.form.subject_label")}{" "}
+						<span style={{ color: "red" }}>*</span>
 					</Typography>
 					<TextField
 						fullWidth
-						placeholder="How do you want to stand out in the recipient's inbox?"
+						placeholder={t("campaigns.form.subject_placeholder")}
 						variant="outlined"
 						size="small"
 						value={campaign.subject || ""}
@@ -140,11 +144,11 @@ export default function CampaignSettingsForm({
 						variant="subtitle2"
 						sx={{ mb: 1 }}
 					>
-						Description
+						{t("campaigns.form.description_label")}
 					</Typography>
 					<TextField
 						fullWidth
-						placeholder="Enter your campaign description"
+						placeholder={t("campaigns.form.description_placeholder")}
 						variant="outlined"
 						size="small"
 						value={campaign.description || ""}
@@ -160,7 +164,8 @@ export default function CampaignSettingsForm({
 						variant="subtitle2"
 						sx={{ mb: 1 }}
 					>
-						From address <span style={{ color: "red" }}>*</span>
+						{t("campaigns.form.from_address_label")}{" "}
+						<span style={{ color: "red" }}>*</span>
 					</Typography>
 					<FormControl
 						fullWidth
@@ -188,7 +193,8 @@ export default function CampaignSettingsForm({
 						variant="subtitle2"
 						sx={{ mb: 1 }}
 					>
-						Template <span style={{ color: "red" }}>*</span>
+						{t("campaigns.form.template_label")}{" "}
+						<span style={{ color: "red" }}>*</span>
 					</Typography>
 					<FormControl
 						fullWidth
@@ -206,7 +212,7 @@ export default function CampaignSettingsForm({
 								<TextField
 									{...params}
 									variant="outlined"
-									placeholder="Choose template"
+									placeholder={t("campaigns.form.template_placeholder")}
 									size="small"
 								/>
 							)}
@@ -222,7 +228,8 @@ export default function CampaignSettingsForm({
 						variant="subtitle2"
 						sx={{ mb: 1 }}
 					>
-						To lists or segments <span style={{ color: "red" }}>*</span>
+						{t("campaigns.form.to_label")}{" "}
+						<span style={{ color: "red" }}>*</span>
 					</Typography>
 					<SubscriberSelector
 						value={campaign.subscribers || []}
@@ -243,7 +250,8 @@ export default function CampaignSettingsForm({
 						variant="subtitle2"
 						sx={{ mb: 1 }}
 					>
-						Tags <span style={{ color: "red" }}>*</span>
+						{t("campaigns.form.tags_label")}{" "}
+						<span style={{ color: "red" }}>*</span>
 					</Typography>
 					<FormControl
 						fullWidth
@@ -264,14 +272,14 @@ export default function CampaignSettingsForm({
 							renderTags={() => null}
 							noOptionsText={
 								<div style={{ padding: 16, textAlign: "center" }}>
-									<Typography>No tags found</Typography>
+									<Typography>{t("campaigns.form.no_tags")}</Typography>
 									<Button
 										onClick={handleAddTag}
 										variant="outlined"
 										size="small"
 										sx={{ mt: 1 }}
 									>
-										Add new tag
+										{t("campaigns.form.add_tag")}
 									</Button>
 								</div>
 							}
@@ -279,7 +287,7 @@ export default function CampaignSettingsForm({
 								<TextField
 									{...params}
 									variant="outlined"
-									placeholder="Select tags"
+									placeholder={t("campaigns.form.tags_placeholder")}
 								/>
 							)}
 						/>
@@ -310,7 +318,7 @@ export default function CampaignSettingsForm({
 						variant="subtitle2"
 						sx={{ mb: 1 }}
 					>
-						When would you like to send the campaign?
+						{t("campaigns.form.send_time_label")}
 					</Typography>
 					<RadioGroup
 						row
@@ -375,7 +383,7 @@ export default function CampaignSettingsForm({
 										variant="body2"
 										sx={{ userSelect: "none", fontWeight: 500 }}
 									>
-										Send now
+										{t("campaigns.form.send_now")}
 									</Typography>
 								</Box>
 							}
@@ -423,7 +431,7 @@ export default function CampaignSettingsForm({
 										variant="body2"
 										sx={{ userSelect: "none", fontWeight: 500 }}
 									>
-										Schedule for later
+										{t("campaigns.form.schedule_later")}
 									</Typography>
 								</Box>
 							}
@@ -436,7 +444,8 @@ export default function CampaignSettingsForm({
 								variant="subtitle2"
 								sx={{ mb: 1 }}
 							>
-								Date & time <span style={{ color: "red" }}>*</span>
+								{t("campaigns.form.date_time_label")}{" "}
+								<span style={{ color: "red" }}>*</span>
 							</Typography>
 							<TextField
 								type="datetime-local"

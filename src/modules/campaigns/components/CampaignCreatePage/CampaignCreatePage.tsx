@@ -30,6 +30,7 @@ import {
 } from "@mui/icons-material";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
 	useCreateCampaign,
 	useUpdateCampaign,
@@ -56,6 +57,7 @@ interface CampaignFormValues {
 }
 
 export default function CampaignCreatePage() {
+	const { t } = useTranslation();
 	const navigate = useNavigate();
 
 	const { data: tags } = useGetAllTags();
@@ -169,11 +171,11 @@ export default function CampaignCreatePage() {
 				subject: values.subject || "No Subject",
 				template: selectedTemplate.html,
 			});
-			setMessage("Test email sent successfully");
+			setMessage(t("campaigns.test_email_sent"));
 			setTestEmailDialogOpen(false);
 			setTestEmailValue("");
 		} catch (error: any) {
-			setMessage(error.message || "Failed to send test email");
+			setMessage(error.message || t("campaigns.test_email_failed"));
 		}
 	};
 
@@ -210,10 +212,10 @@ export default function CampaignCreatePage() {
 						variant="h5"
 						fontWeight="bold"
 					>
-						{values.name || "New campaign"}
+						{values.name || t("campaigns.new_campaign")}
 					</Typography>
 					<Chip
-						label="Draft"
+						label={t("campaigns.status.draft")}
 						size="small"
 						sx={{
 							backgroundColor: "action.hover",
@@ -245,7 +247,7 @@ export default function CampaignCreatePage() {
 							},
 						}}
 					>
-						Send test email
+						{t("campaigns.send_test_email")}
 					</Button>
 					<Button
 						variant="outlined"
@@ -266,7 +268,7 @@ export default function CampaignCreatePage() {
 							},
 						}}
 					>
-						Save
+						{t("common.save")}
 					</Button>
 					<Button
 						variant="contained"
@@ -289,7 +291,10 @@ export default function CampaignCreatePage() {
 							},
 						}}
 					>
-						{values.sendType === "schedule" ? "Schedule" : "Start"} campaign
+						{values.sendType === "schedule"
+							? t("campaigns.schedule")
+							: t("campaigns.start")}{" "}
+						{t("sidebar.campaigns").toLowerCase()}
 					</Button>
 				</Stack>
 			</Stack>
@@ -316,11 +321,12 @@ export default function CampaignCreatePage() {
 									variant="subtitle2"
 									sx={{ mb: 1 }}
 								>
-									Campaign name <span style={{ color: "red" }}>*</span>
+									{t("campaigns.form.name_label")}{" "}
+									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth
-									placeholder="Enter your campaign name"
+									placeholder={t("campaigns.form.name_placeholder")}
 									variant="outlined"
 									size="small"
 									value={values.name}
@@ -335,11 +341,12 @@ export default function CampaignCreatePage() {
 									variant="subtitle2"
 									sx={{ mb: 1 }}
 								>
-									Subject <span style={{ color: "red" }}>*</span>
+									{t("campaigns.form.subject_label")}{" "}
+									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth
-									placeholder="How do you want to stand out in the recipient's inbox?"
+									placeholder={t("campaigns.form.subject_placeholder")}
 									variant="outlined"
 									size="small"
 									value={values.subject}
@@ -354,11 +361,11 @@ export default function CampaignCreatePage() {
 									variant="subtitle2"
 									sx={{ mb: 1 }}
 								>
-									Description
+									{t("campaigns.form.description_label")}
 								</Typography>
 								<TextField
 									fullWidth
-									placeholder="Enter your campaign description"
+									placeholder={t("campaigns.form.description_placeholder")}
 									variant="outlined"
 									size="small"
 									value={values.description}
@@ -374,7 +381,8 @@ export default function CampaignCreatePage() {
 									variant="subtitle2"
 									sx={{ mb: 1 }}
 								>
-									From address <span style={{ color: "red" }}>*</span>
+									{t("campaigns.form.from_address_label")}{" "}
+									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<FormControl
 									fullWidth
@@ -400,7 +408,8 @@ export default function CampaignCreatePage() {
 									variant="subtitle2"
 									sx={{ mb: 1 }}
 								>
-									Template <span style={{ color: "red" }}>*</span>
+									{t("campaigns.form.template_label")}{" "}
+									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<FormControl
 									fullWidth
@@ -426,7 +435,7 @@ export default function CampaignCreatePage() {
 											<TextField
 												{...params}
 												variant="outlined"
-												placeholder="Choose template"
+												placeholder={t("campaigns.form.template_placeholder")}
 												size="small"
 											/>
 										)}
@@ -441,7 +450,8 @@ export default function CampaignCreatePage() {
 									variant="subtitle2"
 									sx={{ mb: 1 }}
 								>
-									To lists or segments <span style={{ color: "red" }}>*</span>
+									{t("campaigns.form.to_label")}{" "}
+									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<SubscriberSelector
 									value={values.subscribers || []}
@@ -458,7 +468,8 @@ export default function CampaignCreatePage() {
 									variant="subtitle2"
 									sx={{ mb: 1 }}
 								>
-									Tags <span style={{ color: "red" }}>*</span>
+									{t("campaigns.form.tags_label")}{" "}
+									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<FormControl
 									fullWidth
@@ -481,13 +492,13 @@ export default function CampaignCreatePage() {
 										renderTags={() => null}
 										noOptionsText={
 											<div style={{ padding: 16, textAlign: "center" }}>
-												<Typography>No tags found</Typography>
+												<Typography>{t("campaigns.form.no_tags")}</Typography>
 												<Button
 													onClick={handleAddTag}
 													variant="outlined"
 													size="small"
 												>
-													Add new tag
+													{t("campaigns.form.add_tag")}
 												</Button>
 											</div>
 										}
@@ -495,7 +506,7 @@ export default function CampaignCreatePage() {
 											<TextField
 												{...params}
 												variant="outlined"
-												placeholder="Select tags"
+												placeholder={t("campaigns.form.tags_placeholder")}
 											/>
 										)}
 									/>
@@ -523,7 +534,7 @@ export default function CampaignCreatePage() {
 									variant="subtitle2"
 									sx={{ mb: 1 }}
 								>
-									When would you like to send the campaign?
+									{t("campaigns.form.send_time_label")}
 								</Typography>
 								<RadioGroup
 									row
@@ -592,7 +603,7 @@ export default function CampaignCreatePage() {
 														fontWeight: 500,
 													}}
 												>
-													Send now
+													{t("campaigns.form.send_now")}
 												</Typography>
 											</Box>
 										}
@@ -644,7 +655,7 @@ export default function CampaignCreatePage() {
 														fontWeight: 500,
 													}}
 												>
-													Schedule for later
+													{t("campaigns.form.schedule_later")}
 												</Typography>
 											</Box>
 										}
@@ -657,7 +668,8 @@ export default function CampaignCreatePage() {
 											variant="subtitle2"
 											sx={{ mb: 1 }}
 										>
-											Date & time <span style={{ color: "red" }}>*</span>
+											{t("campaigns.form.date_time_label")}{" "}
+											<span style={{ color: "red" }}>*</span>
 										</Typography>
 										<TextField
 											type="datetime-local"
@@ -713,7 +725,7 @@ export default function CampaignCreatePage() {
 									variant="subtitle2"
 									color="text.secondary"
 								>
-									PREVIEW
+									{t("campaigns.preview").toUpperCase()}
 								</Typography>
 								<ToggleButtonGroup
 									value={previewMode}
@@ -773,13 +785,15 @@ export default function CampaignCreatePage() {
 											color="text.secondary"
 											display="block"
 										>
-											Subject: <strong>{previewData.subject}</strong>
+											{t("campaigns.form.subject_label")}:{" "}
+											<strong>{previewData.subject}</strong>
 										</Typography>
 										<Typography
 											variant="caption"
 											color="text.secondary"
 										>
-											From: {previewData.fromAddress}
+											{t("campaigns.form.from_address_label")}:{" "}
+											{previewData.fromAddress}
 										</Typography>
 									</Box>
 
@@ -804,7 +818,7 @@ export default function CampaignCreatePage() {
 												}}
 											>
 												<Typography variant="body2">
-													Please select a template to see the preview
+													{t("campaigns.select_template_preview")}
 												</Typography>
 											</Box>
 										)}
@@ -820,27 +834,29 @@ export default function CampaignCreatePage() {
 				open={testEmailDialogOpen}
 				onClose={() => setTestEmailDialogOpen(false)}
 			>
-				<DialogTitle>Send Test Email</DialogTitle>
+				<DialogTitle>{t("campaigns.test_email_dialog_title")}</DialogTitle>
 				<DialogContent sx={{ minWidth: "400px" }}>
 					<Box sx={{ mt: 1 }}>
 						<TextField
 							fullWidth
-							label="Recipient Email"
-							placeholder="Enter email address"
+							label={t("campaigns.test_email_recipient")}
+							placeholder={t("campaigns.test_email_placeholder")}
 							value={testEmailValue}
 							onChange={(e) => setTestEmailValue(e.target.value)}
 						/>
 					</Box>
 				</DialogContent>
 				<DialogActions sx={{ p: 2 }}>
-					<Button onClick={() => setTestEmailDialogOpen(false)}>Cancel</Button>
+					<Button onClick={() => setTestEmailDialogOpen(false)}>
+						{t("common.cancel")}
+					</Button>
 					<Button
 						variant="contained"
 						onClick={handleSendTestEmail}
 						disabled={!testEmailValue}
 						sx={{ borderRadius: "100px", px: 4 }}
 					>
-						Send
+						{t("common.send")}
 					</Button>
 				</DialogActions>
 			</Dialog>

@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
 	Box,
 	Grid,
@@ -49,6 +50,7 @@ const AUTOSAVE_INTERVAL = 30000; // 30 seconds
 export default function CampaignEditPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 	const campaign = useCurrentCampaign();
 	const loading = useCampaignsLoading();
 	const autosaveState = useAutosaveState();
@@ -137,14 +139,14 @@ export default function CampaignEditPage() {
 
 			setSnackbar({
 				open: true,
-				message: "Campaign saved successfully",
+				message: t("campaigns.save_success"),
 				severity: "success",
 			});
 		} catch (error: any) {
 			console.error("Save failed:", error);
 			setSnackbar({
 				open: true,
-				message: error.message || "Failed to save campaign",
+				message: error.message || t("campaigns.save_failed"),
 				severity: "error",
 			});
 		}
@@ -160,11 +162,11 @@ export default function CampaignEditPage() {
 				subject: campaign.subject || "No Subject",
 				template: html,
 			});
-			setMessage("Test email sent successfully");
+			setMessage(t("campaigns.test_email_sent"));
 			setTestEmailDialogOpen(false);
 			setTestEmailValue("");
 		} catch (error: any) {
-			setMessage(error.message || "Failed to send test email");
+			setMessage(error.message || t("campaigns.test_email_failed"));
 		}
 	}, [id, testEmailValue, campaign, html]);
 
@@ -182,7 +184,7 @@ export default function CampaignEditPage() {
 			!campaign.fromAddress ||
 			!hasRecipients
 		) {
-			setMessage("Please fill in all required fields");
+			setMessage(t("campaigns.required_fields_error"));
 			return;
 		}
 
@@ -194,13 +196,13 @@ export default function CampaignEditPage() {
 			await startCampaign(id, sendNow);
 			setMessage(
 				sendNow
-					? `“${campaign.name}” is running`
-					: `“${campaign.name}” is scheduled`,
+					? t("campaigns.running_msg", { name: campaign.name })
+					: t("campaigns.scheduled_msg", { name: campaign.name }),
 			);
 			// Refresh campaign data
 			await fetchCampaignById(id);
 		} catch (error: any) {
-			setMessage(error.message || "Failed to start campaign");
+			setMessage(error.message || t("campaigns.start_failed"));
 		}
 	}, [id, campaign, handleSave]);
 
@@ -278,12 +280,12 @@ export default function CampaignEditPage() {
 				open={testEmailDialogOpen}
 				onClose={() => setTestEmailDialogOpen(false)}
 			>
-				<DialogTitle>Send Test Email</DialogTitle>
+				<DialogTitle>{t("campaigns.test_email_dialog_title")}</DialogTitle>
 				<DialogContent>
 					<TextField
 						autoFocus
 						margin="dense"
-						label="Email address"
+						label={t("campaigns.test_email_label")}
 						type="email"
 						fullWidth
 						value={testEmailValue}
@@ -292,13 +294,15 @@ export default function CampaignEditPage() {
 					/>
 				</DialogContent>
 				<DialogActions>
-					<Button onClick={() => setTestEmailDialogOpen(false)}>Cancel</Button>
+					<Button onClick={() => setTestEmailDialogOpen(false)}>
+						{t("common.cancel")}
+					</Button>
 					<Button
 						onClick={handleSendTestEmail}
 						variant="contained"
 						disabled={!testEmailValue}
 					>
-						Send
+						{t("common.send")}
 					</Button>
 				</DialogActions>
 			</Dialog>

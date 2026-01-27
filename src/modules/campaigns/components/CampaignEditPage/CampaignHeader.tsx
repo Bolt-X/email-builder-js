@@ -16,6 +16,7 @@ import {
 	Edit,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Campaign, CampaignStatus } from "../../types";
 import { statusColors } from "../../utils";
 import { useAutosaveState } from "../../stores/campaign.metadata.store";
@@ -33,6 +34,7 @@ export default function CampaignHeader({
 	onStartCampaign,
 	onSave,
 }: CampaignHeaderProps) {
+	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const autosaveState = useAutosaveState();
 
@@ -50,20 +52,20 @@ export default function CampaignHeader({
 	};
 
 	const formatLastEditTime = (dateString?: string) => {
-		if (!dateString) return "Never";
+		if (!dateString) return t("campaigns.never");
 		const date = new Date(dateString);
 		const now = new Date();
 		const diffMs = now.getTime() - date.getTime();
 		const diffMins = Math.floor(diffMs / 60000);
 
-		if (diffMins < 1) return "Just now";
+		if (diffMins < 1) return t("campaigns.just_now");
 		if (diffMins < 60)
-			return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+			return `${diffMins} ${t(diffMins > 1 ? "campaigns.minutes" : "campaigns.minute")} ${t("campaigns.ago")}`;
 		const diffHours = Math.floor(diffMins / 60);
 		if (diffHours < 24)
-			return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+			return `${diffHours} ${t(diffHours > 1 ? "campaigns.hours" : "campaigns.hour")} ${t("campaigns.ago")}`;
 		const diffDays = Math.floor(diffHours / 24);
-		return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+		return `${diffDays} ${t(diffDays > 1 ? "campaigns.days" : "campaigns.day")} ${t("campaigns.ago")}`;
 	};
 
 	const canStart =
@@ -108,10 +110,10 @@ export default function CampaignHeader({
 							variant="h5"
 							fontWeight="bold"
 						>
-							{campaign.name || "Untitled Campaign"}
+							{campaign.name || t("campaigns.untitled")}
 						</Typography>
 						<Chip
-							label={campaign.status}
+							label={t(`campaigns.status.${campaign.status}`)}
 							size="small"
 							sx={{
 								backgroundColor: "action.hover",
@@ -132,7 +134,7 @@ export default function CampaignHeader({
 									"&:hover": { textDecoration: "underline" },
 								}}
 							>
-								Edit Design
+								{t("campaigns.edit_design")}
 							</Button>
 						)}
 						<Stack
@@ -144,7 +146,7 @@ export default function CampaignHeader({
 								variant="caption"
 								color="text.secondary"
 							>
-								Last edited{" "}
+								{t("campaigns.last_edited")}{" "}
 								{formatLastEditTime(
 									campaign.date_updated || campaign.date_created || undefined,
 								)}
@@ -154,7 +156,7 @@ export default function CampaignHeader({
 									variant="caption"
 									color="warning.main"
 								>
-									• Unsaved changes
+									• {t("campaigns.unsaved_changes")}
 								</Typography>
 							)}
 							{autosaveState.lastSavedAt && !autosaveState.isDirty && (
@@ -162,7 +164,7 @@ export default function CampaignHeader({
 									variant="caption"
 									color="success.main"
 								>
-									• Saved
+									• {t("campaigns.saved")}
 								</Typography>
 							)}
 						</Stack>
@@ -190,7 +192,7 @@ export default function CampaignHeader({
 							},
 						}}
 					>
-						Send test email
+						{t("campaigns.send_test_email")}
 					</Button>
 					<Button
 						variant="outlined"
@@ -210,7 +212,7 @@ export default function CampaignHeader({
 							},
 						}}
 					>
-						Save
+						{t("common.save")}
 					</Button>
 					{canStart && (
 						<Button
@@ -233,7 +235,10 @@ export default function CampaignHeader({
 								},
 							}}
 						>
-							{campaign.sendTime === "schedule" ? "Schedule" : "Start"} campaign
+							{campaign.sendTime === "schedule"
+								? t("campaigns.schedule")
+								: t("campaigns.start")}{" "}
+							{t("sidebar.campaigns").toLowerCase()}
 						</Button>
 					)}
 				</Stack>

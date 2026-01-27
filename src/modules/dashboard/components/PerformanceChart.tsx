@@ -104,7 +104,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ data }) => {
 							/>
 							<Bar
 								dataKey="sent"
-								name="Sent"
+								name={t("dashboard.sent")}
 								fill="#6366f1"
 								radius={[6, 6, 0, 0]}
 								barSize={12}

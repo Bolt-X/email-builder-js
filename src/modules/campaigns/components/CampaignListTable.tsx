@@ -776,8 +776,7 @@ export default function CampaignListTable({
 																}
 																sx={{ fontWeight: 600 }}
 															>
-																{campaign.status.charAt(0).toUpperCase()}
-																{campaign.status.slice(1)}
+																{t(`campaigns.status.${campaign.status}`)}
 															</Typography>
 															{campaign.status === "running" && (
 																<Typography
@@ -853,7 +852,7 @@ export default function CampaignListTable({
 													}}
 												>
 													<Box>
-														Created{" "}
+														{t("campaigns.timestamps_lbl.created")}{" "}
 														{campaign.createdAt
 															? new Date(
 																	campaign.createdAt,
@@ -862,7 +861,7 @@ export default function CampaignListTable({
 													</Box>
 													{campaign.startedAt && (
 														<Box>
-															Started{" "}
+															{t("campaigns.timestamps_lbl.started")}{" "}
 															{new Date(
 																campaign.startedAt,
 															).toLocaleDateString()}
@@ -884,7 +883,7 @@ export default function CampaignListTable({
 														flexDirection="row"
 														gap={2}
 													>
-														Views{" "}
+														{t("campaigns.stats_lbl.views")}{" "}
 														<Typography
 															variant="body2"
 															color="neutral.black.80"
@@ -897,7 +896,7 @@ export default function CampaignListTable({
 														flexDirection="row"
 														gap={2}
 													>
-														Clicks{" "}
+														{t("campaigns.stats_lbl.clicks")}{" "}
 														<Typography
 															variant="body2"
 															color="neutral.black.80"
@@ -910,7 +909,7 @@ export default function CampaignListTable({
 														flexDirection="row"
 														gap={2}
 													>
-														Sent{" "}
+														{t("campaigns.stats_lbl.sent")}{" "}
 														<Typography
 															variant="body2"
 															color="neutral.black.80"
@@ -923,7 +922,7 @@ export default function CampaignListTable({
 														flexDirection="row"
 														gap={2}
 													>
-														Bounces{" "}
+														{t("campaigns.stats_lbl.bounces")}{" "}
 														<Typography
 															variant="body2"
 															color="neutral.black.80"
@@ -944,7 +943,7 @@ export default function CampaignListTable({
 												justifyContent="flex-end"
 												onClick={(e) => e.stopPropagation()}
 											>
-												<Tooltip title="Start">
+												<Tooltip title={t("campaigns.start")}>
 													<span>
 														<IconButton
 															size="small"
@@ -965,7 +964,7 @@ export default function CampaignListTable({
 														</IconButton>
 													</span>
 												</Tooltip>
-												<Tooltip title="Stop">
+												<Tooltip title={t("campaigns.stop")}>
 													<span>
 														<IconButton
 															size="small"
@@ -989,7 +988,7 @@ export default function CampaignListTable({
 														</IconButton>
 													</span>
 												</Tooltip>
-												<Tooltip title="Preview">
+												<Tooltip title={t("campaigns.preview")}>
 													<IconButton
 														size="small"
 														onClick={(e) =>
@@ -1028,7 +1027,7 @@ export default function CampaignListTable({
 														color: "neutral.black.60",
 													}}
 												/>{" "}
-												Duplicate
+												{t("campaigns.duplicate")}
 											</MenuItem>
 											<MenuItem
 												onClick={() => {
@@ -1051,7 +1050,7 @@ export default function CampaignListTable({
 															: "neutral.black.60",
 													}}
 												/>{" "}
-												Analytics
+												{t("campaigns.analytics")}
 											</MenuItem>
 											<MenuItem
 												onClick={() => {
@@ -1076,7 +1075,7 @@ export default function CampaignListTable({
 																: "error.600",
 													}}
 												/>{" "}
-												Delete
+												{t("common.delete")}
 											</MenuItem>
 										</Menu>
 									</TableRow>
@@ -1110,7 +1109,7 @@ export default function CampaignListTable({
 						variant="body2"
 						sx={{ marginTop: 0 }}
 					>
-						Rows per page:
+						{t("campaigns.rows_per_page")}
 					</Typography>
 					<Select
 						size="small"

@@ -8,6 +8,7 @@ import {
 	useDocument,
 	useSelectedBlockId,
 } from "../../../documents/editor/EditorContext";
+import { useTranslation } from "react-i18next";
 
 import AvatarSidebarPanel from "./input-panels/AvatarSidebarPanel";
 import ButtonSidebarPanel from "./input-panels/ButtonSidebarPanel";
@@ -30,16 +31,17 @@ function renderMessage(val: string) {
 }
 
 export default function ConfigurationPanel() {
+	const { t } = useTranslation();
 	const document = useDocument();
 	const selectedBlockId = useSelectedBlockId();
 
 	if (!selectedBlockId) {
-		return renderMessage("Click on a block to inspect.");
+		return renderMessage(t("templates.editor.click_block_to_inspect"));
 	}
 	const block = document[selectedBlockId];
 	if (!block) {
 		return renderMessage(
-			`Block with id ${selectedBlockId} was not found. Click on a block to reset.`
+			t("templates.editor.block_not_found", { id: selectedBlockId }),
 		);
 	}
 

@@ -10,6 +10,7 @@ import {
 import { MonitorOutlined, PhoneIphoneOutlined } from "@mui/icons-material";
 import { useCampaignTemplateEditor } from "../../stores/campaign.template.store";
 import { useCurrentCampaign } from "../../stores/campaign.metadata.store";
+import { useTranslation } from "react-i18next";
 
 type PreviewMode = "desktop" | "mobile";
 
@@ -20,6 +21,7 @@ interface CampaignPreviewPanelProps {
 export default function CampaignPreviewPanel({
 	campaignId,
 }: CampaignPreviewPanelProps) {
+	const { t } = useTranslation();
 	const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
 	const { html } = useCampaignTemplateEditor();
 	const campaign = useCurrentCampaign();
@@ -50,7 +52,7 @@ export default function CampaignPreviewPanel({
 						variant="body2"
 						color="text.secondary"
 					>
-						No template content yet. Start building your email.
+						{t("campaigns.no_results")}
 					</Typography>
 				</Box>
 			);
@@ -94,13 +96,17 @@ export default function CampaignPreviewPanel({
 							color="text.secondary"
 							display="block"
 						>
-							Subject: <strong>{campaign?.subject || "No Subject"}</strong>
+							{t("campaigns.form.subject_label")}:{" "}
+							<strong>
+								{campaign?.subject || t("campaigns.form.subject_placeholder")}
+							</strong>
 						</Typography>
 						<Typography
 							variant="caption"
 							color="text.secondary"
 						>
-							From: {campaign?.fromAddress || "No From Address"}
+							{t("campaigns.form.from_address_label")}:{" "}
+							{campaign?.fromAddress || t("common.no_results")}
 						</Typography>
 					</Box>
 					<Box
@@ -142,7 +148,7 @@ export default function CampaignPreviewPanel({
 					justifyContent="space-between"
 					alignItems="center"
 				>
-					<Typography variant="subtitle1">Preview</Typography>
+					<Typography variant="subtitle1">{t("campaigns.preview")}</Typography>
 					<ToggleButtonGroup
 						value={previewMode}
 						exclusive

@@ -13,6 +13,7 @@ import {
 	ListItemText,
 } from "@mui/material";
 import { People, FilterList } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 import {
 	useContactLists,
 	fetchContactLists,
@@ -31,6 +32,7 @@ export default function SubscriberSelector({
 	onChange,
 	required = false,
 }: SubscriberSelectorProps) {
+	const { t } = useTranslation();
 	const contactLists = useContactLists();
 	const segments = useSegments();
 
@@ -118,10 +120,10 @@ export default function SubscriberSelector({
 			>
 				{/* List Selector */}
 				<FormControl fullWidth>
-					<InputLabel>Add Contact List</InputLabel>
+					<InputLabel>{t("contacts.add_contact_list")}</InputLabel>
 					<Select
 						value=""
-						label="Add Contact List"
+						label={t("contacts.add_contact_list")}
 						onChange={(e) => handleAddList(e.target.value)}
 						displayEmpty
 						size="small"
@@ -134,7 +136,7 @@ export default function SubscriberSelector({
 								disabled
 								value=""
 							>
-								<ListItemText primary="No available lists" />
+								<ListItemText primary={t("contacts.no_available_lists")} />
 							</MenuItem>
 						) : (
 							availableLists.map((list) => (
@@ -152,7 +154,7 @@ export default function SubscriberSelector({
 												<Typography>{list.name}</Typography>
 												{list.is_default && (
 													<Chip
-														label="Default"
+														label={t("contacts.default")}
 														size="small"
 														color="info"
 														variant="outlined"
@@ -161,7 +163,7 @@ export default function SubscriberSelector({
 												)}
 											</Stack>
 										}
-										secondary={`${list.contactCount} subscribers`}
+										secondary={`${list.contactCount} ${t("contacts.subscribers")}`}
 									/>
 								</MenuItem>
 							))
@@ -171,10 +173,10 @@ export default function SubscriberSelector({
 
 				{/* Segment Selector */}
 				<FormControl fullWidth>
-					<InputLabel>Add Segment</InputLabel>
+					<InputLabel>{t("contacts.add_segment")}</InputLabel>
 					<Select
 						value=""
-						label="Add Segment"
+						label={t("contacts.add_segment")}
 						onChange={(e) => handleAddSegment(e.target.value)}
 						displayEmpty
 						size="small"
@@ -187,7 +189,7 @@ export default function SubscriberSelector({
 								disabled
 								value=""
 							>
-								<ListItemText primary="No available segments" />
+								<ListItemText primary={t("contacts.no_available_segments")} />
 							</MenuItem>
 						) : (
 							availableSegments.map((segment) => (
@@ -197,7 +199,7 @@ export default function SubscriberSelector({
 								>
 									<ListItemText
 										primary={segment.name}
-										secondary={`${segment.estimatedCount || 0} estimated subscribers`}
+										secondary={`${segment.estimatedCount || 0} ${t("contacts.estimated_subscribers")}`}
 									/>
 								</MenuItem>
 							))
@@ -244,7 +246,11 @@ export default function SubscriberSelector({
 											{subscriber.name}
 										</Typography>
 										<Chip
-											label={subscriber.type === "list" ? "List" : "Segment"}
+											label={
+												subscriber.type === "list"
+													? t("contacts.list_type")
+													: t("contacts.segment_type")
+											}
 											size="small"
 											variant="outlined"
 										/>
@@ -252,7 +258,7 @@ export default function SubscriberSelector({
 											contactLists.find((l) => l.slug === subscriber.id)
 												?.is_default && (
 												<Chip
-													label="Default"
+													label={t("contacts.default")}
 													size="small"
 													color="info"
 													variant="filled"
@@ -265,7 +271,7 @@ export default function SubscriberSelector({
 											variant="caption"
 											color="text.secondary"
 										>
-											{subscriber.count} subscribers
+											{subscriber.count} {t("contacts.subscribers")}
 										</Typography>
 									)}
 								</Stack>
@@ -273,7 +279,7 @@ export default function SubscriberSelector({
 									size="small"
 									onClick={() => handleRemove(subscriber.id, subscriber.type)}
 								>
-									Remove
+									{t("contacts.remove")}
 								</Button>
 							</Stack>
 						</Paper>
@@ -287,7 +293,8 @@ export default function SubscriberSelector({
 					variant="body2"
 					color="primary"
 				>
-					Total subscribers: {value.reduce((sum, r) => sum + (r.count || 0), 0)}
+					{t("contacts.total_subscribers")}:{" "}
+					{value.reduce((sum, r) => sum + (r.count || 0), 0)}
 				</Typography>
 			)}
 		</Stack>

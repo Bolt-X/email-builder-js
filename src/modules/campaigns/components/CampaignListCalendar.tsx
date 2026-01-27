@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
 	Box,
 	Typography,
@@ -10,20 +10,26 @@ import {
 	Button,
 } from "@mui/material";
 import { ChevronLeft, ChevronRight, Add as AddIcon } from "@mui/icons-material";
-import { Campaign } from "../types";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { Campaign } from "../types";
 
 interface CampaignListCalendarProps {
 	campaigns: any[];
 }
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
 export default function CampaignListCalendar({
 	campaigns,
 }: CampaignListCalendarProps) {
+	const { t, i18n } = useTranslation();
 	const navigate = useNavigate();
 	const [viewDate, setViewDate] = useState(new Date());
+
+	const DAYS = useMemo(
+		() =>
+			t("campaigns.calendar.days_short", { returnObjects: true }) as string[],
+		[t],
+	);
 
 	// Calendar calculations
 	const year = viewDate.getFullYear();
@@ -32,7 +38,7 @@ export default function CampaignListCalendar({
 	const firstDayOfMonth = new Date(year, month, 1).getDay();
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-	const monthYearString = viewDate.toLocaleString("default", {
+	const monthYearString = viewDate.toLocaleString(i18n.language, {
 		month: "long",
 		year: "numeric",
 	});
@@ -144,7 +150,7 @@ export default function CampaignListCalendar({
 									"&:hover": { bgcolor: "action.hover" },
 								}}
 							>
-								Today
+								{t("campaigns.calendar.today")}
 							</Button>
 							<IconButton
 								size="small"

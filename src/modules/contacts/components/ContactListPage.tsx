@@ -26,6 +26,7 @@ import {
 	People,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
 	useContactLists,
 	useContactsLoading,
@@ -34,6 +35,7 @@ import {
 import { ContactList } from "../types";
 
 export default function ContactListPage() {
+	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const contactLists = useContactLists();
 	const loading = useContactsLoading();
@@ -73,11 +75,7 @@ export default function ContactListPage() {
 
 	const handleDelete = async () => {
 		if (selectedId) {
-			if (
-				window.confirm(
-					"Are you sure you want to delete this contact list? This action cannot be undone.",
-				)
-			) {
+			if (window.confirm(t("contacts.confirm_delete_list"))) {
 				// TODO: Implement delete
 				console.log("Delete contact list:", selectedId);
 			}
@@ -106,13 +104,13 @@ export default function ContactListPage() {
 				alignItems="center"
 				mb={3}
 			>
-				<Typography variant="h4">Contact Lists</Typography>
+				<Typography variant="h4">{t("contacts.list_title")}</Typography>
 				<Button
 					variant="contained"
 					startIcon={<Add />}
 					onClick={() => navigate("/contacts/lists/new")}
 				>
-					Create Contact List
+					{t("contacts.create_list")}
 				</Button>
 			</Stack>
 
@@ -120,11 +118,11 @@ export default function ContactListPage() {
 				<Table>
 					<TableHead>
 						<TableRow>
-							<TableCell>Name</TableCell>
-							<TableCell>Description</TableCell>
-							<TableCell>Contacts</TableCell>
-							<TableCell>Created</TableCell>
-							<TableCell align="right">Actions</TableCell>
+							<TableCell>{t("common.name")}</TableCell>
+							<TableCell>{t("common.description")}</TableCell>
+							<TableCell>{t("contacts.contacts")}</TableCell>
+							<TableCell>{t("common.created_at")}</TableCell>
+							<TableCell align="right">{t("common.actions")}</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -153,12 +151,12 @@ export default function ContactListPage() {
 										variant="body2"
 										color="text.secondary"
 									>
-										{list.status || "No status"}
+										{list.status || t("contacts.no_status")}
 									</Typography>
 								</TableCell>
 								<TableCell>
 									<Chip
-										label={`${list.subscribers?.length || 0} contacts`}
+										label={`${list.subscribers?.length || 0} ${t("contacts.contacts_count")}`}
 										size="small"
 										color="primary"
 										variant="outlined"
@@ -198,14 +196,14 @@ export default function ContactListPage() {
 						color="text.secondary"
 						mb={2}
 					>
-						No contact lists found
+						{t("contacts.no_lists_found")}
 					</Typography>
 					<Button
 						variant="outlined"
 						startIcon={<Add />}
 						onClick={() => navigate("/contacts/lists/new")}
 					>
-						Create your first contact list
+						{t("contacts.create_first_list")}
 					</Button>
 				</Box>
 			)}
@@ -218,18 +216,18 @@ export default function ContactListPage() {
 			>
 				<MenuItem onClick={handleView}>
 					<Visibility sx={{ mr: 1 }} />
-					View Details
+					{t("contacts.view_details")}
 				</MenuItem>
 				<MenuItem onClick={handleEdit}>
 					<Edit sx={{ mr: 1 }} />
-					Edit
+					{t("common.edit")}
 				</MenuItem>
 				<MenuItem
 					onClick={handleDelete}
 					sx={{ color: "error.main" }}
 				>
 					<Delete sx={{ mr: 1 }} />
-					Delete
+					{t("common.delete")}
 				</MenuItem>
 			</Menu>
 		</Box>
