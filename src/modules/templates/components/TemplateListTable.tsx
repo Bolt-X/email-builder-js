@@ -27,7 +27,11 @@ import {
 import { Template } from "../types";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { deleteTemplateAction, duplicateTemplateAction } from "../store";
+import {
+	deleteTemplateAction,
+	duplicateTemplateAction,
+	useVisibleColumns,
+} from "../store";
 
 interface TemplateListTableProps {
 	templates: Template[];
@@ -38,6 +42,7 @@ export default function TemplateListTable({
 }: TemplateListTableProps) {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
+	const visibleColumns = useVisibleColumns();
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | number | null>(null);
 	const [selectedRows, setSelectedRows] = useState<(string | number)[]>([]);
@@ -121,9 +126,8 @@ export default function TemplateListTable({
 		<>
 			<Box
 				sx={{
-					display: "flex",
-					flexDirection: "column",
-					height: "calc(100vh - 200px)", // Adjust this value based on header/filter height
+					p: 0,
+					height: "calc(100vh - 144px)", // 64 (header) + 80 (filter)
 					position: "relative",
 				}}
 			>
@@ -131,12 +135,10 @@ export default function TemplateListTable({
 					component={Paper}
 					elevation={0}
 					sx={{
-						flex: 1,
+						height: "100%",
 						overflow: "auto",
-						border: "1px solid",
-						borderColor: "divider",
+						border: "none",
 						borderRadius: 0,
-						minHeight: 0, // Important for flex child with overflow
 					}}
 				>
 					<Table stickyHeader>
@@ -162,12 +164,16 @@ export default function TemplateListTable({
 								<TableCell sx={{ fontWeight: 600 }}>
 									{t("templates.columns.name")}
 								</TableCell>
-								<TableCell sx={{ fontWeight: 600 }}>
-									{t("templates.columns.context")}
-								</TableCell>
-								<TableCell sx={{ fontWeight: 600 }}>
-									{t("templates.columns.timestamps")}
-								</TableCell>
+								{visibleColumns.includes("context") && (
+									<TableCell sx={{ fontWeight: 600 }}>
+										{t("templates.columns.context")}
+									</TableCell>
+								)}
+								{visibleColumns.includes("timestamps") && (
+									<TableCell sx={{ fontWeight: 600 }}>
+										{t("templates.columns.timestamps")}
+									</TableCell>
+								)}
 								<TableCell
 									sx={{ fontWeight: 600, paddingX: 3 }}
 									align="right"
@@ -232,32 +238,40 @@ export default function TemplateListTable({
 												</Box>
 											</Box>
 										</TableCell>
-										<TableCell>
-											<Typography
-												variant="body2"
-												color="text.secondary"
-											>
-												{template.campaignId || "Global"}
-											</Typography>
-										</TableCell>
-										<TableCell>
-											<Box
-												sx={{ fontSize: "0.75rem", color: "text.secondary" }}
-											>
-												<Box>
-													{t("common.created_at")}{" "}
-													{template.createdAt
-														? new Date(template.createdAt).toLocaleDateString()
-														: "-"}
+										{visibleColumns.includes("context") && (
+											<TableCell>
+												<Typography
+													variant="body2"
+													color="text.secondary"
+												>
+													{template.campaignId || "Global"}
+												</Typography>
+											</TableCell>
+										)}
+										{visibleColumns.includes("timestamps") && (
+											<TableCell>
+												<Box
+													sx={{ fontSize: "0.75rem", color: "text.secondary" }}
+												>
+													<Box>
+														{t("common.created_at")}{" "}
+														{template.createdAt
+															? new Date(
+																	template.createdAt,
+																).toLocaleDateString()
+															: "-"}
+													</Box>
+													<Box>
+														{t("common.updated_at")}{" "}
+														{template.updatedAt
+															? new Date(
+																	template.updatedAt,
+																).toLocaleDateString()
+															: "-"}
+													</Box>
 												</Box>
-												<Box>
-													{t("common.updated_at")}{" "}
-													{template.updatedAt
-														? new Date(template.updatedAt).toLocaleDateString()
-														: "-"}
-												</Box>
-											</Box>
-										</TableCell>
+											</TableCell>
+										)}
 										<TableCell
 											align="right"
 											sx={{ paddingX: 3 }}

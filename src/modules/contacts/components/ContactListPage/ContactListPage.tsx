@@ -58,7 +58,8 @@ export default function ContactListPage() {
 				alignItems="center"
 				sx={{
 					px: 3,
-					py: "20px",
+					py: 2,
+					height: 64,
 					bgcolor: "background.paper",
 					borderBottom: 1,
 					borderColor: "divider",

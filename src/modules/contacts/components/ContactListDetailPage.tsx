@@ -26,8 +26,11 @@ import {
 	fetchContactLists,
 	fetchContacts,
 	useContacts,
+	useVisibleColumns,
+	setVisibleColumns,
 } from "../store";
 import { useSegments, fetchSegments } from "../stores/segment.store";
+import { useTranslation } from "react-i18next";
 import ContactTable from "./ContactTable";
 import ImportContactsModal from "./ImportContactsModal";
 import CreateContactModal from "./CreateContactModal";
@@ -35,8 +38,10 @@ import CreateContactModal from "./CreateContactModal";
 export default function ContactListDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
+	const { t } = useTranslation();
 	const contactLists = useContactLists();
 	const contacts = useContacts();
+	const visibleColumns = useVisibleColumns();
 
 	const segments = useSegments();
 
@@ -67,28 +72,20 @@ export default function ContactListDetailPage() {
 	const [importModalOpen, setImportModalOpen] = useState(false);
 	const [createModalOpen, setCreateModalOpen] = useState(false);
 
-	const [visibleColumns, setVisibleColumns] = useState<string[]>([
-		"email",
-		"name",
-		"status",
-		"date_created",
-		"action",
-	]);
-
 	const availableColumns = [
-		{ key: "email", label: "Mail address" },
-		{ key: "name", label: "Name" },
-		{ key: "status", label: "Status" },
-		{ key: "date_created", label: "Date created" },
-		{ key: "action", label: "Action" },
+		{ key: "email", label: t("contacts.email") },
+		{ key: "name", label: t("common.name") },
+		{ key: "status", label: t("common.status") },
+		{ key: "date_created", label: t("common.date_created") },
+		{ key: "action", label: t("common.actions") },
 	];
 
 	const handleColumnToggle = (columnKey: string) => {
-		setVisibleColumns((prev) =>
-			prev.includes(columnKey)
-				? prev.filter((key) => key !== columnKey)
-				: [...prev, columnKey],
-		);
+		if (visibleColumns.includes(columnKey)) {
+			setVisibleColumns(visibleColumns.filter((k) => k !== columnKey));
+		} else {
+			setVisibleColumns([...visibleColumns, columnKey]);
+		}
 	};
 
 	const contactList = contactLists.find(
@@ -181,7 +178,8 @@ export default function ContactListDetailPage() {
 				alignItems="center"
 				sx={{
 					px: 3,
-					py: "20px",
+					py: 2,
+					height: 64,
 					bgcolor: "background.paper",
 					borderBottom: 1,
 					borderColor: "divider",
@@ -503,20 +501,24 @@ export default function ContactListDetailPage() {
 
 				<Button
 					variant="outlined"
-					startIcon={<Settings />}
+					size="small"
+					startIcon={<Settings fontSize="small" />}
 					onClick={(e) => setColumnsAnchorEl(e.currentTarget)}
 					sx={{
-						borderRadius: 10,
+						borderRadius: 20,
 						textTransform: "none",
-						color: "text.secondary",
+						color: "text.primary",
 						borderColor: "divider",
 						px: 2,
 						height: 40,
-						fontWeight: 700,
-						"&:hover": { bgcolor: "#F9FAFB", borderColor: "#D1D5DB" },
+						fontWeight: 600,
+						"&:hover": {
+							borderColor: "primary.main",
+							backgroundColor: "action.hover",
+						},
 					}}
 				>
-					Columns
+					{t("common.columns") || "Columns"}
 				</Button>
 			</Stack>
 
@@ -605,7 +607,7 @@ export default function ContactListDetailPage() {
 						variant="subtitle2"
 						sx={{ mb: 1.5, fontWeight: 700 }}
 					>
-						Column Visibility
+						{t("contacts.column_visibility")}
 					</Typography>
 					<FormGroup>
 						{availableColumns.map((col) => (

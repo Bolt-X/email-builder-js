@@ -240,7 +240,7 @@ export default function CampaignEditPage() {
 			<Grid
 				container
 				spacing={0}
-				sx={{ height: "calc(100vh - 80px)", overflow: "hidden" }}
+				sx={{ height: "calc(100vh - 64px)", overflow: "hidden" }}
 			>
 				{/* Left Panel: Settings Form */}
 				<Grid

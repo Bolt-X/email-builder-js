@@ -21,6 +21,12 @@ import {
 	Typography,
 	Stack,
 	Popover,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogContentText,
+	DialogActions,
+	Button,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import {
@@ -158,11 +164,16 @@ export default function DashboardLayout() {
 	);
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { user, restoreSession, logout } = useAuthStore((s) => ({
+	const {
+		user,
+		restoreSession,
+		logout: performLogout,
+	} = useAuthStore((s) => ({
 		user: s.user,
 		restoreSession: s.restoreSession,
 		logout: s.logout,
 	}));
+	const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
 	const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
 		setProfileAnchorEl(event.currentTarget);
@@ -686,6 +697,36 @@ export default function DashboardLayout() {
 				<Outlet />
 			</Box>
 			<GlobalToast />
+			<Dialog
+				open={logoutDialogOpen}
+				onClose={() => setLogoutDialogOpen(false)}
+			>
+				<DialogTitle>{t("login.logout_confirm_title")}</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						{t("login.logout_confirm_desc")}
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions sx={{ p: 2, py: 2 }}>
+					<Button
+						onClick={() => setLogoutDialogOpen(false)}
+						color="inherit"
+					>
+						{t("common.cancel")}
+					</Button>
+					<Button
+						onClick={() => {
+							setLogoutDialogOpen(false);
+							performLogout();
+						}}
+						variant="contained"
+						color="error"
+						autoFocus
+					>
+						{t("login.logout")}
+					</Button>
+				</DialogActions>
+			</Dialog>
 			<Popover
 				open={profileOpen}
 				anchorEl={profileAnchorEl}
@@ -749,7 +790,7 @@ export default function DashboardLayout() {
 					<ListItemButton
 						onClick={() => {
 							handleProfileClose();
-							logout();
+							setLogoutDialogOpen(true);
 						}}
 						sx={{
 							borderRadius: 1.5,
@@ -761,7 +802,7 @@ export default function DashboardLayout() {
 							<Logout fontSize="small" />
 						</ListItemIcon>
 						<ListItemText
-							primary="Sign out"
+							primary={t("login.logout")}
 							primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
 						/>
 					</ListItemButton>

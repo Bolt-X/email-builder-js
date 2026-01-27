@@ -70,7 +70,8 @@ export default function TemplatesPage() {
 				alignItems="center"
 				sx={{
 					px: 3,
-					py: "20px",
+					py: 2,
+					height: 64,
 					bgcolor: "background.paper",
 					borderBottom: 1,
 					borderColor: "divider",
@@ -98,7 +99,7 @@ export default function TemplatesPage() {
 				</Button>
 			</Stack>
 
-			<Stack spacing={2}>
+			<Stack spacing={0}>
 				<TemplateFilters
 					searchQuery={searchQuery}
 					onSearchChange={setSearchQuery}

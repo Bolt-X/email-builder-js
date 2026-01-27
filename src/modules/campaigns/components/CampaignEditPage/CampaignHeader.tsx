@@ -78,7 +78,9 @@ export default function CampaignHeader({
 				borderColor: "divider",
 				px: 3,
 				py: 2,
+				height: 64,
 				backgroundColor: "background.paper",
+				boxSizing: "border-box",
 			}}
 		>
 			<Stack

@@ -147,15 +147,19 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 				borderColor: "divider",
 				py: 2,
 				bgcolor: "background.paper",
+				minHeight: 80,
+				display: "flex",
+				alignItems: "center",
 			}}
 			mt={[0, "0rem !important"]}
 		>
 			<Stack
 				direction="row"
 				justifyContent="space-between"
-				alignItems="flex-start"
+				alignItems="center"
 				spacing={2}
 				px={3}
+				sx={{ width: "100%" }}
 			>
 				{/* Left Side: Search & Filters */}
 				<Stack

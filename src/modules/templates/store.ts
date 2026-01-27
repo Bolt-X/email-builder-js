@@ -18,6 +18,14 @@ type TemplateState = {
 	activeTemplateId: string | number | null;
 	loading: boolean;
 	error: string | null;
+	visibleColumns: string[];
+};
+
+const DEFAULT_COLUMNS = ["context", "timestamps"];
+
+const getStoredColumns = (): string[] => {
+	const stored = localStorage.getItem("template_list_columns");
+	return stored ? JSON.parse(stored) : DEFAULT_COLUMNS;
 };
 
 const templateStore = create<TemplateState>(() => ({
@@ -26,6 +34,7 @@ const templateStore = create<TemplateState>(() => ({
 	activeTemplateId: null,
 	loading: false,
 	error: null,
+	visibleColumns: getStoredColumns(),
 }));
 
 // --- Selectors ---
@@ -35,6 +44,13 @@ export const useTemplatesError = () => templateStore((s) => s.error);
 export const useCurrentTemplate = () => templateStore((s) => s.currentTemplate);
 export const useActiveTemplateId = () =>
 	templateStore((s) => s.activeTemplateId);
+export const useVisibleColumns = () => templateStore((s) => s.visibleColumns);
+
+// --- Actions ---
+export const setVisibleColumns = (columns: string[]) => {
+	templateStore.setState({ visibleColumns: columns });
+	localStorage.setItem("template_list_columns", JSON.stringify(columns));
+};
 
 // --- Actions ---
 export const setCurrentTemplate = (template: Partial<Template> | null) => {
@@ -95,9 +111,7 @@ export const fetchTemplates = async () => {
 	}
 };
 
-export const fetchTemplatesByCampaign = async (
-	campaignId: string | number
-) => {
+export const fetchTemplatesByCampaign = async (campaignId: string | number) => {
 	try {
 		templateStore.setState({ loading: true, error: null });
 		const res = await getTemplatesByCampaign(campaignId);
@@ -116,7 +130,7 @@ export const fetchTemplatesByCampaign = async (
 
 export const createTemplateAction = async (
 	campaignId: string | number,
-	template: Omit<Template, "id" | "campaignId" | "createdAt" | "updatedAt">
+	template: Omit<Template, "id" | "campaignId" | "createdAt" | "updatedAt">,
 ): Promise<Template> => {
 	try {
 		templateStore.setState({ loading: true, error: null });
@@ -137,14 +151,14 @@ export const createTemplateAction = async (
 
 export const updateTemplateAction = async (
 	id: string | number,
-	template: Partial<Omit<Template, "id" | "createdAt" | "updatedAt">>
+	template: Partial<Omit<Template, "id" | "createdAt" | "updatedAt">>,
 ): Promise<Template> => {
 	try {
 		templateStore.setState({ loading: true, error: null });
 		const updatedTemplate = await updateTemplate(id, template);
 		templateStore.setState((state) => ({
 			templates: state.templates.map((t) =>
-				t.id === id ? updatedTemplate : t
+				t.id === id ? updatedTemplate : t,
 			),
 			currentTemplate:
 				state.currentTemplate?.id === id
@@ -163,7 +177,7 @@ export const updateTemplateAction = async (
 };
 
 export const deleteTemplateAction = async (
-	id: string | number
+	id: string | number,
 ): Promise<void> => {
 	try {
 		templateStore.setState({ loading: true, error: null });
@@ -187,7 +201,7 @@ export const deleteTemplateAction = async (
 
 export const duplicateTemplateAction = async (
 	id: string | number,
-	newName?: string
+	newName?: string,
 ): Promise<Template> => {
 	try {
 		templateStore.setState({ loading: true, error: null });

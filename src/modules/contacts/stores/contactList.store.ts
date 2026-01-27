@@ -29,11 +29,11 @@ type ContactListState = {
 
 const getStoredColumns = (): string[] => {
 	if (typeof window === "undefined")
-		return ["name", "status", "contactCount", "date_created", "actions"];
+		return ["description", "contactCount", "date_created"];
 	const stored = localStorage.getItem("contactListColumns");
 	return stored
 		? JSON.parse(stored)
-		: ["name", "status", "contactCount", "date_created", "actions"];
+		: ["description", "contactCount", "date_created"];
 };
 
 const contactListStore = create<ContactListState>(() => ({
@@ -204,7 +204,7 @@ export const updateContactListAction = async (
 export const deleteContactListAction = async (slug: string): Promise<void> => {
 	try {
 		contactListStore.setState({ loading: true, error: null });
-		await deleteContactList(slug);
+		await deleteContactList([slug]);
 		contactListStore.setState((state) => ({
 			contactLists: state.contactLists.filter((l) => l.slug !== slug),
 			currentList: state.currentList?.slug === slug ? null : state.currentList,

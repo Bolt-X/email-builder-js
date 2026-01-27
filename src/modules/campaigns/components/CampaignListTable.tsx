@@ -450,11 +450,9 @@ export default function CampaignListTable({
 
 	return (
 		<Box
-			mt={[0, "0rem !important"]}
 			sx={{
-				display: "flex",
-				flexDirection: "column",
-				height: "calc(100vh - 159px)",
+				p: 0,
+				height: "calc(100vh - 144px)", // 64 (header) + 80 (filter)
 				position: "relative",
 			}}
 		>
@@ -585,11 +583,10 @@ export default function CampaignListTable({
 				component={Paper}
 				elevation={0}
 				sx={{
-					flex: 1,
+					height: "100%",
 					overflow: "auto",
-					minHeight: 0,
-					display: "flex",
-					flexDirection: "column",
+					border: "none",
+					borderRadius: 0,
 					m: 0,
 					p: 0,
 

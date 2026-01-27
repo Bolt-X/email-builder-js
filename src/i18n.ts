@@ -27,6 +27,8 @@ const resources = {
 				duplicate: "Duplicate",
 				created_at: "Created:",
 				updated_at: "Updated:",
+				columns: "Columns",
+				date_created: "Date created",
 			},
 			sidebar: {
 				dashboard: "Dashboard",
@@ -50,7 +52,13 @@ const resources = {
 				title: "Login",
 				email: "Email",
 				password: "Password",
-				submit: "Submit",
+				submit: "Log in",
+				forgot_password: "Forgot password",
+				logout: "Log Out",
+				logout_confirm_title: "Log Out",
+				logout_confirm_desc: "Are you sure you want to log out?",
+				platform: "BoltX Platform",
+				app_label: "App",
 				error_invalid: "Incorrect login credentials!",
 			},
 			dashboard: {
@@ -206,6 +214,7 @@ const resources = {
 					context: "Context",
 					timestamps: "Timestamps",
 					actions: "Actions",
+					title: "Columns",
 				},
 				actions: {
 					edit_legacy: "Edit in Legacy Editor",
@@ -404,6 +413,12 @@ const resources = {
 				email: "Email",
 				password: "Mật khẩu",
 				submit: "Đăng nhập",
+				forgot_password: "Quên mật khẩu",
+				logout: "Đăng Xuất",
+				logout_confirm_title: "Đăng Xuất",
+				logout_confirm_desc: "Bạn có chắc chắn muốn đăng xuất không?",
+				platform: "BoltX Platform",
+				app_label: "Ứng dụng",
 				error_invalid: "Thông tin đăng nhập không chính xác!",
 			},
 			dashboard: {
@@ -445,6 +460,8 @@ const resources = {
 				items: "mục",
 				loading_data: "Đang tải dữ liệu...",
 				no_results: "Không tìm thấy kết quả.",
+				columns: "Cột",
+				date_created: "Ngày tạo",
 				status: {
 					draft: "Nháp",
 					scheduled: "Đã lên lịch",
@@ -452,8 +469,7 @@ const resources = {
 					finished: "Hoàn thành",
 					cancelled: "Đã hủy",
 				},
-				columns: {
-					title: "Cột hiển thị",
+				column_labels: {
 					name: "Tên",
 					status: "Trạng thái",
 					contacts: "Liên hệ",
@@ -462,7 +478,6 @@ const resources = {
 					stats: "Thống kê",
 					actions: "Thao tác",
 				},
-				date_created: "Ngày tạo",
 				date_range: {
 					from: "Từ",
 					to: "Đến",
@@ -559,6 +574,7 @@ const resources = {
 					context: "Ngữ cảnh",
 					timestamps: "Thời gian",
 					actions: "Thao tác",
+					title: "Cột",
 				},
 				actions: {
 					edit_legacy: "Chỉnh sửa trong Legacy Editor",

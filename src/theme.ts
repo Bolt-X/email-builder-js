@@ -191,7 +191,8 @@ export const getTheme = (mode: "light" | "dark") => {
 				},
 				styleOverrides: {
 					paper: {
-						minWidth: 480,
+						minWidth: 400,
+						borderRadius: 16,
 					},
 				},
 			},

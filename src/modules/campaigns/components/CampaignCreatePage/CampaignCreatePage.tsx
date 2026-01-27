@@ -28,9 +28,9 @@ import {
 	MonitorOutlined,
 	PhoneIphoneOutlined,
 } from "@mui/icons-material";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import React, { useState, useEffect } from "react";
 import {
 	useCreateCampaign,
 	useUpdateCampaign,
@@ -88,6 +88,22 @@ export default function CampaignCreatePage() {
 	});
 	const mutateCreate = useCreateCampaign();
 	const mutateUpdate = useUpdateCampaign();
+	const location = useLocation();
+
+	useEffect(() => {
+		const params = new URLSearchParams(location.search);
+		const dateParam = params.get("date");
+		if (dateParam) {
+			// Pre-fill date and set type to schedule
+			// Format for datetime-local is YYYY-MM-DDTHH:mm
+			// We append a default time 09:00
+			setValues((prev) => ({
+				...prev,
+				sendType: "schedule",
+				scheduledAt: `${dateParam}T09:00`,
+			}));
+		}
+	}, [location]);
 	const handleChange = (prop: keyof CampaignFormValues) => (event: any) => {
 		setValues({ ...values, [prop]: event.target.value });
 	};
@@ -191,11 +207,15 @@ export default function CampaignCreatePage() {
 				alignItems="center"
 				justifyContent="space-between"
 				spacing={2}
-				mb={3}
-				py={2}
-				borderBottom={1}
-				borderColor="divider"
-				sx={{ px: 3, backgroundColor: "background.paper" }}
+				sx={{
+					px: 3,
+					py: 2,
+					height: 64,
+					backgroundColor: "background.paper",
+					borderBottom: 1,
+					borderColor: "divider",
+					mb: 3,
+				}}
 			>
 				<Stack
 					direction="row"

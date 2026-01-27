@@ -7,6 +7,7 @@ import {
 } from "@directus/sdk";
 import { directusClientWithRest } from "../../services/directus";
 import { DirectusTemplate, Template } from "./types";
+export type { Template };
 
 /**
  * Transform Directus format to Template model

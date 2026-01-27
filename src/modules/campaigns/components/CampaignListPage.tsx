@@ -89,7 +89,8 @@ export default function CampaignListPage() {
 				alignItems="center"
 				sx={{
 					px: 3,
-					py: "20px",
+					py: 2,
+					height: 64,
 					bgcolor: "background.paper",
 					borderBottom: 1,
 					borderColor: "divider",
@@ -117,7 +118,7 @@ export default function CampaignListPage() {
 				</Button>
 			</Stack>
 
-			<Stack spacing={2}>
+			<Stack spacing={0}>
 				{/* Filters - Always show if NOT truly empty */}
 				{!isTrulyEmpty && <CampaignFilters />}
 

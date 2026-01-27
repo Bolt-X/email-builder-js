@@ -18,6 +18,8 @@ import {
 	Tooltip,
 	TablePagination,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { MoreVert, Edit, Delete, PostAdd, Campaign } from "@mui/icons-material";
 import { Contact, ContactStatus } from "../types";
 
@@ -69,6 +71,8 @@ export default function ContactTable({
 	onPageChange,
 	onRowsPerPageChange,
 }: ContactTableProps) {
+	const navigate = useNavigate();
+	const { t } = useTranslation();
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | number | null>(null);
 
@@ -76,6 +80,7 @@ export default function ContactTable({
 		event: React.MouseEvent<HTMLElement>,
 		id: string | number,
 	) => {
+		event.stopPropagation();
 		setAnchorEl(event.currentTarget);
 		setSelectedId(id);
 	};
@@ -96,9 +101,8 @@ export default function ContactTable({
 				sx={{
 					p: 4,
 					textAlign: "center",
-					border: "1px solid",
-					borderColor: "divider",
-					borderRadius: 2,
+					border: "none",
+					borderRadius: 0,
 				}}
 				elevation={0}
 			>
@@ -106,25 +110,32 @@ export default function ContactTable({
 					variant="h6"
 					color="text.secondary"
 				>
-					No contacts found
+					{t("contacts.no_contacts_found")}
 				</Typography>
 			</Paper>
 		);
 	}
+
+	const headerStyle = {
+		fontWeight: 700,
+		color: "text.secondary",
+		borderBottom: "1px solid",
+		borderColor: "divider",
+	};
 
 	return (
 		<>
 			<TableContainer
 				component={Paper}
 				elevation={0}
-				sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
+				sx={{ border: "none", borderRadius: 0 }}
 			>
 				<Table>
 					<TableHead sx={{ bgcolor: "action.hover" }}>
 						<TableRow>
 							<TableCell
 								padding="checkbox"
-								sx={{ borderBottom: "1px solid #E5E7EB", paddingX: 3 }}
+								sx={{ ...headerStyle, paddingX: 3 }}
 							>
 								<Checkbox
 									indeterminate={isIndeterminate}
@@ -136,64 +147,25 @@ export default function ContactTable({
 								/>
 							</TableCell>
 							{visibleColumns.includes("email") && (
-								<TableCell
-									sx={{
-										fontWeight: 700,
-										color: "text.secondary",
-										borderBottom: "1px solid",
-										borderColor: "divider",
-									}}
-								>
-									Mail address
-								</TableCell>
+								<TableCell sx={headerStyle}>{t("contacts.email")}</TableCell>
 							)}
 							{visibleColumns.includes("name") && (
-								<TableCell
-									sx={{
-										fontWeight: 700,
-										color: "text.secondary",
-										borderBottom: "1px solid",
-										borderColor: "divider",
-									}}
-								>
-									Name
-								</TableCell>
+								<TableCell sx={headerStyle}>{t("common.name")}</TableCell>
 							)}
 							{visibleColumns.includes("status") && (
-								<TableCell
-									sx={{
-										fontWeight: 700,
-										color: "text.secondary",
-										borderBottom: "1px solid",
-										borderColor: "divider",
-									}}
-								>
-									Status
-								</TableCell>
+								<TableCell sx={headerStyle}>{t("common.status")}</TableCell>
 							)}
 							{visibleColumns.includes("date_created") && (
-								<TableCell
-									sx={{
-										fontWeight: 700,
-										color: "text.secondary",
-										borderBottom: "1px solid",
-										borderColor: "divider",
-									}}
-								>
-									Date created
+								<TableCell sx={headerStyle}>
+									{t("common.date_created")}
 								</TableCell>
 							)}
 							{visibleColumns.includes("action") && (
 								<TableCell
-									sx={{
-										fontWeight: 700,
-										color: "text.secondary",
-										borderBottom: "1px solid #E5E7EB",
-										paddingX: 3,
-									}}
+									sx={{ ...headerStyle, paddingX: 3 }}
 									align="right"
 								>
-									Action
+									{t("common.actions")}
 								</TableCell>
 							)}
 						</TableRow>
@@ -286,7 +258,7 @@ export default function ContactTable({
 												spacing={0.5}
 												justifyContent="flex-end"
 											>
-												<Tooltip title="Edit">
+												<Tooltip title={t("common.edit")}>
 													<IconButton
 														size="small"
 														sx={{ color: "#666" }}
@@ -294,7 +266,7 @@ export default function ContactTable({
 														<Edit fontSize="small" />
 													</IconButton>
 												</Tooltip>
-												<Tooltip title="Add content">
+												<Tooltip title={t("contacts.add_content")}>
 													<IconButton
 														size="small"
 														sx={{ color: "#666" }}
@@ -339,14 +311,14 @@ export default function ContactTable({
 			>
 				<MenuItem onClick={handleMenuClose}>
 					<Edit sx={{ mr: 1, fontSize: 20 }} />
-					Edit contact
+					{t("contacts.edit_contact")}
 				</MenuItem>
 				<MenuItem
 					onClick={handleMenuClose}
 					sx={{ color: "error.main" }}
 				>
 					<Delete sx={{ mr: 1, fontSize: 20 }} />
-					Delete contact
+					{t("contacts.delete_contact")}
 				</MenuItem>
 			</Menu>
 		</>
