@@ -133,7 +133,7 @@ export default function CreateContactModal({
 			console.error("Failed to create contact:", error);
 		}
 		finally {
-			// form.reset();
+			form.reset();
 		}
 	}
 
@@ -278,6 +278,12 @@ export default function CreateContactModal({
 									/>
 								</Box>
 								<Box sx={{ flex: 1 }}>
+									<Typography
+										variant="body2"
+										sx={{ mb: 1, fontWeight: 600 }}
+									>
+										Email marketing status <span style={{ color: "red" }}>*</span>
+									</Typography>
 									<Select
 										fullWidth
 										size="small"
@@ -306,33 +312,43 @@ export default function CreateContactModal({
 									)}
 								</Box>
 							</Stack>
+							<Stack direction="row" spacing={3} alignItems="cetner">
+								<Box sx={{ flex: 1 }}>
+									<Typography
+										variant="body2"
+										sx={{ mb: 1, fontWeight: 600 }}
+									>
+										First Name <span style={{ color: "red" }}>*</span>
+									</Typography>
+									<TextField
+										fullWidth
+										size="small"
+										{...form.register("first_name")}
+										error={!!form.formState.errors.first_name}
+										helperText={form.formState.errors.first_name?.message}
+										sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+										placeholder="Enter full name"
+									/>
+								</Box>
+								<Box sx={{ flex: 1 }}>
+									<Typography
+										variant="body2"
+										sx={{ mb: 1, fontWeight: 600 }}
+									>
+										Last Name <span style={{ color: "red" }}>*</span>
+									</Typography>
+									<TextField
+										fullWidth
+										size="small"
+										{...form.register("last_name")}
+										error={!!form.formState.errors.last_name}
+										helperText={form.formState.errors.last_name?.message}
+										sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+										placeholder="Enter last name"
+									/>
+								</Box>
 
-							<Box>
-								<Typography
-									variant="body2"
-									sx={{ mb: 1, fontWeight: 600 }}
-								>
-									Full Name <span style={{ color: "red" }}>*</span>
-								</Typography>
-								<TextField
-									fullWidth
-									size="small"
-									{...form.register("first_name")}
-									error={!!form.formState.errors.first_name}
-									helperText={form.formState.errors.first_name?.message}
-									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-									placeholder="Enter full name"
-								/>
-								<TextField
-									fullWidth
-									size="small"
-									{...form.register("last_name")}
-									error={!!form.formState.errors.last_name}
-									helperText={form.formState.errors.last_name?.message}
-									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-									placeholder="Enter last name"
-								/>
-							</Box>
+							</Stack>
 
 							<Box>
 								<Typography
@@ -351,6 +367,7 @@ export default function CreateContactModal({
 									placeholder="Enter address"
 								/>
 							</Box>
+
 
 							<Stack
 								direction="row"
@@ -509,7 +526,7 @@ export default function CreateContactModal({
 									variant="body2"
 									sx={{ mb: 1, fontWeight: 600 }}
 								>
-									Phone Number
+									Phone Number <span style={{ color: "red" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth

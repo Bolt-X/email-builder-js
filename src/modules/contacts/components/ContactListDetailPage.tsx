@@ -1,46 +1,61 @@
-import React, { useEffect, useState } from "react";
+import {
+	Add,
+	ArrowBackIosNew,
+	FileUploadOutlined,
+	Search,
+	Settings
+} from "@mui/icons-material";
 import {
 	Box,
-	Typography,
-	Stack,
 	Button,
-	IconButton,
-	TextField,
-	InputAdornment,
-	Popover,
 	Checkbox,
 	FormControlLabel,
 	FormGroup,
+	IconButton,
+	InputAdornment,
+	Popover,
+	Stack,
+	TextField,
+	Typography,
 } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
 import {
-	ArrowBackIosNew,
-	Search,
-	Add,
-	FileUploadOutlined,
-	ViewColumnOutlined,
-	Settings,
-} from "@mui/icons-material";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-	useContactLists,
 	fetchContactLists,
 	fetchContacts,
+	setVisibleColumns,
+	useContactLists,
 	useContacts,
 	useVisibleColumns,
-	setVisibleColumns,
 } from "../store";
-import { useSegments, fetchSegments } from "../stores/segment.store";
-import { useTranslation } from "react-i18next";
+import { fetchSegments, useSegments } from "../stores/segment.store";
 import ContactTable from "./ContactTable";
-import ImportContactsModal from "./ImportContactsModal";
 import CreateContactModal from "./CreateContactModal";
+import ImportContactsModal from "./ImportContactsModal";
+import { useGetContactListById } from "../../../hooks/useContact";
 
 export default function ContactListDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const { t } = useTranslation();
-	const contactLists = useContactLists();
-	const contacts = useContacts();
+
+	const [filter, setFilter] = useState({
+		from: undefined,
+		to: undefined,
+		status: [],
+		tags: [],
+		segments: [],
+	})
+	// const contactLists = useContactLists();
+	const { data: contactListData } = useGetContactListById(id, {
+		from: "",
+		to: "",
+		status: "",
+		tags: [],
+		segments: [],
+	});
+
 	const visibleColumns = useVisibleColumns();
 
 	const segments = useSegments();
@@ -74,7 +89,8 @@ export default function ContactListDetailPage() {
 
 	const availableColumns = [
 		{ key: "email", label: t("contacts.email") },
-		{ key: "name", label: t("common.name") },
+		{ key: "first_name", label: t("common.first_name") },
+		{ key: "last_name", label: t("common.last_name") },
 		{ key: "status", label: t("common.status") },
 		{ key: "date_created", label: t("common.date_created") },
 		{ key: "action", label: t("common.actions") },
@@ -88,41 +104,42 @@ export default function ContactListDetailPage() {
 		}
 	};
 
-	const contactList = contactLists.find(
-		(list) => String(list.slug) === String(id),
-	);
+	// const contactList = contactListData.find(
+	// 	(list) => String(list.slug) === String(id),
+	// );
 
-	const contactsInList = contactList?.subscribers || [];
+	// const contactsInList = contactList?.subscribers || [];
 
-	const filteredContacts = contactsInList.filter((contact) => {
-		// 1. Search Query
-		const query = searchQuery.toLowerCase();
-		const matchesSearch =
-			!searchQuery ||
-			contact.email.toLowerCase().includes(query) ||
-			contact.name?.toLowerCase().includes(query);
+	// const filteredContacts = contactsInList.filter((contact) => {
+	// 	// 1. Search Query
+	// 	const query = searchQuery.toLowerCase();
+	// 	const matchesSearch =
+	// 		!searchQuery ||
+	// 		contact.email.toLowerCase().includes(query) ||
+	// 		contact.first_name?.toLowerCase().includes(query) ||
+	// 		contact.last_name?.toLowerCase().includes(query);
 
-		// 2. Status Filter
-		const matchesStatus =
-			selectedStatus.length === 0 || selectedStatus.includes(contact.status);
+	// 	// 2. Status Filter
+	// 	const matchesStatus =
+	// 		selectedStatus.length === 0 || selectedStatus.includes(contact.status);
 
-		// 3. Tag Filter (Subscribers in schema don't have tags field directly, skipping for now)
-		const matchesTags = true;
+	// 	// 3. Tag Filter (Subscribers in schema don't have tags field directly, skipping for now)
+	// 	const matchesTags = true;
 
-		// 4. Segment Filter
-		const matchesSegment = true;
+	// 	// 4. Segment Filter
+	// 	const matchesSegment = true;
 
-		return matchesSearch && matchesStatus && matchesTags && matchesSegment;
-	});
+	// 	return matchesSearch && matchesStatus && matchesTags && matchesSegment;
+	// });
 
 	// Get unique tags (skipping as model changed)
 	const allTags: string[] = [];
 	const statusOptions = ["enabled", "blocklisted", "duplicate"];
 
 	// Pagination logic
-	const totalContacts = filteredContacts.length;
+	const totalContacts = contactListData?.subscribers?.length;
 	const totalPages = Math.ceil(totalContacts / rowsPerPage);
-	const paginatedContacts = filteredContacts.slice(
+	const paginatedContacts = contactListData?.subscribers?.slice(
 		page * rowsPerPage,
 		(page + 1) * rowsPerPage,
 	);
@@ -131,11 +148,11 @@ export default function ContactListDetailPage() {
 		setPage(0);
 	}, [searchQuery]);
 
-	useEffect(() => {
-		fetchContactLists();
-		fetchContacts();
-		fetchSegments();
-	}, []);
+	// useEffect(() => {
+	// 	fetchContactLists();
+	// 	fetchContacts();
+	// 	fetchSegments();
+	// }, []);
 
 	const handleBack = () => {
 		navigate("/contacts");
@@ -148,14 +165,14 @@ export default function ContactListDetailPage() {
 	};
 
 	const handleSelectAll = () => {
-		setSelectedContacts(filteredContacts.map((c) => c.id));
+		setSelectedContacts(contactListData?.subscribers?.map((c) => c.id) || []);
 	};
 
 	const handleClearSelection = () => {
 		setSelectedContacts([]);
 	};
 
-	if (!contactList) {
+	if (!contactListData) {
 		return (
 			<Box sx={{ p: 4, textAlign: "center" }}>
 				<Typography variant="h6">Contact list not found</Typography>
@@ -201,7 +218,7 @@ export default function ContactListDetailPage() {
 						variant="h4"
 						sx={{ fontWeight: 600, color: "text.primary" }}
 					>
-						{contactList.name}
+						{contactListData?.name}
 					</Typography>
 				</Stack>
 
@@ -280,7 +297,7 @@ export default function ContactListDetailPage() {
 					/>
 
 					{/* Segment Filter */}
-					<Button
+					{/* <Button
 						variant="outlined"
 						size="small"
 						onClick={(e) => setSegmentAnchorEl(e.currentTarget)}
@@ -337,7 +354,7 @@ export default function ContactListDetailPage() {
 								))}
 							</FormGroup>
 						</Box>
-					</Popover>
+					</Popover> */}
 
 					{/* Status Filter */}
 					<Button

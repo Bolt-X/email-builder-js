@@ -126,6 +126,10 @@ export const clearSelection = () => {
 	contactListStore.setState({ selectedIds: [] });
 };
 
+export const setSelectedIds = (ids: (string | number)[]) => {
+	contactListStore.setState({ selectedIds: ids });
+};
+
 export const setVisibleColumns = (columns: string[]) => {
 	contactListStore.setState({ visibleColumns: columns });
 	if (typeof window !== "undefined") {

@@ -3,7 +3,8 @@ export type ContactStatus = "subscribed" | "non_subscribed" | "unsubscribed";
 export interface Contact {
 	id?: string;
 	email: string;
-	name?: string;
+	first_name?: string;
+	last_name?: string;
 	status: ContactStatus;
 	attribs?: Record<string, any>;
 	date_created?: string;

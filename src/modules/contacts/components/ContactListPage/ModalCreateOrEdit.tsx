@@ -17,6 +17,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { Close } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 const createContactListSchema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -32,6 +33,7 @@ const ModalCreateOrEditContactList = ({
   onClose: () => void;
   dataContactList?: any;
 }) => {
+  const navigate = useNavigate();
   const form = useForm({
     resolver: yupResolver(createContactListSchema),
   });
@@ -43,16 +45,21 @@ const ModalCreateOrEditContactList = ({
     data: yup.InferType<typeof createContactListSchema>,
   ) => {
     try {
-      if (dataContactList) { 
+      if (dataContactList) {
         await mutateUpdateContactList.mutateAsync({
-          slug: dataContactList.slug, payload: data});
+          slug: dataContactList.slug, payload: data
+        });
       } else {
-        await mutateCreateContactList.mutateAsync(data);
+        const res = await mutateCreateContactList.mutateAsync(data);
+        if (res) {
+          navigate(`/contacts/${res.slug}`);
+        }
       }
-      onClose();
-      form.reset();
     } catch (error) {
       console.error("Failed to create contact list:", error);
+    } finally {
+      onClose();
+      form.reset();
     }
   };
 
@@ -65,8 +72,16 @@ const ModalCreateOrEditContactList = ({
     }
   }, [dataContactList]);
 
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open]);
+
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={() => {
+      onClose();
+    }}>
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -76,7 +91,7 @@ const ModalCreateOrEditContactList = ({
         borderBottom={1}
         borderColor="divider"
       >
-        <Typography variant="h6">Create Contact List</Typography>
+        <Typography variant="h6">{dataContactList ? "Edit Contact List" : "Create Contact List"}</Typography>
         <IconButton onClick={onClose}>
           <Close />
         </IconButton>

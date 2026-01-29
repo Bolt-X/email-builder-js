@@ -64,7 +64,7 @@ export default function ContactTable({
 	onSelectOne,
 	onSelectAll,
 	onClearSelection,
-	visibleColumns = ["email", "name", "status", "date_created", "action"],
+	visibleColumns = ["email", "first_name", "last_name", "status", "date_created", "action"],
 	total = 0,
 	page = 0,
 	rowsPerPage = 25,
@@ -91,11 +91,11 @@ export default function ContactTable({
 	};
 
 	const isAllSelected =
-		contacts.length > 0 && selectedContacts.length === contacts.length;
+		contacts?.length > 0 && selectedContacts.length === contacts?.length;
 	const isIndeterminate =
-		selectedContacts.length > 0 && selectedContacts.length < contacts.length;
+		selectedContacts.length > 0 && selectedContacts.length < contacts?.length;
 
-	if (contacts.length === 0) {
+	if (contacts?.length === 0) {
 		return (
 			<Paper
 				sx={{
@@ -149,8 +149,11 @@ export default function ContactTable({
 							{visibleColumns.includes("email") && (
 								<TableCell sx={headerStyle}>{t("contacts.email")}</TableCell>
 							)}
-							{visibleColumns.includes("name") && (
-								<TableCell sx={headerStyle}>{t("common.name")}</TableCell>
+							{visibleColumns.includes("first_name") && (
+								<TableCell sx={headerStyle}>{t("common.first_name")}</TableCell>
+							)}
+							{visibleColumns.includes("last_name") && (
+								<TableCell sx={headerStyle}>{t("common.last_name")}</TableCell>
 							)}
 							{visibleColumns.includes("status") && (
 								<TableCell sx={headerStyle}>{t("common.status")}</TableCell>
@@ -171,7 +174,8 @@ export default function ContactTable({
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{contacts.map((contact) => {
+						{contacts?.map((contact) => {
+
 							const isSelected = selectedContacts.includes(contact.id);
 							const style =
 								statusStyles[contact.status] || statusStyles.subscribed;
@@ -206,10 +210,17 @@ export default function ContactTable({
 											</Typography>
 										</TableCell>
 									)}
-									{visibleColumns.includes("name") && (
+									{visibleColumns.includes("first_name") && (
 										<TableCell>
 											<Typography variant="body2">
-												{contact.name || "-"}
+												{contact?.first_name || "-"}
+											</Typography>
+										</TableCell>
+									)}
+									{visibleColumns.includes("last_name") && (
+										<TableCell>
+											<Typography variant="body2">
+												{contact?.last_name || "-"}
 											</Typography>
 										</TableCell>
 									)}
@@ -237,13 +248,13 @@ export default function ContactTable({
 											>
 												{contact.date_created
 													? new Date(contact.date_created).toLocaleDateString(
-															"en-GB",
-															{
-																day: "2-digit",
-																month: "2-digit",
-																year: "numeric",
-															},
-														)
+														"en-GB",
+														{
+															day: "2-digit",
+															month: "2-digit",
+															year: "numeric",
+														},
+													)
 													: "-"}
 											</Typography>
 										</TableCell>

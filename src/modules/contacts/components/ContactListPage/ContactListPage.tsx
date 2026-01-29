@@ -49,7 +49,10 @@ export default function ContactListPage() {
 			{/* Page Title & Actions */}
 			<ModalCreateContactList
 				open={openModal}
-				onClose={() => setOpenModal(false)}
+				onClose={() => {
+					setOpenModal(false);
+					setEditingList(null);
+				}}
 				dataContactList={editingList}
 			/>
 			<Stack
@@ -86,6 +89,7 @@ export default function ContactListPage() {
 				>
 					Create list
 				</Button>
+
 			</Stack>
 
 			{/* Content */}

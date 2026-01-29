@@ -20,6 +20,7 @@ import {
 } from "../stores/contactList.store";
 import { useSegments, fetchSegments } from "../stores/segment.store";
 import { SubscriberSelection, SubscriberType } from "../../campaigns/types";
+import { useGetAllContactLists } from "../../../hooks/useContactLists";
 
 interface SubscriberSelectorProps {
 	value: SubscriberSelection[];
@@ -33,13 +34,15 @@ export default function SubscriberSelector({
 	required = false,
 }: SubscriberSelectorProps) {
 	const { t } = useTranslation();
-	const contactLists = useContactLists();
+	// const contactLists = useContactLists();
 	const segments = useSegments();
 
-	useEffect(() => {
-		fetchContactLists();
-		fetchSegments();
-	}, []);
+	const { data: contactLists } = useGetAllContactLists();
+
+	// useEffect(() => {
+	// 	fetchContactLists();
+	// 	fetchSegments();
+	// }, []);
 
 	// Track if we have already auto-selected
 	const hasAutoSelected = React.useRef(false);
@@ -49,9 +52,9 @@ export default function SubscriberSelector({
 		if (
 			!hasAutoSelected.current &&
 			value.length === 0 &&
-			contactLists.length > 0
+			contactLists?.length > 0
 		) {
-			const defaultList = contactLists.find((l) => l.is_default);
+			const defaultList = contactLists?.find((l) => l.is_default);
 			if (defaultList) {
 				const newSubscriber: SubscriberSelection = {
 					id: defaultList.slug,
@@ -66,7 +69,7 @@ export default function SubscriberSelector({
 	}, [contactLists, value, onChange]);
 
 	const handleAddList = (slug: string) => {
-		const list = contactLists.find((l) => l.slug === slug);
+		const list = contactLists?.find((l) => l.slug === slug);
 		if (list && !value.find((r) => r.id === slug && r.type === "list")) {
 			const newSubscriber: SubscriberSelection = {
 				id: slug,
@@ -79,7 +82,7 @@ export default function SubscriberSelector({
 	};
 
 	const handleAddSegment = (segmentId: string | number) => {
-		const segment = segments.find((s) => s.id === segmentId);
+		const segment = segments?.find((s) => s.id === segmentId);
 		if (
 			segment &&
 			!value.find((r) => r.id === segmentId && r.type === "segment")
@@ -99,15 +102,15 @@ export default function SubscriberSelector({
 	};
 
 	// Filter out disabled lists
-	const enabledLists = contactLists.filter(
+	const enabledLists = contactLists?.filter(
 		(list) => list.status === "published",
 	);
 
-	const availableLists = enabledLists.filter(
+	const availableLists = enabledLists?.filter(
 		(list) => !value.find((r) => r.id === list.slug && r.type === "list"),
 	);
 
-	const availableSegments = segments.filter(
+	const availableSegments = segments?.filter(
 		(segment) =>
 			!value.find((r) => r.id === segment.id && r.type === "segment"),
 	);
@@ -131,7 +134,7 @@ export default function SubscriberSelector({
 							minHeight: 46,
 						}}
 					>
-						{availableLists.length === 0 ? (
+						{availableLists?.length === 0 ? (
 							<MenuItem
 								disabled
 								value=""
@@ -139,7 +142,7 @@ export default function SubscriberSelector({
 								<ListItemText primary={t("contacts.no_available_lists")} />
 							</MenuItem>
 						) : (
-							availableLists.map((list) => (
+							availableLists?.map((list) => (
 								<MenuItem
 									key={list.slug}
 									value={list.slug}
@@ -184,7 +187,7 @@ export default function SubscriberSelector({
 							minHeight: 46,
 						}}
 					>
-						{availableSegments.length === 0 ? (
+						{availableSegments?.length === 0 ? (
 							<MenuItem
 								disabled
 								value=""
@@ -192,7 +195,7 @@ export default function SubscriberSelector({
 								<ListItemText primary={t("contacts.no_available_segments")} />
 							</MenuItem>
 						) : (
-							availableSegments.map((segment) => (
+							availableSegments?.map((segment) => (
 								<MenuItem
 									key={segment.id}
 									value={segment.id}
@@ -255,7 +258,7 @@ export default function SubscriberSelector({
 											variant="outlined"
 										/>
 										{subscriber.type === "list" &&
-											contactLists.find((l) => l.slug === subscriber.id)
+											contactLists?.find((l) => l.slug === subscriber.id)
 												?.is_default && (
 												<Chip
 													label={t("contacts.default")}

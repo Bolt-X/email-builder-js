@@ -8,10 +8,10 @@ import {
 } from "../modules/contacts";
 import { s } from "vite/dist/node/types.d-aGj9QkWt";
 
-export const useGetAllContactLists = (from?: string, to?: string) => {
+export const useGetAllContactLists = (from?: string, to?: string, searchText?: string) => {
 	return useQuery({
-		queryKey: ["contact_lists", from, to],
-		queryFn: () => getAllContactLists(from, to),
+		queryKey: ["contact_lists", from, to, searchText],
+		queryFn: () => getAllContactLists(from, to, searchText),
 		select: (data) => data ?? [],
 	});
 };

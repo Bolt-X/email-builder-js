@@ -13,12 +13,11 @@ import { Contact, ContactList, Segment } from "./types";
  * Transform Directus Subscriber to Contact model
  */
 export function transformContactFromDirectus(item: any): Contact {
-  console.log("item", item);
-
   return {
     id: item?.id,
     email: item?.email,
-    name: item?.name,
+    first_name: item?.first_name,
+    last_name: item?.last_name,
     status: item?.status,
     attribs: item.attribs,
     date_created: item?.date_created,
@@ -32,7 +31,8 @@ export function transformContactFromDirectus(item: any): Contact {
 export function transformContactToDirectus(contact: Partial<Contact>): any {
   const directusContact: any = {};
   if (contact.email !== undefined) directusContact.email = contact.email;
-  if (contact.name !== undefined) directusContact.name = contact.name;
+  if (contact.first_name !== undefined) directusContact.first_name = contact.first_name;
+  if (contact.last_name !== undefined) directusContact.last_name = contact.last_name;
   if (contact.status !== undefined) directusContact.status = contact.status;
   if (contact.attribs !== undefined) directusContact.attribs = contact.attribs;
   return directusContact;
@@ -52,6 +52,7 @@ export function transformContactListFromDirectus(item: any): ContactList {
         ? transformContactFromDirectus(s.subscriber)
         : ({ id: s.subscriber } as Contact);
     }),
+    description: item.description,
     date_created: item.date_created,
     date_updated: item.date_updated,
     contactCount: item.subscribers?.length || 0,
@@ -92,6 +93,7 @@ export async function getAllContacts(): Promise<Contact[]> {
 export async function getAllContactLists(
   from?: string,
   to?: string,
+  searchText?: string
 ): Promise<ContactList[]> {
   try {
     const filter =
@@ -109,6 +111,7 @@ export async function getAllContactLists(
         fields: ["*", "subscribers.subscriber.*"],
         sort: ["-date_created"],
         ...(filter && { filter }),
+        ...(searchText && { search: searchText })
       }),
     );
 
@@ -286,7 +289,87 @@ export async function getContactListById(id: string | number) {
 
 export async function exportContactList(slug: string | number): Promise<void> {
   console.log("Exporting contact list:", slug);
-  // TODO: Implement actual export logic (CSV/Excel)
+
+}
+
+/**
+ * Download contact list as CSV file
+ */
+export async function downloadContactListAsCSV(slug: string): Promise<void> {
+  try {
+    // Lấy contact list với tất cả subscribers
+    const contactList = await getContactListBySlug(slug);
+    if (!contactList) {
+      throw new Error("Contact list not found");
+    }
+
+    // Lấy tất cả subscribers từ contact list
+    const subscribersData = await getContactListBySlugWithSubscribers(slug);
+
+    // Chuyển đổi subscribers thành format Contact
+    const subscribers: Contact[] = subscribersData
+      .map((item: any) => {
+        const subscriber = item.subscriber;
+        // Nếu subscriber là object thì transform, nếu là string/ID thì bỏ qua (cần fetch riêng)
+        if (subscriber && typeof subscriber === "object") {
+          return transformContactFromDirectus(subscriber);
+        }
+        return null;
+      })
+      .filter((contact): contact is Contact => contact !== null);
+
+    // Tạo CSV content
+    const headers = ["Email", "First Name", "Last Name", "Status", "Date Created", "Date Updated"];
+    const rows = subscribers.map((subscriber) => {
+      return [
+        subscriber.email || "",
+        subscriber.first_name || "",
+        subscriber.last_name || "",
+        subscriber.status || "",
+        subscriber.date_created ? new Date(subscriber.date_created).toLocaleString() : "",
+        subscriber.date_updated ? new Date(subscriber.date_updated).toLocaleString() : "",
+      ];
+    });
+
+    // Escape CSV values (xử lý dấu phẩy và dấu ngoặc kép)
+    const escapeCSV = (value: string | undefined | null): string => {
+      const strValue = value?.toString() || "";
+      if (strValue.includes(",") || strValue.includes('"') || strValue.includes("\n")) {
+        return `"${strValue.replace(/"/g, '""')}"`;
+      }
+      return strValue;
+    };
+
+    // Tạo CSV string
+    const csvContent = [
+      headers.map(escapeCSV).join(","),
+      ...rows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\n");
+
+    // Tạo BOM để hỗ trợ UTF-8 trong Excel
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+
+    // Tạo link download
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+
+    // Tên file: sanitize tên contact list
+    const fileName = `${slug}.csv`;
+    link.setAttribute("download", fileName);
+
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Cleanup
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error downloading contact list as CSV:", error);
+    throw error;
+  }
 }
 
 export const getContactListBySlugWithSubscribers = async (slug: string) => {
@@ -299,6 +382,7 @@ export const getContactListBySlugWithSubscribers = async (slug: string) => {
           },
         },
         fields: ["*", "subscriber.*"], // thường là subscriber chứ không phải subscribers
+        limit: -1, // -1 để lấy tất cả records, không giới hạn
       })
     );
 

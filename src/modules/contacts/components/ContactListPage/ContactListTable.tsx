@@ -57,6 +57,7 @@ import {
 	setVisibleColumns,
 } from "../../stores/contactList.store";
 import { ContactList } from "../../types";
+import { downloadContactListAsCSV } from "../../service";
 import { useTranslation } from "react-i18next";
 import ModalCustomDelete from "../base/ModalCustomDelete";
 import ModalDuplicate from "./ModalDuplicate";
@@ -102,6 +103,7 @@ export default function ContactListTable({
 	const [filtered, setFiltered] = useState({
 		from: undefined,
 		to: undefined,
+		searchText: undefined,
 	});
 
 	const [confirmDelete, setConfirmDelete] = useState(false);
@@ -110,6 +112,7 @@ export default function ContactListTable({
 		setFiltered({
 			from: startDate,
 			to: endDate,
+			searchText: searchQuery,
 		});
 		setDateAnchorEl(null);
 	};
@@ -118,6 +121,7 @@ export default function ContactListTable({
 		setFiltered({
 			from: undefined,
 			to: undefined,
+			searchText: undefined,
 		});
 		setStartDate(undefined);
 		setEndDate(undefined);
@@ -127,6 +131,7 @@ export default function ContactListTable({
 	const { data: contactLists, refetch } = useGetAllContactLists(
 		filtered.from,
 		filtered.to,
+		filtered.searchText,
 	);
 
 	const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
@@ -221,6 +226,21 @@ export default function ContactListTable({
 
 	const isBatchMode = selectedIds.length > 0;
 
+	const handleDownload = async () => {
+		if (selectedIds.length > 0) {
+			try {
+				// Download từng file CSV cho mỗi contact list được chọn
+				for (const slug of selectedIds) {
+					await downloadContactListAsCSV(slug as string);
+					// Thêm delay nhỏ giữa các lần download để tránh browser block
+					await new Promise((resolve) => setTimeout(resolve, 300));
+				}
+			} catch (error) {
+				console.error("Failed to download contact lists:", error);
+			}
+		}
+	};
+
 	return (
 		<>
 			<ModalDuplicate
@@ -304,6 +324,7 @@ export default function ContactListTable({
 								color="inherit"
 								startIcon={<GetApp />}
 								sx={{ textTransform: "none", fontWeight: 600 }}
+								onClick={handleDownload}
 							>
 								Download
 							</Button>
@@ -439,27 +460,27 @@ export default function ContactListTable({
 										value={endDate === undefined ? "" : endDate}
 										onChange={(e) => setEndDate(e.target.value)}
 									/>
-									<Stack
-										direction="row"
-										spacing={1}
-										justifyContent="flex-end"
-									>
-										<Button
-											size="small"
-											onClick={handleClearFilter}
-										>
-											Clear
-										</Button>
-										<Button
-											size="small"
-											variant="contained"
-											onClick={handleFiltered}
-										>
-											Apply
-										</Button>
-									</Stack>
 								</Stack>
 							</Popover>
+							<Stack
+								direction="row"
+								spacing={1}
+								justifyContent="flex-end"
+							>
+								<Button
+									size="small"
+									onClick={handleClearFilter}
+								>
+									Clear
+								</Button>
+								<Button
+									size="small"
+									variant="contained"
+									onClick={handleFiltered}
+								>
+									Apply
+								</Button>
+							</Stack>
 						</Stack>
 
 						<Stack
@@ -496,8 +517,9 @@ export default function ContactListTable({
 			<Box
 				sx={{
 					p: 0,
-					height: "calc(100vh - 144px)", // 64 (header) + 80 (filter)
+					height: "100%", // 64 (header) + 80 (filter)
 					position: "relative",
+					flex: 1
 				}}
 			>
 				<TableContainer
@@ -508,6 +530,7 @@ export default function ContactListTable({
 						overflow: "auto",
 						border: "none",
 						borderRadius: 0,
+						flex: 1,
 					}}
 				>
 					<Table stickyHeader>
@@ -684,13 +707,13 @@ export default function ContactListTable({
 												>
 													{list.date_created
 														? new Date(list.date_created).toLocaleDateString(
-																"en-GB",
-																{
-																	day: "2-digit",
-																	month: "2-digit",
-																	year: "numeric",
-																},
-															)
+															"en-GB",
+															{
+																day: "2-digit",
+																month: "2-digit",
+																year: "numeric",
+															},
+														)
 														: "25/10/2025"}
 												</Typography>
 											</TableCell>
