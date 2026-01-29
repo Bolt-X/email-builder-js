@@ -6,8 +6,9 @@ import {
   readItems,
   updateItem
 } from "@directus/sdk";
+import * as XLSX from "xlsx";
 import { directusClientWithRest } from "../../services/directus";
-import { Contact, ContactList, Segment } from "./types";
+import { Contact, ContactList, Segment, ContactStatus } from "./types";
 
 /**
  * Transform Directus Subscriber to Contact model
@@ -19,7 +20,7 @@ export function transformContactFromDirectus(item: any): Contact {
     first_name: item?.first_name,
     last_name: item?.last_name,
     status: item?.status,
-    attribs: item.attribs,
+    attribs: item?.attribs,
     date_created: item?.date_created,
     date_updated: item?.date_updated,
   };
@@ -201,6 +202,297 @@ const createContactListSubscriber = async (payload: any): Promise<any> => {
     return res as any;
   } catch (error) {
     console.error("Error creating contact list subscriber:", error);
+    throw error;
+  }
+}
+
+/**
+ * Tạo subscriber mới hoặc cập nhật subscriber đã tồn tại
+ */
+export async function createOrUpdateSubscriber(
+  contact: Partial<Contact>,
+  updateExisting: boolean = true
+): Promise<Contact> {
+  try {
+    // Kiểm tra subscriber đã tồn tại chưa (theo email)
+    if (contact.email) {
+      const existing = await directusClientWithRest.request(
+        readItems("subscribers", {
+          filter: {
+            email: {
+              _eq: contact.email,
+            },
+          },
+          limit: 1,
+        })
+      );
+
+      if (existing && (existing as any[]).length > 0) {
+        if (updateExisting) {
+          // Update subscriber đã tồn tại
+          const existingId = (existing as any[])[0].id;
+          const updateData = transformContactToDirectus(contact);
+          const updated = await directusClientWithRest.request(
+            updateItem("subscribers", existingId, updateData)
+          );
+          return transformContactFromDirectus(updated as any);
+        } else {
+          // Trả về subscriber đã tồn tại mà không update
+          return transformContactFromDirectus((existing as any[])[0]);
+        }
+      }
+    }
+
+    // Tạo subscriber mới
+    const newSubscriber = transformContactToDirectus(contact);
+    const created = await directusClientWithRest.request(
+      createItem("subscribers", newSubscriber)
+    );
+    await getAllContacts()
+    return transformContactFromDirectus(created as any);
+  } catch (error) {
+    console.error("Error creating or updating subscriber:", error);
+    throw error;
+  }
+}
+
+/**
+ * Parse CSV file - xử lý đúng các trường hợp có dấu phẩy trong giá trị
+ */
+function parseCSV(csvText: string): any[] {
+  const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+  if (lines.length === 0) return [];
+
+  // Hàm parse một dòng CSV
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          // Escaped quote
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          // Toggle quote state
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        // End of field
+        result.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+
+    // Add last field
+    result.push(current.trim());
+    return result;
+  };
+
+  // Parse header
+  const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, ""));
+
+  // Parse rows
+  const rows: any[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, ""));
+    const row: any = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index] || "";
+    });
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+/**
+ * Parse XLSX file sử dụng thư viện xlsx
+ */
+async function parseXLSX(file: File): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const data = e.target?.result;
+        if (!data) {
+          reject(new Error("Failed to read file"));
+          return;
+        }
+
+        // Đọc workbook từ file
+        const workbook = XLSX.read(data, { type: "binary" });
+
+        // Lấy sheet đầu tiên
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+
+        // Chuyển đổi sheet thành JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+        // Chuyển đổi về format giống CSV (array of objects với keys là header)
+        resolve(jsonData as any[]);
+      } catch (error) {
+        reject(new Error(`Failed to parse XLSX file: ${error instanceof Error ? error.message : "Unknown error"}`));
+      }
+    };
+
+    reader.onerror = () => {
+      reject(new Error("Failed to read file"));
+    };
+
+    // Đọc file dưới dạng binary string
+    reader.readAsBinaryString(file);
+  });
+}
+
+/**
+ * Import contacts từ file CSV hoặc XLSX
+ */
+export interface ImportContactsOptions {
+  file: File;
+  contactListSlug: string;
+  status?: ContactStatus;
+  updateExisting?: boolean; // true: update nếu đã tồn tại, false: chỉ thêm mới
+}
+
+export async function importContacts(options: ImportContactsOptions): Promise<{
+  success: number;
+  failed: number;
+  errors: Array<{ row: number; email: string; error: string }>;
+}> {
+  const { file, contactListSlug, status = "subscribed", updateExisting = true } = options;
+
+  let rows: any[] = [];
+  const errors: Array<{ row: number; email: string; error: string }> = [];
+  let successCount = 0;
+  let failedCount = 0;
+
+  try {
+    // Parse file
+    if (file.name.endsWith(".csv") || file.name.endsWith(".txt")) {
+      const text = await file.text();
+      rows = parseCSV(text);
+    } else if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+      rows = await parseXLSX(file);
+    } else {
+      throw new Error("Unsupported file format. Please use CSV or XLSX.");
+    }
+
+    if (rows.length === 0) {
+      throw new Error("File is empty or could not be parsed.");
+    }
+
+    // Map columns - tìm các cột email, first_name, last_name
+    const firstRow = rows[0];
+    const emailColumn = Object.keys(firstRow).find(
+      key => key.toLowerCase().includes("email")
+    );
+
+    if (!emailColumn) {
+      throw new Error("Email column not found in file.");
+    }
+
+    const firstNameColumn = Object.keys(firstRow).find(
+      key => key.toLowerCase().includes("first") && key.toLowerCase().includes("name")
+    );
+    const lastNameColumn = Object.keys(firstRow).find(
+      key => key.toLowerCase().includes("last") && key.toLowerCase().includes("name")
+    );
+
+    // Xử lý từng row
+    const subscriberIds: string[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const email = row[emailColumn]?.trim();
+
+      if (!email) {
+        failedCount++;
+        errors.push({
+          row: i + 2, // +2 vì có header và index bắt đầu từ 0
+          email: "",
+          error: "Email is required",
+        });
+        continue;
+      }
+
+      try {
+        // Tạo hoặc update subscriber
+        const contactData: Partial<Contact> = {
+          email,
+          first_name: firstNameColumn ? row[firstNameColumn]?.trim() : undefined,
+          last_name: lastNameColumn ? row[lastNameColumn]?.trim() : undefined,
+          status,
+        };
+
+        const subscriber = await createOrUpdateSubscriber(contactData, updateExisting);
+        subscriberIds.push(subscriber.id!);
+        successCount++;
+      } catch (error: any) {
+        failedCount++;
+        errors.push({
+          row: i + 2,
+          email,
+          error: error.message || "Failed to create subscriber",
+        });
+      }
+    }
+
+    // Tạo records trong contact_lists_subscribers (chỉ những subscriber chưa có trong list)
+    if (subscriberIds.length > 0) {
+      try {
+        // Kiểm tra các subscriber đã có trong list chưa
+        const existingRelations = await directusClientWithRest.request(
+          readItems("contact_lists_subscribers", {
+            filter: {
+              list: {
+                _eq: contactListSlug,
+              },
+              subscriber: {
+                _in: subscriberIds,
+              },
+            },
+            fields: ["subscriber"],
+          })
+        );
+
+        const existingSubscriberIds = (existingRelations as any[]).map(
+          (rel) => rel.subscriber
+        );
+        const newSubscriberIds = subscriberIds.filter(
+          (id) => !existingSubscriberIds.includes(id)
+        );
+
+        if (newSubscriberIds.length > 0) {
+          const payload = newSubscriberIds.map((subscriberId) => ({
+            list: contactListSlug,
+            subscriber: subscriberId,
+          }));
+
+          await createContactListSubscriber(payload);
+        }
+      } catch (error) {
+        console.error("Error creating contact list subscribers:", error);
+        // Không throw error ở đây vì subscribers đã được tạo
+      }
+    }
+
+    return {
+      success: successCount,
+      failed: failedCount,
+      errors,
+    };
+  } catch (error: any) {
+    console.error("Error importing contacts:", error);
     throw error;
   }
 }

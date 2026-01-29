@@ -1,18 +1,24 @@
 import {
 	Add,
 	ArrowBackIosNew,
+	ContentCopy,
+	Delete,
+	DriveFileMove,
 	FileUploadOutlined,
+	GetApp,
 	Search,
-	Settings
+	Settings,
 } from "@mui/icons-material";
 import {
 	Box,
 	Button,
 	Checkbox,
+	Divider,
 	FormControlLabel,
 	FormGroup,
 	IconButton,
 	InputAdornment,
+	Paper,
 	Popover,
 	Stack,
 	TextField,
@@ -21,19 +27,16 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { useGetContactListById } from "../../../hooks/useContact";
 import {
-	fetchContactLists,
-	fetchContacts,
 	setVisibleColumns,
-	useContactLists,
-	useContacts,
-	useVisibleColumns,
+	useVisibleColumns
 } from "../store";
-import { fetchSegments, useSegments } from "../stores/segment.store";
+import { useSegments } from "../stores/segment.store";
 import ContactTable from "./ContactTable";
 import CreateContactModal from "./CreateContactModal";
 import ImportContactsModal from "./ImportContactsModal";
-import { useGetContactListById } from "../../../hooks/useContact";
+import MoveOrAddListModal from "./MoveOrAddListModal";
 
 export default function ContactListDetailPage() {
 	const { id } = useParams<{ id: string }>();
@@ -86,6 +89,8 @@ export default function ContactListDetailPage() {
 
 	const [importModalOpen, setImportModalOpen] = useState(false);
 	const [createModalOpen, setCreateModalOpen] = useState(false);
+	const [moveModalOpen, setMoveModalOpen] = useState(false);
+	const [moveModalType, setMoveModalType] = useState<"move" | "add">("move");
 
 	const availableColumns = [
 		{ key: "email", label: t("contacts.email") },
@@ -170,6 +175,70 @@ export default function ContactListDetailPage() {
 
 	const handleClearSelection = () => {
 		setSelectedContacts([]);
+	};
+
+	const handleMoveSuccess = () => {
+		// Refresh data sau khi move thành công
+		setSelectedContacts([]);
+	};
+
+	const handleDownloadSelected = async () => {
+		if (selectedContacts.length === 0) return;
+
+		try {
+			// Lấy thông tin contacts được chọn
+			const selectedContactData = contactListData?.subscribers?.filter((c) =>
+				selectedContacts.includes(c.id!)
+			) || [];
+
+			// Tạo CSV content
+			const headers = ["Email", "First Name", "Last Name", "Status", "Date Created", "Date Updated"];
+			const rows = selectedContactData.map((contact) => {
+				return [
+					contact.email || "",
+					contact.first_name || "",
+					contact.last_name || "",
+					contact.status || "",
+					contact.date_created ? new Date(contact.date_created).toLocaleString() : "",
+					contact.date_updated ? new Date(contact.date_updated).toLocaleString() : "",
+				];
+			});
+
+			// Escape CSV values
+			const escapeCSV = (value: string | undefined | null): string => {
+				const strValue = value?.toString() || "";
+				if (strValue.includes(",") || strValue.includes('"') || strValue.includes("\n")) {
+					return `"${strValue.replace(/"/g, '""')}"`;
+				}
+				return strValue;
+			};
+
+			// Tạo CSV string
+			const csvContent = [
+				headers.map(escapeCSV).join(","),
+				...rows.map((row) => row.map(escapeCSV).join(",")),
+			].join("\n");
+
+			// Tạo BOM để hỗ trợ UTF-8 trong Excel
+			const BOM = "\uFEFF";
+			const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+
+			// Tạo link download
+			const link = document.createElement("a");
+			const url = URL.createObjectURL(blob);
+			link.setAttribute("href", url);
+			link.setAttribute("download", `contacts_${Date.now()}.csv`);
+
+			link.style.visibility = "hidden";
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+
+			// Cleanup
+			URL.revokeObjectURL(url);
+		} catch (error) {
+			console.error("Failed to download contacts:", error);
+		}
 	};
 
 	if (!contactListData) {
@@ -539,6 +608,120 @@ export default function ContactListDetailPage() {
 				</Button>
 			</Stack>
 
+			{/* Batch Actions Menu */}
+			{selectedContacts.length > 0 && (
+				<Paper
+					elevation={0}
+					sx={{
+						bgcolor: "primary.main",
+						borderBottom: 1,
+						borderColor: "divider",
+						borderRadius: 0,
+						overflow: "hidden",
+						minHeight: 80,
+						display: "flex",
+						alignItems: "center",
+						transition: "all 0.3s ease",
+					}}
+				>
+					<Stack
+						direction="row"
+						alignItems="center"
+						sx={{ width: "100%", px: 3, color: "white" }}
+						justifyContent="space-between"
+					>
+						<Stack
+							direction="row"
+							spacing={3}
+							alignItems="center"
+						>
+							<Typography
+								variant="body2"
+								sx={{ fontWeight: 600 }}
+							>
+								{selectedContacts.length} item{selectedContacts.length > 1 ? "s" : ""}{" "}
+								selected
+							</Typography>
+							<Typography
+								variant="body2"
+								sx={{
+									cursor: "pointer",
+									textDecoration: "underline",
+									fontWeight: 600,
+								}}
+								onClick={handleSelectAll}
+							>
+								Select all
+							</Typography>
+						</Stack>
+
+						<Stack
+							direction="row"
+							spacing={2}
+							alignItems="center"
+						>
+							<Button
+								variant="text"
+								color="inherit"
+								startIcon={<DriveFileMove />}
+								sx={{ textTransform: "none", fontWeight: 600 }}
+								onClick={() => {
+									setMoveModalType("move");
+									setMoveModalOpen(true);
+								}}
+							>
+								Move to list
+							</Button>
+							<Button
+								variant="text"
+								color="inherit"
+								startIcon={<ContentCopy />}
+								sx={{ textTransform: "none", fontWeight: 600 }}
+								onClick={() => {
+									setMoveModalType("add");
+									setMoveModalOpen(true);
+								}}
+							>
+								Add to list
+							</Button>
+							<Button
+								variant="text"
+								color="inherit"
+								startIcon={<GetApp />}
+								sx={{ textTransform: "none", fontWeight: 600 }}
+								onClick={handleDownloadSelected}
+							>
+								Download
+							</Button>
+							<Button
+								variant="text"
+								color="inherit"
+								startIcon={<Delete />}
+								sx={{ textTransform: "none", fontWeight: 600 }}
+								onClick={() => {
+									// TODO: Implement delete
+									console.log("Delete:", selectedContacts);
+								}}
+							>
+								Delete
+							</Button>
+							<Divider
+								orientation="vertical"
+								flexItem
+								sx={{ borderColor: "rgba(255,255,255,0.3)", my: 2, mx: 1 }}
+							/>
+							<Typography
+								variant="body2"
+								sx={{ cursor: "pointer", fontWeight: 600 }}
+								onClick={handleClearSelection}
+							>
+								Cancel
+							</Typography>
+						</Stack>
+					</Stack>
+				</Paper>
+			)}
+
 			{/* Table area */}
 			<ContactTable
 				contacts={paginatedContacts}
@@ -647,11 +830,21 @@ export default function ContactListDetailPage() {
 			<ImportContactsModal
 				open={importModalOpen}
 				onClose={() => setImportModalOpen(false)}
+				contactListSlug={id}
 			/>
 
 			<CreateContactModal
 				open={createModalOpen}
 				onClose={() => setCreateModalOpen(false)}
+			/>
+
+			<MoveOrAddListModal
+				open={moveModalOpen}
+				onClose={() => setMoveModalOpen(false)}
+				type={moveModalType}
+				contactIds={selectedContacts}
+				oldListId={id}
+				onSuccess={handleMoveSuccess}
 			/>
 		</Box>
 	);

@@ -1,4 +1,4 @@
-import { createItem, createItems, readItem, readItems } from "@directus/sdk";
+import { createItem, createItems, deleteItems, readItem, readItems } from "@directus/sdk";
 import { directusClientWithRest } from "./directus";
 import { transformContactFromDirectus, transformContactListFromDirectus } from "../modules/contacts";
 
@@ -53,7 +53,7 @@ export const getWardsByProvinceId = async (provinceId: string | number) => {
     }
 };
 
-export const getContactListById = async (slug: string, filter: any) => {
+export const getContactListById = async (slug: string, filter?: any) => {
     try {
         const deepFilter: any = {};
 
@@ -97,3 +97,80 @@ export const getContactListById = async (slug: string, filter: any) => {
         throw error;
     }
 };
+
+export const moveContactToList = async (
+    contactId: string,
+    newListId: string,
+    oldListId: string
+) => {
+    try {
+        // 1. Tìm record trong junction table để xóa (contact đang ở list cũ)
+        const existingRelations = await directusClientWithRest.request(
+            readItems("contact_lists_subscribers", {
+                filter: {
+                    list: {
+                        _eq: oldListId,
+                    },
+                    subscriber: {
+                        _eq: contactId,
+                    },
+                },
+                fields: ["id"],
+            })
+        );
+
+        // 2. Xóa record cũ nếu tìm thấy
+        if (existingRelations && (existingRelations as any[]).length > 0) {
+            const relationIds = (existingRelations as any[]).map((rel) => rel.id);
+            await directusClientWithRest.request(
+                deleteItems("contact_lists_subscribers", relationIds)
+            );
+        }
+
+        // 3. Kiểm tra xem contact đã có trong list mới chưa (tránh duplicate)
+        const existingInNewList = await directusClientWithRest.request(
+            readItems("contact_lists_subscribers", {
+                filter: {
+                    list: {
+                        _eq: newListId,
+                    },
+                    subscriber: {
+                        _eq: contactId,
+                    },
+                },
+                fields: ["id"],
+            })
+        );
+
+        // 4. Chỉ thêm vào list mới nếu chưa có
+        if (!existingInNewList || (existingInNewList as any[]).length === 0) {
+            const res = await directusClientWithRest.request(
+                createItem("contact_lists_subscribers", {
+                    list: newListId,
+                    subscriber: contactId,
+                })
+            );
+            return res;
+        }
+        await getContactListById(oldListId)
+        // Nếu đã có trong list mới rồi thì chỉ cần xóa khỏi list cũ (đã làm ở bước 2)
+        return { message: "Contact already in new list, removed from old list" };
+    } catch (error) {
+        console.error("Error moving contact to list:", error);
+        throw error;
+    }
+}
+
+export const addContactToList = async (contactIds: string[], listId: string) => {
+    try {
+        const res = await directusClientWithRest.request(createItems("contact_lists_subscribers", contactIds.map((contactId) => ({
+            list: listId,
+            subscriber: contactId,
+        })))
+        );
+        return res;
+    } catch (error) {
+        console.error("Error adding contacts to list:", error);
+        throw error;
+    }
+}
