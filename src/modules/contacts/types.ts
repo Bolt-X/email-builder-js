@@ -6,7 +6,6 @@ export interface Contact {
 	first_name?: string;
 	last_name?: string;
 	status: ContactStatus;
-	attribs?: Record<string, any>;
 	date_created?: string;
 	date_updated?: string;
 }
@@ -32,7 +31,6 @@ export interface DirectusSubscriber {
 	email: string;
 	name?: string;
 	status: ContactStatus;
-	attribs?: any;
 	date_created?: string;
 	date_updated?: string;
 }

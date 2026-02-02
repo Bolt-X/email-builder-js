@@ -20,7 +20,6 @@ export function transformContactFromDirectus(item: any): Contact {
     first_name: item?.first_name,
     last_name: item?.last_name,
     status: item?.status,
-    attribs: item?.attribs,
     date_created: item?.date_created,
     date_updated: item?.date_updated,
   };
@@ -35,7 +34,6 @@ export function transformContactToDirectus(contact: Partial<Contact>): any {
   if (contact.first_name !== undefined) directusContact.first_name = contact.first_name;
   if (contact.last_name !== undefined) directusContact.last_name = contact.last_name;
   if (contact.status !== undefined) directusContact.status = contact.status;
-  if (contact.attribs !== undefined) directusContact.attribs = contact.attribs;
   return directusContact;
 }
 

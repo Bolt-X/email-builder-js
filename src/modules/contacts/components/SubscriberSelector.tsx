@@ -39,34 +39,41 @@ export default function SubscriberSelector({
 
 	const { data: contactLists } = useGetAllContactLists();
 
-	// useEffect(() => {
-	// 	fetchContactLists();
-	// 	fetchSegments();
-	// }, []);
-
-	// Track if we have already auto-selected
-	const hasAutoSelected = React.useRef(false);
-
-	// Auto-select default list
 	useEffect(() => {
-		if (
-			!hasAutoSelected.current &&
-			value.length === 0 &&
-			contactLists?.length > 0
-		) {
-			const defaultList = contactLists?.find((l) => l.is_default);
-			if (defaultList) {
-				const newSubscriber: SubscriberSelection = {
-					id: defaultList.slug,
-					type: "list",
-					name: defaultList.name,
-					count: defaultList.contactCount,
-				};
-				onChange([newSubscriber]);
-				hasAutoSelected.current = true;
+		fetchSegments();
+	}, []);
+
+	// Sync subscriber counts with latest data
+	useEffect(() => {
+		if (value.length === 0) return;
+
+		let hasChanges = false;
+		const newValue = value.map((sub) => {
+			let currentCount = sub.count;
+			if (sub.type === "list") {
+				const list = contactLists?.find((l) => l.slug === sub.id);
+				if (list && list.contactCount !== undefined) {
+					currentCount = list.contactCount;
+				}
+			} else if (sub.type === "segment") {
+				// eslint-disable-next-line
+				const segment = segments?.find((s) => s.id == sub.id);
+				if (segment && segment.estimatedCount !== undefined) {
+					currentCount = segment.estimatedCount;
+				}
 			}
+
+			if (currentCount !== sub.count) {
+				hasChanges = true;
+				return { ...sub, count: currentCount };
+			}
+			return sub;
+		});
+
+		if (hasChanges) {
+			onChange(newValue);
 		}
-	}, [contactLists, value, onChange]);
+	}, [contactLists, segments, value, onChange]);
 
 	const handleAddList = (slug: string) => {
 		const list = contactLists?.find((l) => l.slug === slug);
