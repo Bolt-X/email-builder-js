@@ -4,7 +4,6 @@ import { getAllContacts, getAllContactLists } from "./service";
 
 type ContactState = {
 	contacts: Contact[];
-	contactLists: ContactList[];
 	loading: boolean;
 	error: string | null;
 	visibleColumns: string[];
@@ -20,14 +19,12 @@ const getStoredColumns = (): string[] => {
 
 const contactStore = create<ContactState>(() => ({
 	contacts: [],
-	contactLists: [],
 	loading: false,
 	error: null,
 	visibleColumns: getStoredColumns(),
 }));
 
 export const useContacts = () => contactStore((s) => s.contacts);
-export const useContactLists = () => contactStore((s) => s.contactLists);
 export const useContactsLoading = () => contactStore((s) => s.loading);
 export const useContactsError = () => contactStore((s) => s.error);
 export const useVisibleColumns = () => contactStore((s) => s.visibleColumns);
@@ -55,18 +52,19 @@ export const fetchContacts = async () => {
 	}
 };
 
-export const fetchContactLists = async () => {
-	try {
-		contactStore.setState({ loading: true, error: null });
-		const res = await getAllContactLists();
-		contactStore.setState({
-			contactLists: res ?? [],
-			loading: false,
-		});
-	} catch (err: any) {
-		contactStore.setState({
-			error: err.message,
-			loading: false,
-		});
-	}
-};
+// Re-export specific selectors/actions from contactList.store
+export {
+	useContactLists,
+	useContactListsLoading,
+	useContactListsError,
+	useSelectedContactLists,
+	useFilteredContactLists,
+	toggleSelectContactList,
+	selectAllContactLists,
+	clearSelection,
+	fetchContactLists,
+	createContactListAction,
+	updateContactListAction,
+	deleteContactListAction,
+	exportContactListAction,
+} from "./stores/contactList.store";

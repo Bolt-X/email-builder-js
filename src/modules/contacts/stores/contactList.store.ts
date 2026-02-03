@@ -8,6 +8,8 @@ import {
 	deleteContactList,
 	exportContactList,
 } from "../service";
+import { setMessage } from "../../../contexts";
+import i18n from "../../../i18n"; // Assuming i18n instance is available there or similar path
 
 type ContactListState = {
 	contactLists: ContactList[];
@@ -170,12 +172,14 @@ export const createContactListAction = async (
 			contactLists: [newList, ...state.contactLists],
 			loading: false,
 		}));
+		setMessage(i18n.t("contacts.create_params_success", { name: list.name }));
 		return newList;
 	} catch (err: any) {
 		contactListStore.setState({
 			error: err.message,
 			loading: false,
 		});
+		setMessage(i18n.t("contacts.create_error") + ": " + err.message);
 		throw err;
 	}
 };
@@ -195,12 +199,14 @@ export const updateContactListAction = async (
 				state.currentList?.slug === slug ? updatedList : state.currentList,
 			loading: false,
 		}));
+		setMessage(i18n.t("contacts.update_success"));
 		return updatedList;
 	} catch (err: any) {
 		contactListStore.setState({
 			error: err.message,
 			loading: false,
 		});
+		setMessage(i18n.t("contacts.update_error") + ": " + err.message);
 		throw err;
 	}
 };
@@ -217,11 +223,13 @@ export const deleteContactListAction = async (slug: string): Promise<void> => {
 			),
 			loading: false,
 		}));
+		setMessage(i18n.t("contacts.delete_success"));
 	} catch (err: any) {
 		contactListStore.setState({
 			error: err.message,
 			loading: false,
 		});
+		setMessage(i18n.t("contacts.delete_error") + ": " + err.message);
 		throw err;
 	}
 };
@@ -242,11 +250,13 @@ export const exportContactListAction = async (slug: string): Promise<void> => {
 		contactListStore.setState({ loading: true, error: null });
 		await exportContactList(slug);
 		contactListStore.setState({ loading: false });
+		setMessage(i18n.t("contacts.export_success"));
 	} catch (err: any) {
 		contactListStore.setState({
 			error: err.message,
 			loading: false,
 		});
+		setMessage(i18n.t("contacts.export_error") + ": " + err.message);
 		throw err;
 	}
 };

@@ -296,6 +296,65 @@ const ModalDeleteCampaign = ({
 	);
 };
 
+const ModalConfirmStart = ({
+	open,
+	onClose,
+	onConfirm,
+	campaignName,
+}: {
+	open: boolean;
+	onClose: () => void;
+	onConfirm: () => void;
+	campaignName: string;
+}) => {
+	const { t } = useTranslation();
+	return (
+		<Dialog
+			open={open}
+			onClose={onClose}
+			fullWidth
+			maxWidth="sm"
+		>
+			<Box p={3}>
+				<Typography
+					variant="h6"
+					mb={2}
+				>
+					{t("campaigns.start_title", "Start Campaign")}
+				</Typography>
+				<Typography
+					variant="body1"
+					mb={3}
+				>
+					{t("campaigns.start_confirm", {
+						defaultValue: `Are you sure you want to start campaign "${campaignName}"?`,
+						name: campaignName,
+					})}
+				</Typography>
+				<Stack
+					direction="row"
+					spacing={2}
+					justifyContent="flex-end"
+				>
+					<Button
+						onClick={onClose}
+						variant="outlined"
+					>
+						{t("common.cancel")}
+					</Button>
+					<Button
+						onClick={onConfirm}
+						variant="contained"
+						color="primary"
+					>
+						{t("common.start", "Start Immediately")}
+					</Button>
+				</Stack>
+			</Box>
+		</Dialog>
+	);
+};
+
 export default function CampaignListTable({
 	campaigns,
 	loading,
@@ -310,7 +369,19 @@ export default function CampaignListTable({
 	const [openModalDelete, setOpenModalDelete] = useState(false);
 	//Modal action state
 	const [openModalRename, setOpenModalRename] = useState(false);
+	const [openModalStart, setOpenModalStart] = useState(false);
 	const [campaignModal, setCampaignModal] = useState<any | null>(null);
+
+	const handleStartCampaign = async () => {
+		if (!campaignModal) return;
+		try {
+			await startCampaign(campaignModal.slug, true);
+			setOpenModalStart(false);
+			window.location.reload();
+		} catch (error) {
+			console.error("Failed to start campaign:", error);
+		}
+	};
 
 	// Pagination state
 	const [page, setPage] = useState(1);
@@ -419,10 +490,16 @@ export default function CampaignListTable({
 	) => {
 		e.stopPropagation();
 		try {
-			if (action === "start") await startCampaign(slug, true);
+			if (action === "start") {
+				const campaign = campaigns.find((c) => c.slug === slug);
+				if (campaign) {
+					setCampaignModal(campaign);
+					setOpenModalStart(true);
+				}
+			}
 			if (action === "stop") await stopCampaign(slug);
 			if (action === "analytics") navigate(`/campaigns/${slug}/analytics`);
-			window.location.reload();
+			if (action !== "start") window.location.reload();
 		} catch (error) {
 			console.error(`Failed to perform ${action}:`, error);
 		}
@@ -467,6 +544,12 @@ export default function CampaignListTable({
 				open={openModalDelete}
 				onClose={() => setOpenModalDelete(false)}
 				campaigns={campaignModal}
+			/>
+			<ModalConfirmStart
+				open={openModalStart}
+				onClose={() => setOpenModalStart(false)}
+				onConfirm={handleStartCampaign}
+				campaignName={campaignModal?.name || ""}
 			/>
 			{/* Selection Bar */}
 			{selectedRows.length > 0 && (
@@ -796,17 +879,35 @@ export default function CampaignListTable({
 										)}
 										{visibleColumns.includes("contacts") && (
 											<TableCell>
-												<Typography
-													variant="body2"
-													color="brand.primary.600"
-													sx={{ fontWeight: 600, fontSize: "14px" }}
-												>
-													{campaign.recipients
-														?.map((r: any) => r.name)
-														.join(", ") || "N/A"}
-												</Typography>
+												{campaign.subscribers &&
+													campaign.subscribers.length > 0 && (
+														<Stack
+															direction="row"
+															spacing={1}
+															flexWrap="wrap"
+														>
+															{campaign.subscribers
+																.slice(0, 2)
+																.map((sub: any, idx: number) => (
+																	<Chip
+																		key={idx}
+																		label={sub.name || sub.id}
+																		size="small"
+																		variant="outlined"
+																	/>
+																))}
+															{campaign.subscribers.length > 2 && (
+																<Chip
+																	label={`+${campaign.subscribers.length - 2}`}
+																	size="small"
+																	variant="outlined"
+																/>
+															)}
+														</Stack>
+													)}
 											</TableCell>
 										)}
+
 										{visibleColumns.includes("tags") && (
 											<TableCell>
 												<Stack
@@ -842,29 +943,30 @@ export default function CampaignListTable({
 										)}
 										{visibleColumns.includes("timestamps") && (
 											<TableCell>
-												<Box
-													sx={{
-														fontSize: "0.75rem",
-														color: "neutral.black.60",
-													}}
-												>
-													<Box>
-														{t("campaigns.timestamps_lbl.created")}{" "}
-														{campaign.createdAt
+												<Stack>
+													<Typography
+														variant="caption"
+														color="text.primary"
+													>
+														Create:{" "}
+														{campaign.date_created
 															? new Date(
-																	campaign.createdAt,
+																	campaign.date_created,
 																).toLocaleDateString()
 															: "-"}
-													</Box>
-													{campaign.startedAt && (
-														<Box>
-															{t("campaigns.timestamps_lbl.started")}{" "}
-															{new Date(
-																campaign.startedAt,
-															).toLocaleDateString()}
-														</Box>
-													)}
-												</Box>
+													</Typography>
+													<Typography
+														variant="caption"
+														color="text.secondary"
+													>
+														Update:{" "}
+														{campaign.date_updated
+															? new Date(
+																	campaign.date_updated,
+																).toLocaleDateString()
+															: "-"}
+													</Typography>
+												</Stack>
 											</TableCell>
 										)}
 										{visibleColumns.includes("stats") && (

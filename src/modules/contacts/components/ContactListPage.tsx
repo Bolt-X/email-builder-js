@@ -16,6 +16,7 @@ import {
 	IconButton,
 	Menu,
 	MenuItem,
+	Checkbox,
 } from "@mui/material";
 import {
 	Add,
@@ -24,23 +25,36 @@ import {
 	Delete,
 	Visibility,
 	People,
+	Send as SendIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
 	useContactLists,
-	useContactsLoading,
+	useContactListsLoading,
 	fetchContactLists,
+	useSelectedContactLists,
+	toggleSelectContactList,
+	selectAllContactLists,
+	clearSelection,
+	deleteContactListAction,
 } from "../store";
 import { ContactList } from "../types";
+import CampaignSelectorModal from "./CampaignSelectorModal";
 
 export default function ContactListPage() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const contactLists = useContactLists();
-	const loading = useContactsLoading();
+	const loading = useContactListsLoading();
+	const selectedIds = useSelectedContactLists();
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | number | null>(null);
+	const [openCampaignSelector, setOpenCampaignSelector] = useState(false);
+
+	// Filter numeric ids if needed, but store uses string slugs usually or mixed.
+	// Ensure slug usage is consistent.
+	const selectedSlugs = selectedIds.map((id) => String(id));
 
 	useEffect(() => {
 		fetchContactLists();
@@ -76,11 +90,26 @@ export default function ContactListPage() {
 	const handleDelete = async () => {
 		if (selectedId) {
 			if (window.confirm(t("contacts.confirm_delete_list"))) {
-				// TODO: Implement delete
-				console.log("Delete contact list:", selectedId);
+				try {
+					await deleteContactListAction(String(selectedId));
+					setSelectedId(null);
+				} catch (error) {
+					console.error(error);
+				}
 			}
 			handleMenuClose();
 		}
+	};
+
+	const handleSendCampaign = () => {
+		setOpenCampaignSelector(true);
+	};
+
+	const handleCampaignSelect = (campaignSlug: string) => {
+		// Navigate to campaign edit page with pre-selected lists
+		navigate(`/campaigns/${campaignSlug}`, {
+			state: { preselectedContactLists: selectedSlugs },
+		});
 	};
 
 	if (loading && contactLists.length === 0) {
@@ -105,19 +134,59 @@ export default function ContactListPage() {
 				mb={3}
 			>
 				<Typography variant="h4">{t("contacts.list_title")}</Typography>
-				<Button
-					variant="contained"
-					startIcon={<Add />}
-					onClick={() => navigate("/contacts/lists/new")}
+				<Stack
+					direction="row"
+					spacing={2}
 				>
-					{t("contacts.create_list")}
-				</Button>
+					{selectedIds.length > 0 && (
+						<Button
+							variant="outlined"
+							startIcon={<SendIcon />}
+							onClick={handleSendCampaign}
+							sx={{ mr: 2 }}
+						>
+							{t("contacts.send_campaign")}
+						</Button>
+					)}
+					<Button
+						variant="contained"
+						startIcon={<Add />}
+						onClick={() => navigate("/contacts/lists/new")}
+					>
+						{t("contacts.create_list")}
+					</Button>
+				</Stack>
 			</Stack>
+
+			<CampaignSelectorModal
+				open={openCampaignSelector}
+				onClose={() => setOpenCampaignSelector(false)}
+				onSelect={handleCampaignSelect}
+			/>
 
 			<TableContainer component={Paper}>
 				<Table>
 					<TableHead>
 						<TableRow>
+							<TableCell padding="checkbox">
+								<Checkbox
+									checked={
+										contactLists.length > 0 &&
+										selectedIds.length === contactLists.length
+									}
+									indeterminate={
+										selectedIds.length > 0 &&
+										selectedIds.length < contactLists.length
+									}
+									onChange={(e) => {
+										if (e.target.checked) {
+											selectAllContactLists();
+										} else {
+											clearSelection();
+										}
+									}}
+								/>
+							</TableCell>
 							<TableCell>{t("common.name")}</TableCell>
 							<TableCell>{t("common.description")}</TableCell>
 							<TableCell>{t("contacts.contacts")}</TableCell>
@@ -132,7 +201,17 @@ export default function ContactListPage() {
 								hover
 								sx={{ cursor: "pointer" }}
 								onClick={() => navigate(`/contacts/lists/${list.slug}`)}
+								selected={selectedIds.includes(list.slug)}
 							>
+								<TableCell padding="checkbox">
+									<Checkbox
+										checked={selectedIds.includes(list.slug)}
+										onClick={(e) => {
+											e.stopPropagation();
+											toggleSelectContactList(list.slug);
+										}}
+									/>
+								</TableCell>
 								<TableCell>
 									<Stack
 										direction="row"

@@ -9,6 +9,8 @@ import {
 	updateCampaign,
 	duplicateCampaign,
 } from "../service";
+import { setMessage } from "../../../contexts";
+import i18n from "../../../i18n";
 
 /**
  * Campaign Metadata Store
@@ -204,12 +206,14 @@ export const createCampaignAction = async (
 			loading: false,
 		}));
 		markSaved();
+		setMessage(i18n.t("campaigns.create_success", { name: newCampaign.name }));
 		return newCampaign;
 	} catch (err: any) {
 		campaignMetadataStore.setState({
 			error: err.message,
 			loading: false,
 		});
+		setMessage(i18n.t("campaigns.create_error") + ": " + err.message);
 		throw err;
 	}
 };
@@ -244,12 +248,14 @@ export const updateCampaignMetadataAction = async (
 					: state.currentCampaign,
 		}));
 		markSaved();
+		setMessage(i18n.t("campaigns.update_success"));
 		return updatedCampaign;
 	} catch (err: any) {
 		campaignMetadataStore.setState({
 			error: err.message,
 			loading: false,
 		});
+		setMessage(i18n.t("campaigns.update_error") + ": " + err.message);
 		throw err;
 	}
 };
@@ -264,11 +270,13 @@ export const deleteCampaignAction = async (slug: string): Promise<void> => {
 				state.currentCampaign?.slug === slug ? null : state.currentCampaign,
 			loading: false,
 		}));
+		setMessage(i18n.t("campaigns.delete_success"));
 	} catch (err: any) {
 		campaignMetadataStore.setState({
 			error: err.message,
 			loading: false,
 		});
+		setMessage(i18n.t("campaigns.delete_error") + ": " + err.message);
 		throw err;
 	}
 };
@@ -284,12 +292,14 @@ export const duplicateCampaignAction = async (
 			campaigns: [newCampaign, ...state.campaigns],
 			loading: false,
 		}));
+		setMessage(i18n.t("campaigns.duplicate_success"));
 		return newCampaign;
 	} catch (err: any) {
 		campaignMetadataStore.setState({
 			error: err.message,
 			loading: false,
 		});
+		setMessage(i18n.t("campaigns.duplicate_error") + ": " + err.message);
 		throw err;
 	}
 };

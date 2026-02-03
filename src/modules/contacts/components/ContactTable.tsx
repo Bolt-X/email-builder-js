@@ -64,7 +64,14 @@ export default function ContactTable({
 	onSelectOne,
 	onSelectAll,
 	onClearSelection,
-	visibleColumns = ["email", "first_name", "last_name", "status", "date_created", "action"],
+	visibleColumns = [
+		"email",
+		"first_name",
+		"last_name",
+		"status",
+		"date_created",
+		"action",
+	],
 	total = 0,
 	page = 0,
 	rowsPerPage = 25,
@@ -175,7 +182,6 @@ export default function ContactTable({
 					</TableHead>
 					<TableBody>
 						{contacts?.map((contact) => {
-
 							const isSelected = selectedContacts.includes(contact.id);
 							const style =
 								statusStyles[contact.status] || statusStyles.subscribed;
@@ -248,13 +254,13 @@ export default function ContactTable({
 											>
 												{contact.date_created
 													? new Date(contact.date_created).toLocaleDateString(
-														"en-GB",
-														{
-															day: "2-digit",
-															month: "2-digit",
-															year: "numeric",
-														},
-													)
+															"en-GB",
+															{
+																day: "2-digit",
+																month: "2-digit",
+																year: "numeric",
+															},
+														)
 													: "-"}
 											</Typography>
 										</TableCell>
@@ -277,7 +283,7 @@ export default function ContactTable({
 														<Edit fontSize="small" />
 													</IconButton>
 												</Tooltip>
-												<Tooltip title={t("contacts.add_content")}>
+												<Tooltip title={t("contacts.add_contact")}>
 													<IconButton
 														size="small"
 														sx={{ color: "#666" }}

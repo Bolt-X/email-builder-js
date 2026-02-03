@@ -60,7 +60,17 @@ export default function ImportContactsModal({
 		errors: Array<{ row: number; email: string; error: string }>;
 	} | null>(null);
 
-	const handleNext = () => setActiveStep((prev) => prev + 1);
+	const handleNext = () => {
+		if (!selectedFile) {
+			alert("Please select a file to import.");
+			return;
+		}
+		if (!contactListSlug) {
+			alert("Contact list invalid.");
+			return;
+		}
+		setActiveStep((prev) => prev + 1);
+	};
 	const handleBack = () => setActiveStep((prev) => prev - 1);
 
 	const renderStepContent = (step: number) => {
@@ -374,7 +384,15 @@ function StepInitialise({
 						Max file size: 200 MB (CSV, TXT), 50 MB (XLSX)
 					</Typography>
 					<Typography color="text.secondary">
-						Example file: <a href="/assets/sample_file/subscribers_sample.xlsx" target="_blank" rel="noopener noreferrer" style={{ color: "#2563EB", fontWeight: 600 }}>Download</a>
+						Example file:{" "}
+						<a
+							href="/assets/sample_file/subscribers_sample.xlsx"
+							target="_blank"
+							rel="noopener noreferrer"
+							style={{ color: "#2563EB", fontWeight: 600 }}
+						>
+							Download
+						</a>
 					</Typography>
 				</Box>
 				{selectedFile && (
@@ -405,7 +423,9 @@ function StepInitialise({
 									justifyContent: "center",
 								}}
 							>
-								<CloudUploadOutlined sx={{ fontSize: 20, color: "text.secondary" }} />
+								<CloudUploadOutlined
+									sx={{ fontSize: 20, color: "text.secondary" }}
+								/>
 							</Box>
 							<Box>
 								<Typography
@@ -497,9 +517,7 @@ function StepInitialise({
 							return optionSlug === valueSlug;
 						}}
 						value={selectedTags}
-						onChange={(_, newValue) =>
-							handleSelectTags(newValue)
-						}
+						onChange={(_, newValue) => handleSelectTags(newValue)}
 						renderTags={() => null}
 						noOptionsText={
 							<div style={{ padding: 16, textAlign: "center" }}>
@@ -642,7 +660,15 @@ const mockColumns = [
 // 	);
 // }
 
-function StepConfirm({ result }: { result: { success: number; failed: number; errors: Array<{ row: number; email: string; error: string }> } | null }) {
+function StepConfirm({
+	result,
+}: {
+	result: {
+		success: number;
+		failed: number;
+		errors: Array<{ row: number; email: string; error: string }>;
+	} | null;
+}) {
 	return (
 		<Box>
 			{result ? (
@@ -651,28 +677,45 @@ function StepConfirm({ result }: { result: { success: number; failed: number; er
 						variant="body2"
 						sx={{ mb: 1 }}
 					>
-						<span style={{ fontWeight: 700, color: "#2563EB" }}>{result.success}</span> contacts
-						have been successfully imported.
+						<span style={{ fontWeight: 700, color: "#2563EB" }}>
+							{result.success}
+						</span>{" "}
+						contacts have been successfully imported.
 					</Typography>
 					{result.failed > 0 && (
 						<Typography
 							variant="body2"
 							sx={{ mb: 3 }}
 						>
-							<span style={{ fontWeight: 700, color: "#DC2626" }}>{result.failed}</span> contacts
-							failed to import.
+							<span style={{ fontWeight: 700, color: "#DC2626" }}>
+								{result.failed}
+							</span>{" "}
+							contacts failed to import.
 							{result.errors.length > 0 && (
-								<Box sx={{ mt: 2, p: 2, bgcolor: "#FEF2F2", borderRadius: "8px" }}>
-									<Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+								<Box
+									sx={{ mt: 2, p: 2, bgcolor: "#FEF2F2", borderRadius: "8px" }}
+								>
+									<Typography
+										variant="body2"
+										sx={{ fontWeight: 600, mb: 1 }}
+									>
 										Errors:
 									</Typography>
 									{result.errors.slice(0, 5).map((error, index) => (
-										<Typography key={index} variant="caption" display="block" sx={{ mb: 0.5 }}>
+										<Typography
+											key={index}
+											variant="caption"
+											display="block"
+											sx={{ mb: 0.5 }}
+										>
 											Row {error.row}: {error.email} - {error.error}
 										</Typography>
 									))}
 									{result.errors.length > 5 && (
-										<Typography variant="caption" color="text.secondary">
+										<Typography
+											variant="caption"
+											color="text.secondary"
+										>
 											... and {result.errors.length - 5} more errors
 										</Typography>
 									)}

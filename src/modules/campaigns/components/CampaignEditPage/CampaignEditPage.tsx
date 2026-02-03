@@ -1,5 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import {
+	useParams,
+	useNavigate,
+	useLocation,
+	useSearchParams,
+} from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
 	Box,
@@ -24,6 +29,7 @@ import {
 	useAutosaveState,
 	setDirty,
 } from "../../stores/campaign.metadata.store";
+import { SubscriberType } from "../../types";
 import {
 	fetchCampaignTemplate,
 	saveCampaignTemplate,
@@ -50,6 +56,8 @@ const AUTOSAVE_INTERVAL = 30000; // 30 seconds
 export default function CampaignEditPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
+	const location = useLocation();
+	const [searchParams] = useSearchParams();
 	const { t } = useTranslation();
 	const campaign = useCurrentCampaign();
 	const loading = useCampaignsLoading();
@@ -76,6 +84,24 @@ export default function CampaignEditPage() {
 				// After loading campaign, load its media
 				fetchCampaignMedia(id);
 				setCampaignMedia(id);
+
+				// Re-apply preselected contact lists if present (handling "Send Campaign" flow)
+				let preselectedSlugs: string[] = [];
+				if (location.state && (location.state as any).preselectedContactLists) {
+					preselectedSlugs = (location.state as any)
+						.preselectedContactLists as string[];
+				} else if (searchParams.get("contact-list")) {
+					preselectedSlugs = searchParams.get("contact-list")?.split(",") || [];
+				}
+
+				if (preselectedSlugs.length > 0) {
+					const newSelections = preselectedSlugs.map((slug) => ({
+						type: "list" as SubscriberType,
+						id: slug,
+						name: slug,
+					}));
+					updateCurrentCampaign({ subscribers: newSelections });
+				}
 			});
 		}
 

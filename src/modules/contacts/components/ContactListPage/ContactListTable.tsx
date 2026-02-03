@@ -8,6 +8,7 @@ import {
 	PostAdd,
 	Search,
 	Settings,
+	Send,
 } from "@mui/icons-material";
 import {
 	Box,
@@ -61,6 +62,7 @@ import { downloadContactListAsCSV } from "../../service";
 import { useTranslation } from "react-i18next";
 import ModalCustomDelete from "../base/ModalCustomDelete";
 import ModalDuplicate from "./ModalDuplicate";
+import CampaignSelectorModal from "../CampaignSelectorModal";
 
 interface ContactListTableProps {
 	formDrawerOpen: boolean;
@@ -100,6 +102,7 @@ export default function ContactListTable({
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [openModalDuplicate, setOpenModalDuplicate] = useState(false);
+	const [openCampaignSelector, setOpenCampaignSelector] = useState(false);
 	const [filtered, setFiltered] = useState({
 		from: undefined,
 		to: undefined,
@@ -169,13 +172,27 @@ export default function ContactListTable({
 		}
 	};
 
+	const handleSendCampaign = () => {
+		setOpenCampaignSelector(true);
+	};
+
+	const handleCampaignSelect = (campaignSlug: string) => {
+		// Navigate to campaign edit page with pre-selected lists
+		const queryParams = new URLSearchParams();
+		if (selectedIds.length > 0) {
+			queryParams.set("contact-list", selectedIds.join(","));
+		}
+		navigate(`/campaigns/${campaignSlug}?${queryParams.toString()}`);
+	};
+
 	const handleDelete = async () => {
 		try {
 			if (selectedIds.length > 0) {
-				deleteContactList(selectedIds as string[]);
+				await deleteContactList(selectedIds as string[]);
 			} else {
-				deleteContactList([selectedId as string]);
+				await deleteContactList([selectedId as string]);
 			}
+			clearSelection();
 		} catch (error) {
 			console.error("Failed to delete contact list:", error);
 		} finally {
@@ -251,6 +268,11 @@ export default function ContactListTable({
 				}}
 				slug={selectedId}
 			/>
+			<CampaignSelectorModal
+				open={openCampaignSelector}
+				onClose={() => setOpenCampaignSelector(false)}
+				onSelect={handleCampaignSelect}
+			/>
 			<ModalCustomDelete
 				open={confirmDelete}
 				isPending={isDeleting}
@@ -319,6 +341,15 @@ export default function ContactListTable({
 							spacing={2}
 							alignItems="center"
 						>
+							<Button
+								variant="text"
+								color="inherit"
+								startIcon={<Send />}
+								sx={{ textTransform: "none", fontWeight: 600 }}
+								onClick={handleSendCampaign}
+							>
+								{t("contacts.send_campaign", "Send Campaign")}
+							</Button>
 							<Button
 								variant="text"
 								color="inherit"
@@ -519,7 +550,7 @@ export default function ContactListTable({
 					p: 0,
 					height: "100%", // 64 (header) + 80 (filter)
 					position: "relative",
-					flex: 1
+					flex: 1,
 				}}
 			>
 				<TableContainer
@@ -707,13 +738,13 @@ export default function ContactListTable({
 												>
 													{list.date_created
 														? new Date(list.date_created).toLocaleDateString(
-															"en-GB",
-															{
-																day: "2-digit",
-																month: "2-digit",
-																year: "numeric",
-															},
-														)
+																"en-GB",
+																{
+																	day: "2-digit",
+																	month: "2-digit",
+																	year: "numeric",
+																},
+															)
 														: "25/10/2025"}
 												</Typography>
 											</TableCell>
@@ -736,7 +767,7 @@ export default function ContactListTable({
 														<Campaign fontSize="small" />
 													</IconButton>
 												</Tooltip>
-												<Tooltip title={t("contacts.add_content")}>
+												<Tooltip title={t("contacts.add_contact")}>
 													<IconButton
 														size="small"
 														sx={{ color: "#666" }}

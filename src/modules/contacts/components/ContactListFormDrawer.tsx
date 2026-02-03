@@ -18,6 +18,16 @@ import {
 	updateContactListAction,
 	fetchContactLists,
 } from "../stores/contactList.store";
+import { importContacts } from "../service";
+import { CloudUploadOutlined } from "@mui/icons-material";
+import { useGetAllTags } from "../../../hooks/useTags";
+import {
+	Checkbox,
+	FormControlLabel,
+	Select,
+	MenuItem,
+	InputLabel,
+} from "@mui/material";
 
 interface ContactListFormDrawerProps {
 	open: boolean;
@@ -37,6 +47,12 @@ export default function ContactListFormDrawer({
 		name: "",
 		status: "draft",
 	});
+	const [shouldImport, setShouldImport] = useState(false);
+	const [importFile, setImportFile] = useState<File | null>(null);
+	const [importStatus, setImportStatus] = useState("subscribed");
+	const [importUpdateMode, setImportUpdateMode] = useState("both");
+
+	const fileInputRef = React.useRef<HTMLInputElement>(null);
 
 	// Load contact list data when editing
 	useEffect(() => {
@@ -65,10 +81,20 @@ export default function ContactListFormDrawer({
 
 		try {
 			if (mode === "create") {
-				await createContactListAction({
+				const newList = await createContactListAction({
 					name: formData.name!,
 					status: formData.status as any,
 				});
+
+				if (shouldImport && importFile) {
+					await importContacts({
+						file: importFile,
+						contactListSlug: newList.slug,
+						status: importStatus,
+						updateExisting: importUpdateMode !== "add", // simplified logic based on "both", "add", "update"
+					});
+					// Note: importContacts might throw, caught by catch block.
+				}
 			} else if (list) {
 				await updateContactListAction(list.slug, {
 					name: formData.name,
@@ -148,6 +174,80 @@ export default function ContactListFormDrawer({
 							<option value="published">Published</option>
 							<option value="archived">Archived</option>
 						</TextField>
+
+						{mode === "create" && (
+							<Box
+								sx={{
+									mt: 2,
+									border: "1px solid #E5E7EB",
+									borderRadius: 2,
+									p: 2,
+								}}
+							>
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={shouldImport}
+											onChange={(e) => setShouldImport(e.target.checked)}
+										/>
+									}
+									label="Import subscribers immediately"
+								/>
+								{shouldImport && (
+									<Stack
+										spacing={2}
+										mt={1}
+									>
+										<Box
+											onClick={() => fileInputRef.current?.click()}
+											sx={{
+												border: "1px dashed #E5E7EB",
+												borderRadius: "8px",
+												p: 2,
+												textAlign: "center",
+												bgcolor: "#FAFBFC",
+												cursor: "pointer",
+												"&:hover": {
+													bgcolor: "#F3F4F6",
+													borderColor: "#2563EB",
+												},
+											}}
+										>
+											<input
+												ref={fileInputRef}
+												type="file"
+												accept=".csv,.txt,.xlsx,.xls"
+												onChange={(e) =>
+													setImportFile(e.target.files?.[0] || null)
+												}
+												style={{ display: "none" }}
+											/>
+											<CloudUploadOutlined
+												sx={{ fontSize: 24, color: "text.secondary", mb: 0.5 }}
+											/>
+											<Typography
+												variant="body2"
+												color="text.secondary"
+											>
+												{importFile ? importFile.name : "Click to upload file"}
+											</Typography>
+										</Box>
+
+										<TextField
+											select
+											label="Subscriber Status"
+											size="small"
+											value={importStatus}
+											onChange={(e) => setImportStatus(e.target.value)}
+											SelectProps={{ native: true }}
+										>
+											<option value="subscribed">Subscribed</option>
+											<option value="unsubscribed">Unsubscribed</option>
+										</TextField>
+									</Stack>
+								)}
+							</Box>
+						)}
 
 						{/* Action Buttons */}
 						<Stack

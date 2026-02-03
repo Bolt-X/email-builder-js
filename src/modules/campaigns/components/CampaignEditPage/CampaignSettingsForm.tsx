@@ -16,6 +16,7 @@ import {
 	FormControlLabel,
 	Radio,
 } from "@mui/material";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Campaign, SubscriberSelection, SubscriberType } from "../../types";
 import SubscriberSelector from "../../../contacts/components/SubscriberSelector";
@@ -40,6 +41,34 @@ export default function CampaignSettingsForm({
 	const handleSubscribersChange = (subscribers: SubscriberSelection[]) => {
 		onChange({ subscribers });
 	};
+
+	// Handle pre-selection from ContactListPage navigation
+	const location = useLocation();
+	const [searchParams] = useSearchParams();
+
+	useEffect(() => {
+		let preselectedSlugs: string[] = [];
+
+		// Check state first (legacy support)
+		if (location.state && (location.state as any).preselectedContactLists) {
+			preselectedSlugs = (location.state as any)
+				.preselectedContactLists as string[];
+		}
+		// Check query params
+		else if (searchParams.get("contact-list")) {
+			preselectedSlugs = searchParams.get("contact-list")?.split(",") || [];
+		}
+
+		if (preselectedSlugs.length > 0) {
+			const newSelections = preselectedSlugs.map((slug) => ({
+				type: "list" as SubscriberType,
+				id: slug,
+				name: slug, // Use slug as name fallback since we don't have the real name here
+			}));
+			// Always apply selection if query param is present, reflecting user intent from "Send Campaign" action
+			onChange({ subscribers: newSelections });
+		}
+	}, [location.state, searchParams]);
 
 	const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		onChange({ name: e.target.value });

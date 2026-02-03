@@ -211,13 +211,28 @@ export default function DashboardLayout() {
 		label: string,
 		path: string,
 		hasChildren: boolean,
+		children?: any[],
 	) => {
 		if (hasChildren) {
 			if (!open && !isMobile) {
 				setOpen(true);
-				setOpenMenus((prev) => ({ ...prev, [label]: true }));
+				setOpenMenus({ [label]: true }); // Open this, close others
 			} else {
-				setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
+				setOpenMenus((prev) => ({
+					// If clicking currently open menu, toggle it.
+					// If clicking new menu, open it and close others (Accordion).
+					...(!prev[label] ? {} : prev),
+					[label]: !prev[label],
+				}));
+				// If we are opening the menu (it wasn't open before), close others by resetting state to just this one
+				if (!openMenus[label]) {
+					setOpenMenus({ [label]: true });
+				}
+			}
+
+			// Auto-navigate to first child if opening
+			if (!openMenus[label] && children && children.length > 0) {
+				handleNavigation(children[0].path);
 			}
 		} else {
 			handleNavigation(path);
@@ -356,7 +371,12 @@ export default function DashboardLayout() {
 									>
 										<ListItemButton
 											onClick={() =>
-												handleMenuClick(item.label, item.path, hasChildren)
+												handleMenuClick(
+													item.label,
+													item.path,
+													hasChildren,
+													item.children,
+												)
 											}
 											sx={{
 												minHeight: 52,
