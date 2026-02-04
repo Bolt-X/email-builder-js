@@ -70,12 +70,14 @@ export default function CampaignListPage() {
 	// 	);
 	// }
 
+	console.log("campaigns", campaigns);
+
 	const hasFilters = Boolean(
 		searchQuery ||
-			statusFilter.length > 0 ||
-			contactListFilter ||
-			tagsFilter.length > 0 ||
-			dateRangeFilter,
+		statusFilter.length > 0 ||
+		contactListFilter ||
+		tagsFilter.length > 0 ||
+		dateRangeFilter,
 	);
 
 	const isTrulyEmpty = campaigns?.length === 0 && !loading && !hasFilters;

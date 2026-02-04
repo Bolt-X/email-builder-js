@@ -103,6 +103,7 @@ export default function ContactListTable({
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [openModalDuplicate, setOpenModalDuplicate] = useState(false);
 	const [openCampaignSelector, setOpenCampaignSelector] = useState(false);
+	const [campaignSelected, setCampaignSelected] = useState<string | null>(null);
 	const [filtered, setFiltered] = useState({
 		from: undefined,
 		to: undefined,
@@ -172,15 +173,18 @@ export default function ContactListTable({
 		}
 	};
 
-	const handleSendCampaign = () => {
+	const handleSendCampaign = (selectedId?: string) => {
+		setCampaignSelected(selectedId || null);
 		setOpenCampaignSelector(true);
 	};
 
 	const handleCampaignSelect = (campaignSlug: string) => {
-		// Navigate to campaign edit page with pre-selected lists
 		const queryParams = new URLSearchParams();
 		if (selectedIds.length > 0) {
 			queryParams.set("contact-list", selectedIds.join(","));
+		}
+		if (campaignSelected) {
+			queryParams.set("contact-list", campaignSelected);
 		}
 		navigate(`/campaigns/${campaignSlug}?${queryParams.toString()}`);
 	};
@@ -346,7 +350,7 @@ export default function ContactListTable({
 								color="inherit"
 								startIcon={<Send />}
 								sx={{ textTransform: "none", fontWeight: 600 }}
-								onClick={handleSendCampaign}
+								onClick={() => handleSendCampaign(selectedId)}
 							>
 								{t("contacts.send_campaign", "Send Campaign")}
 							</Button>
@@ -738,13 +742,13 @@ export default function ContactListTable({
 												>
 													{list.date_created
 														? new Date(list.date_created).toLocaleDateString(
-																"en-GB",
-																{
-																	day: "2-digit",
-																	month: "2-digit",
-																	year: "numeric",
-																},
-															)
+															"en-GB",
+															{
+																day: "2-digit",
+																month: "2-digit",
+																year: "numeric",
+															},
+														)
 														: "25/10/2025"}
 												</Typography>
 											</TableCell>
@@ -763,6 +767,7 @@ export default function ContactListTable({
 													<IconButton
 														size="small"
 														sx={{ color: "#666" }}
+														onClick={() => handleSendCampaign(list.slug)}
 													>
 														<Campaign fontSize="small" />
 													</IconButton>

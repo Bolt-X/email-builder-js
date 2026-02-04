@@ -174,3 +174,13 @@ export const addContactToList = async (contactIds: string[], listId: string) => 
         throw error;
     }
 }
+
+export const deleteContatsFromList = async (contactIds: string[]) => {
+    try {
+        const res = await directusClientWithRest.request(deleteItems("subscribers", contactIds))
+        return res;
+    } catch (error) {
+        console.error("Error deleting contacts from list:", error);
+        throw error;
+    }
+}

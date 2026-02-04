@@ -59,6 +59,8 @@ export default function ImportContactsModal({
 		failed: number;
 		errors: Array<{ row: number; email: string; error: string }>;
 	} | null>(null);
+	const [selectedStatus, setSelectedStatus] = useState("non_subscribed");
+	const [selectedUpdateExisting, setSelectedUpdateExisting] = useState<string>("both");
 
 	const handleNext = () => {
 		if (!selectedFile) {
@@ -83,6 +85,10 @@ export default function ImportContactsModal({
 						selectedFile={selectedFile}
 						setSelectedFile={setSelectedFile}
 						contactListSlug={contactListSlug}
+						selectedStatus={selectedStatus}
+						setSelectedStatus={setSelectedStatus}
+						selectedUpdateExisting={selectedUpdateExisting}
+						setSelectedUpdateExisting={setSelectedUpdateExisting}
 					/>
 				);
 			case 1:
@@ -104,8 +110,9 @@ export default function ImportContactsModal({
 			const result = await importContacts({
 				file: selectedFile,
 				contactListSlug,
-				status: "subscribed", // Có thể lấy từ form
-				updateExisting: true, // Có thể lấy từ form
+				status: selectedStatus as string || "",
+				updateExisting: selectedUpdateExisting as string || "both",
+				tags: selectedTags,
 			});
 			setImportResult(result);
 			setActiveStep(2); // Chuyển sang step confirm
@@ -221,12 +228,20 @@ function StepInitialise({
 	selectedFile,
 	setSelectedFile,
 	contactListSlug,
+	selectedStatus,
+	setSelectedStatus,
+	selectedUpdateExisting,
+	setSelectedUpdateExisting,
 }: {
 	selectedTags: any[];
 	setSelectedTags: (tags: any[]) => void;
 	selectedFile: File | null;
 	setSelectedFile: (file: File | null) => void;
 	contactListSlug?: string;
+	selectedStatus: string;
+	setSelectedStatus: (status: string) => void;
+	selectedUpdateExisting: string;
+	setSelectedUpdateExisting: (updateExisting: string) => void;
 }) {
 	const { data: tags } = useGetAllTags();
 	const [addTagModalOpen, setAddTagModalOpen] = useState(false);
@@ -305,11 +320,13 @@ function StepInitialise({
 						Email marketing status <span style={{ color: "red" }}>*</span>
 					</Typography>
 					<Select
-						defaultValue="non"
+						defaultValue="non_subscribed"
+						value={selectedStatus}
+						onChange={(e) => setSelectedStatus(e.target.value)}
 						sx={{ borderRadius: "8px" }}
 					>
-						<MenuItem value="non">Non-subscribed</MenuItem>
-						<MenuItem value="sub">Subscribed</MenuItem>
+						<MenuItem value="non_subscribed">Non-subscribed</MenuItem>
+						<MenuItem value="subscribed">Subscribed</MenuItem>
 					</Select>
 				</FormControl>
 			</Stack>
@@ -327,6 +344,8 @@ function StepInitialise({
 				</Typography>
 				<Select
 					defaultValue="both"
+					value={selectedUpdateExisting}
+					onChange={(e) => setSelectedUpdateExisting(e.target.value as string)}
 					sx={{ borderRadius: "8px" }}
 				>
 					<MenuItem value="both">Add and update existing</MenuItem>

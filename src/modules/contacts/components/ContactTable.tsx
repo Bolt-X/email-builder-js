@@ -22,6 +22,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { MoreVert, Edit, Delete, PostAdd, Campaign } from "@mui/icons-material";
 import { Contact, ContactStatus } from "../types";
+import ModalCustomDelete from "./base/ModalCustomDelete";
+import { useDeleteContatsFromList } from "../../../hooks/useContact";
 
 interface ContactTableProps {
 	contacts: Contact[];
@@ -82,7 +84,18 @@ export default function ContactTable({
 	const { t } = useTranslation();
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | number | null>(null);
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+	const { mutateAsync: deleteContatsFromList, isPending: isDeleting } = useDeleteContatsFromList();
+	console.log("selectedContacts", selectedId);
 
+	const handleDelete = () => {
+		if (selectedContacts.length > 0) {
+			deleteContatsFromList(selectedContacts as string[]);
+		} else {
+			deleteContatsFromList([selectedId as string]);
+		}
+		setDeleteModalOpen(false);
+	}
 	const handleMenuOpen = (
 		event: React.MouseEvent<HTMLElement>,
 		id: string | number,
@@ -132,6 +145,18 @@ export default function ContactTable({
 
 	return (
 		<>
+			<ModalCustomDelete
+				open={deleteModalOpen}
+				onClose={() => setDeleteModalOpen(false)}
+				onOk={handleDelete}
+				title="Delete Contacts"
+				content={
+					<Typography>
+						Are you sure you want to delete {selectedContacts.length > 1 ? `${selectedContacts.length} items` : "this item"}? You won't be able to undo this action.
+					</Typography>
+				}
+				isPending={false}
+			/>
 			<TableContainer
 				component={Paper}
 				elevation={0}
@@ -331,7 +356,7 @@ export default function ContactTable({
 					{t("contacts.edit_contact")}
 				</MenuItem>
 				<MenuItem
-					onClick={handleMenuClose}
+					onClick={() => setDeleteModalOpen(true)}
 					sx={{ color: "error.main" }}
 				>
 					<Delete sx={{ mr: 1, fontSize: 20 }} />

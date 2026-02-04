@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createContact, getContactListById, getProvinces, getWardsByProvinceId } from "../services/contact";
+import { createContact, deleteContatsFromList, getContactListById, getProvinces, getWardsByProvinceId } from "../services/contact";
 import { Contact } from "../modules/contacts";
 
 export const useCreateContact = () => {
@@ -34,5 +34,15 @@ export const useGetContactListById = (slug: string, filter: any) => {
         queryKey: ["contact_list_by_id", slug, filter],
         queryFn: () => getContactListById(slug, filter),
         select: (data) => data ?? { subscribers: [], name: "" },
+    });
+};
+
+export const useDeleteContatsFromList = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (contactIds: string[]) => deleteContatsFromList(contactIds),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["contact_list_by_id"] });
+        },
     });
 };

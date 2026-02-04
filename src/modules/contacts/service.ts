@@ -358,8 +358,9 @@ async function parseXLSX(file: File): Promise<any[]> {
 export interface ImportContactsOptions {
   file: File;
   contactListSlug: string;
-  status?: ContactStatus;
-  updateExisting?: boolean; // true: update nếu đã tồn tại, false: chỉ thêm mới
+  status?: string;
+  updateExisting?: string;
+  tags?: any[];
 }
 
 export async function importContacts(options: ImportContactsOptions): Promise<{
@@ -367,7 +368,7 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
   failed: number;
   errors: Array<{ row: number; email: string; error: string }>;
 }> {
-  const { file, contactListSlug, status = "subscribed", updateExisting = true } = options;
+  const { file, contactListSlug, status = "subscribed", updateExisting = "both", tags = [] } = options;
 
   let rows: any[] = [];
   const errors: Array<{ row: number; email: string; error: string }> = [];
@@ -429,10 +430,16 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
           email,
           first_name: firstNameColumn ? row[firstNameColumn]?.trim() : undefined,
           last_name: lastNameColumn ? row[lastNameColumn]?.trim() : undefined,
-          status,
+          status: status as ContactStatus,
         };
 
-        const subscriber = await createOrUpdateSubscriber(contactData, updateExisting);
+
+        const subscriber = await createOrUpdateSubscriber(contactData, updateExisting === "both" ? true : updateExisting === "add" ? false : true);
+        const payload = tags.map((tag) => ({
+          subscribers_id: subscriber.id,
+          tags_slug: tag,
+        }));
+        await directusClientWithRest.request(createItems("subscribers_tags", payload))
         subscriberIds.push(subscriber.id!);
         successCount++;
       } catch (error: any) {

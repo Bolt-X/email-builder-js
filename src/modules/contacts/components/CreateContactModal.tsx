@@ -258,7 +258,7 @@ export default function CreateContactModal({
 							<Stack
 								direction="row"
 								spacing={3}
-								alignItems="flex-end"
+								alignItems="flex-start"
 							>
 								<Box sx={{ flex: 1 }}>
 									<Typography
@@ -355,14 +355,14 @@ export default function CreateContactModal({
 									variant="body2"
 									sx={{ mb: 1, fontWeight: 600 }}
 								>
-									Address
+									Address<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth
 									size="small"
 									{...form.register("address")}
-									// error={!!form.formState.errors.address}
-									// helperText={form.formState.errors.address?.message}
+									error={!!form.formState.errors.address}
+									helperText={form.formState.errors.address?.message}
 									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
 									placeholder="Enter address"
 								/>
@@ -532,6 +532,8 @@ export default function CreateContactModal({
 									fullWidth
 									size="small"
 									{...form.register("phone_number")}
+									error={!!form.formState.errors.phone_number}
+									helperText={form.formState.errors.phone_number?.message}
 									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
 								/>
 							</Box>
@@ -547,13 +549,13 @@ export default function CreateContactModal({
 									size="small"
 									type="date"
 									{...form.register("birthday")}
-									InputProps={{
-										endAdornment: (
-											<CalendarMonth
-												sx={{ color: "text.secondary", fontSize: 20 }}
-											/>
-										),
-									}}
+									// InputProps={{
+									// 	endAdornment: (
+									// 		<CalendarMonth
+									// 			sx={{ color: "text.secondary", fontSize: 20 }}
+									// 		/>
+									// 	),
+									// }}
 									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
 								/>
 							</Box>
@@ -596,14 +598,14 @@ export default function CreateContactModal({
 					spacing={2}
 				>
 					<Button
-						onClick={handleSaveAndAdd}
+						onClick={form.handleSubmit(handleSaveAndAdd)}
 						sx={{ textTransform: "none", color: "#2196F3", fontWeight: 700 }}
 					>
 						Save & Add Another
 					</Button>
 					<Button
 						variant="contained"
-						onClick={handleAddContact}
+						onClick={form.handleSubmit(handleAddContact)}
 						sx={{
 							textTransform: "none",
 							fontWeight: 700,

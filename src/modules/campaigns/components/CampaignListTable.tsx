@@ -534,11 +534,13 @@ export default function CampaignListTable({
 			}}
 		>
 			{/* Modal Rename Campaign */}
-			<ModalRenameCampaign
-				open={openModalRename}
-				onClose={() => setOpenModalRename(false)}
-				campaign={campaignModal}
-			/>
+			{openModalRename && (
+				<ModalRenameCampaign
+					open={openModalRename}
+					onClose={() => setOpenModalRename(false)}
+					campaign={campaignModal}
+				/>
+			)}
 			{/* Modal Delete Campaign */}
 			<ModalDeleteCampaign
 				open={openModalDelete}
@@ -951,8 +953,8 @@ export default function CampaignListTable({
 														Create:{" "}
 														{campaign.date_created
 															? new Date(
-																	campaign.date_created,
-																).toLocaleDateString()
+																campaign.date_created,
+															).toLocaleDateString()
 															: "-"}
 													</Typography>
 													<Typography
@@ -962,8 +964,8 @@ export default function CampaignListTable({
 														Update:{" "}
 														{campaign.date_updated
 															? new Date(
-																	campaign.date_updated,
-																).toLocaleDateString()
+																campaign.date_updated,
+															).toLocaleDateString()
 															: "-"}
 													</Typography>
 												</Stack>

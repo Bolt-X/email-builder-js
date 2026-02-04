@@ -83,7 +83,7 @@ const MoveOrAddListModal = ({
                 </DialogContentText>
                 <Autocomplete
                     size="small"
-                    options={contactLists.filter((list) => list.slug !== oldListId) ?? []}
+                    options={contactLists?.filter((list) => list.slug !== oldListId) ?? []}
                     getOptionLabel={(option) => option.name}
                     isOptionEqualToValue={(option, value) => {
                         const optionSlug = option?.slug || option;
