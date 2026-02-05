@@ -21,17 +21,20 @@ import {
 import { useSegments, fetchSegments } from "../stores/segment.store";
 import { SubscriberSelection, SubscriberType } from "../../campaigns/types";
 import { useGetAllContactLists } from "../../../hooks/useContactLists";
+import { UseFormReturn } from "react-hook-form";
 
 interface SubscriberSelectorProps {
 	value: SubscriberSelection[];
 	onChange: (subscribers: SubscriberSelection[]) => void;
 	required?: boolean;
+	form?: UseFormReturn<any>;
 }
 
 export default function SubscriberSelector({
 	value,
 	onChange,
 	required = false,
+	form = null,
 }: SubscriberSelectorProps) {
 	const { t } = useTranslation();
 	// const contactLists = useContactLists();
@@ -132,9 +135,10 @@ export default function SubscriberSelector({
 				<FormControl fullWidth>
 					<InputLabel>{t("contacts.add_contact_list")}</InputLabel>
 					<Select
-						value=""
+						{...form?.register("subscribers")}
 						label={t("contacts.add_contact_list")}
-						onChange={(e) => handleAddList(e.target.value)}
+						{...form?.register("subscribers")}
+						error={!!form?.formState.errors.subscribers}
 						displayEmpty
 						size="small"
 						sx={{
@@ -182,7 +186,7 @@ export default function SubscriberSelector({
 				</FormControl>
 
 				{/* Segment Selector */}
-				<FormControl fullWidth>
+				{/* <FormControl fullWidth>
 					<InputLabel>{t("contacts.add_segment")}</InputLabel>
 					<Select
 						value=""
@@ -215,7 +219,7 @@ export default function SubscriberSelector({
 							))
 						)}
 					</Select>
-				</FormControl>
+				</FormControl> */}
 			</Stack>
 
 			{/* Selected Subscribers */}

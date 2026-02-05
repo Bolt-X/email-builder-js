@@ -7,6 +7,8 @@ import {
 	updateContactList,
 } from "../modules/contacts";
 import { s } from "vite/dist/node/types.d-aGj9QkWt";
+import { toast } from "react-toastify";
+import i18n from "../i18n";
 
 export const useGetAllContactLists = (from?: string, to?: string, searchText?: string) => {
 	return useQuery({
@@ -22,6 +24,10 @@ export const useCreateContactList = () => {
 		mutationFn: (payload: any) => createContactList(payload),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["contact_lists"] });
+			toast.success(i18n.t("contacts.create_contact_list_success"));
+		},
+		onError: () => {
+			toast.error(i18n.t("contacts.create_contact_list_error"));
 		},
 	});
 };
@@ -33,6 +39,10 @@ export const useUpdateContactList = () => {
 			updateContactList(slug, payload),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["contact_lists"] });
+			toast.success(i18n.t("contacts.update_contact_list_success"));
+		},
+		onError: () => {
+			toast.error(i18n.t("contacts.update_contact_list_error"));
 		},
 	});
 };
@@ -43,6 +53,10 @@ export const useDeleteContactList = () => {
 		mutationFn: (slugs: string[]) => deleteContactList(slugs),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["contact_lists"] });
+			toast.success(i18n.t("contacts.delete_contact_list_success"));
+		},
+		onError: () => {
+			toast.error(i18n.t("contacts.delete_contact_list_error"));
 		},
 	});
 };
@@ -53,6 +67,10 @@ export const useDuplicateContactList = () => {
 		mutationFn: ({ slug, newName }: { slug: string, newName?: string }) => duplicateContactList(slug, newName),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["contact_lists"] });
+			toast.success(i18n.t("contacts.duplicate_contact_list_success"));
+		},
+		onError: () => {
+			toast.error(i18n.t("contacts.duplicate_contact_list_error"));
 		},
 	});
 };

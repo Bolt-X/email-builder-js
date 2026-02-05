@@ -11,6 +11,8 @@ import {
 } from "../service";
 import { setMessage } from "../../../contexts";
 import i18n from "../../../i18n";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 /**
  * Campaign Metadata Store
@@ -292,14 +294,14 @@ export const duplicateCampaignAction = async (
 			campaigns: [newCampaign, ...state.campaigns],
 			loading: false,
 		}));
-		setMessage(i18n.t("campaigns.duplicate_success"));
+		toast.success(i18n.t("campaigns.duplicate_success"));
 		return newCampaign;
 	} catch (err: any) {
 		campaignMetadataStore.setState({
 			error: err.message,
 			loading: false,
 		});
-		setMessage(i18n.t("campaigns.duplicate_error") + ": " + err.message);
+		toast.error(i18n.t("campaigns.duplicate_error") + ": " + err.message);
 		throw err;
 	}
 };

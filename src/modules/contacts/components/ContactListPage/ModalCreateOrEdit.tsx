@@ -18,6 +18,8 @@ import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { Close } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import i18n from "../../../../i18n";
 
 const createContactListSchema = yup.object().shape({
   name: yup.string().required("Name is required"),
@@ -49,14 +51,17 @@ const ModalCreateOrEditContactList = ({
         await mutateUpdateContactList.mutateAsync({
           slug: dataContactList.slug, payload: data
         });
+        toast.success(i18n.t("contacts.update_success"));
       } else {
         const res = await mutateCreateContactList.mutateAsync(data);
         if (res) {
           navigate(`/contacts/${res.slug}`);
+          toast.success(i18n.t("contacts.create_success"));
         }
       }
     } catch (error) {
       console.error("Failed to create contact list:", error);
+      toast.error(i18n.t("contacts.create_error"));
     } finally {
       onClose();
       form.reset();

@@ -46,6 +46,9 @@ import { setMessage } from "../../../../contexts";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+import * as yup from "yup";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 
 interface CampaignFormValues {
 	name: string;
@@ -59,9 +62,29 @@ interface CampaignFormValues {
 	subscribers: SubscriberSelection[];
 }
 
+const formCampaignSchema = yup.object().shape({
+	name: yup.string().required("Name is required"),
+	subject: yup.string().required("Subject is required"),
+	fromAddress: yup.string().required("From address is required"),
+	tags: yup.array().of(yup.string()).required("Tags are required"),
+	sendType: yup.string().required("Send type is required"),
+	description: yup.string().nullable().notRequired(),
+	template: yup.number().nullable().notRequired(),
+	scheduledAt: yup.string().nullable().notRequired(),
+	subscribers: yup.array().of(yup.object().shape({
+		id: yup.string().required("Subscriber ID is required"),
+		type: yup.string().required("Subscriber type is required"),
+		name: yup.string().required("Subscriber name is required"),
+	})).required("Subscribers are required"),
+});
+
 export default function CampaignCreatePage() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
+
+	const form = useForm({
+		resolver: yupResolver(formCampaignSchema),
+	});
 
 	const { data: tags } = useGetAllTags();
 	const { data: templates } = useGetAllTemplates();
@@ -121,26 +144,25 @@ export default function CampaignCreatePage() {
 		setValues((prev) => ({ ...prev, subscribers }));
 	};
 
-	const handleSubmit = async (e?: React.FormEvent, isRunning?: boolean) => {
-		if (e) e.preventDefault();
+	const handleSubmit = async (data: any, isRunning?: boolean) => {
 		setSubmitting(true);
 		try {
 			const res = await mutateCreate.mutateAsync({
-				name: values.name,
-				subject: values.subject,
-				fromAddress: values.fromAddress,
+				name: data.name,
+				subject: data.subject,
+				fromAddress: data.fromAddress,
 				status: status || "draft",
-				subscribers: values.subscribers,
-				tags: values.tags,
-				sendTime: values.sendType === "now" ? "now" : "schedule",
+				subscribers: data.subscribers,
+				tags: data.tags,
+				sendTime: data.sendType === "now" ? "now" : "schedule",
 				date_scheduled:
-					values.sendType === "schedule"
-						? new Date(values.scheduledAt || "").toISOString()
+					data.sendType === "schedule"
+						? new Date(data.scheduledAt || "").toISOString()
 						: undefined,
 				date_updated: new Date().toISOString(),
-				description: values.description,
-				template: values.template,
-				slug: values.name.toLowerCase().replace(/ /g, "-") + "-" + Date.now(), // Generate a basic slug
+				description: data.description,
+				template: data.template,
+				slug: data.name.toLowerCase().replace(/ /g, "-") + "-" + Date.now(), // Generate a basic slug
 			});
 			console.log("Campaign created:", res);
 			if (isRunning) {
@@ -274,7 +296,7 @@ export default function CampaignCreatePage() {
 					</Button>
 					<Button
 						variant="outlined"
-						onClick={(e) => handleSubmit(e, false)}
+						onClick={form.handleSubmit((data) => handleSubmit(data, false))}
 						disabled={submitting}
 						sx={{
 							borderRadius: "100px",
@@ -295,7 +317,7 @@ export default function CampaignCreatePage() {
 					</Button>
 					<Button
 						variant="contained"
-						onClick={(e) => handleSubmit(e, true)}
+						onClick={form.handleSubmit((data) => handleSubmit(data, true))}
 						disabled={submitting}
 						sx={{
 							borderRadius: "100px",
@@ -352,9 +374,9 @@ export default function CampaignCreatePage() {
 									placeholder={t("campaigns.form.name_placeholder")}
 									variant="outlined"
 									size="small"
-									value={values.name}
-									onChange={handleChange("name")}
-									required
+									{...form.register("name")}
+									error={!!form.formState.errors.name}
+									helperText={form.formState.errors.name?.message as string}
 								/>
 							</Box>
 
@@ -372,9 +394,9 @@ export default function CampaignCreatePage() {
 									placeholder={t("campaigns.form.subject_placeholder")}
 									variant="outlined"
 									size="small"
-									value={values.subject}
-									onChange={handleChange("subject")}
-									required
+									{...form.register("subject")}
+									error={!!form.formState.errors.subject}
+									helperText={form.formState.errors.subject?.message as string}
 								/>
 							</Box>
 
@@ -391,8 +413,7 @@ export default function CampaignCreatePage() {
 									placeholder={t("campaigns.form.description_placeholder")}
 									variant="outlined"
 									size="small"
-									value={values.description}
-									onChange={handleChange("description")}
+									{...form.register("description")}
 									multiline
 									rows={3}
 								/>
@@ -412,8 +433,8 @@ export default function CampaignCreatePage() {
 									size="small"
 								>
 									<Select
-										value={values.fromAddress}
-										onChange={handleChange("fromAddress")}
+										{...form.register("fromAddress")}
+										error={!!form.formState.errors.fromAddress}
 									>
 										<MenuItem value="BoltX Digital <norereply@boltxmail.com>">
 											BoltX Digital &lt;norereply@boltxmail.com&gt;
@@ -445,14 +466,7 @@ export default function CampaignCreatePage() {
 										isOptionEqualToValue={(option, value) =>
 											option.id === value.id
 										}
-										value={
-											templates?.find(
-												(template) => template.id === values.template,
-											) || null
-										}
-										onChange={(_, newValue) =>
-											setValues({ ...values, template: newValue?.id as number })
-										}
+										{...form.register("template")}
 										renderTags={() => null}
 										renderInput={(params) => (
 											<TextField
@@ -460,6 +474,8 @@ export default function CampaignCreatePage() {
 												variant="outlined"
 												placeholder={t("campaigns.form.template_placeholder")}
 												size="small"
+												error={!!form.formState.errors.template}
+												helperText={form.formState.errors.template?.message as string}
 											/>
 										)}
 									/>
@@ -480,6 +496,7 @@ export default function CampaignCreatePage() {
 									value={values.subscribers || []}
 									onChange={handleSubscribersChange}
 									required
+									form={form}
 								/>
 							</Box>
 
@@ -508,7 +525,7 @@ export default function CampaignCreatePage() {
 											const valueSlug = value?.slug || value;
 											return optionSlug === valueSlug;
 										}}
-										value={values.tags}
+										{...form.register("tags")}
 										onChange={(_, newValue) =>
 											setValues({ ...values, tags: newValue })
 										}
@@ -530,6 +547,8 @@ export default function CampaignCreatePage() {
 												{...params}
 												variant="outlined"
 												placeholder={t("campaigns.form.tags_placeholder")}
+												error={!!form.formState.errors.tags}
+												helperText={form.formState.errors.tags?.message as string}
 											/>
 										)}
 									/>
@@ -561,8 +580,7 @@ export default function CampaignCreatePage() {
 								</Typography>
 								<RadioGroup
 									row
-									value={values.sendType}
-									onChange={handleChange("sendType")}
+									{...form.register("sendType")}
 									sx={{
 										gap: 2,
 										width: "100%",

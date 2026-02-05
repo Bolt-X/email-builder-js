@@ -9,6 +9,8 @@ import {
 import * as XLSX from "xlsx";
 import { directusClientWithRest } from "../../services/directus";
 import { Contact, ContactList, Segment, ContactStatus } from "./types";
+import i18n from "../../i18n";
+import { toast } from "react-toastify";
 
 /**
  * Transform Directus Subscriber to Contact model
@@ -383,11 +385,11 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
     } else if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
       rows = await parseXLSX(file);
     } else {
-      throw new Error("Unsupported file format. Please use CSV or XLSX.");
+      throw new Error(i18n.t("contacts.unsupported_file_format"));
     }
 
     if (rows.length === 0) {
-      throw new Error("File is empty or could not be parsed.");
+      throw new Error(i18n.t("contacts.file_empty_or_could_not_be_parsed"));
     }
 
     // Map columns - tìm các cột email, first_name, last_name
@@ -397,7 +399,7 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
     );
 
     if (!emailColumn) {
-      throw new Error("Email column not found in file.");
+      throw new Error(i18n.t("contacts.email_column_not_found"));
     }
 
     const firstNameColumn = Object.keys(firstRow).find(
@@ -485,9 +487,11 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
 
           await createContactListSubscriber(payload);
         }
+        toast.success(i18n.t("contacts.create_contact_list_subscribers_success"));
       } catch (error) {
         console.error("Error creating contact list subscribers:", error);
         // Không throw error ở đây vì subscribers đã được tạo
+        toast.error(i18n.t("contacts.create_contact_list_subscribers_error"));
       }
     }
 
@@ -498,6 +502,7 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
     };
   } catch (error: any) {
     console.error("Error importing contacts:", error);
+    toast.error(i18n.t("contacts.import_error"));
     throw error;
   }
 }

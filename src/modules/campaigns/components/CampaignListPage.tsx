@@ -70,8 +70,6 @@ export default function CampaignListPage() {
 	// 	);
 	// }
 
-	console.log("campaigns", campaigns);
-
 	const hasFilters = Boolean(
 		searchQuery ||
 		statusFilter.length > 0 ||

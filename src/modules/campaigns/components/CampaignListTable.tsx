@@ -42,6 +42,7 @@ import { useNavigate } from "react-router-dom";
 import {
 	useDeleteCampaign,
 	useDeleteMutipleCampaigns,
+	useDuplicateCampaign,
 	useUpdateCampaign,
 	useUpdateMutipleCampaigns,
 } from "../../../hooks/useCampaigns";
@@ -372,6 +373,9 @@ export default function CampaignListTable({
 	const [openModalStart, setOpenModalStart] = useState(false);
 	const [campaignModal, setCampaignModal] = useState<any | null>(null);
 
+	const { mutate: deleteCampaign } = useDeleteCampaign();
+	const { mutate: duplicateCampaign } = useDuplicateCampaign();
+
 	const handleStartCampaign = async () => {
 		if (!campaignModal) return;
 		try {
@@ -542,17 +546,22 @@ export default function CampaignListTable({
 				/>
 			)}
 			{/* Modal Delete Campaign */}
-			<ModalDeleteCampaign
-				open={openModalDelete}
-				onClose={() => setOpenModalDelete(false)}
-				campaigns={campaignModal}
-			/>
-			<ModalConfirmStart
-				open={openModalStart}
-				onClose={() => setOpenModalStart(false)}
-				onConfirm={handleStartCampaign}
-				campaignName={campaignModal?.name || ""}
-			/>
+			{openModalDelete && (
+
+				<ModalDeleteCampaign
+					open={openModalDelete}
+					onClose={() => setOpenModalDelete(false)}
+					campaigns={campaignModal}
+				/>
+			)}
+			{openModalStart && (
+				<ModalConfirmStart
+					open={openModalStart}
+					onClose={() => setOpenModalStart(false)}
+					onConfirm={handleStartCampaign}
+					campaignName={campaignModal?.name || ""}
+				/>
+			)}
 			{/* Selection Bar */}
 			{selectedRows.length > 0 && (
 				<Box
@@ -1117,7 +1126,7 @@ export default function CampaignListTable({
 										>
 											<MenuItem
 												onClick={() => {
-													selectedId && duplicateCampaignAction(selectedId);
+													selectedId && duplicateCampaign(selectedId);
 													handleMenuClose();
 												}}
 											>
@@ -1155,7 +1164,7 @@ export default function CampaignListTable({
 											</MenuItem>
 											<MenuItem
 												onClick={() => {
-													selectedId && deleteCampaignAction(selectedId);
+													selectedId && deleteCampaign(selectedId);
 													handleMenuClose();
 												}}
 												sx={{

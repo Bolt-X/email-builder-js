@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContact, deleteContatsFromList, getContactListById, getProvinces, getWardsByProvinceId } from "../services/contact";
 import { Contact } from "../modules/contacts";
+import { toast } from "react-toastify";
+import i18n from "../i18n";
 
 export const useCreateContact = () => {
     const queryClient = useQueryClient();
@@ -8,6 +10,10 @@ export const useCreateContact = () => {
         mutationFn: ({ contact, slug }: { contact: any, slug: string }) => createContact(contact, slug),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["contact_list_by_id"] });
+            toast.success(i18n.t("contacts.create_contact_success"));
+        },
+        onError: () => {
+            toast.error(i18n.t("contacts.create_contact_error"));
         },
     });
 };
@@ -43,6 +49,10 @@ export const useDeleteContatsFromList = () => {
         mutationFn: (contactIds: string[]) => deleteContatsFromList(contactIds),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["contact_list_by_id"] });
+            toast.success(i18n.t("contacts.delete_contact_success"));
+        },
+        onError: () => {
+            toast.error(i18n.t("contacts.delete_contact_error"));
         },
     });
 };
