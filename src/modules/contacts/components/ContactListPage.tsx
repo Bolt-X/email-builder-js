@@ -157,12 +157,13 @@ export default function ContactListPage() {
 					</Button>
 				</Stack>
 			</Stack>
-
-			<CampaignSelectorModal
-				open={openCampaignSelector}
-				onClose={() => setOpenCampaignSelector(false)}
-				onSelect={handleCampaignSelect}
-			/>
+			{openCampaignSelector && (
+				<CampaignSelectorModal
+					open={openCampaignSelector}
+					onClose={() => setOpenCampaignSelector(false)}
+					onSelect={handleCampaignSelect}
+				/>
+			)}
 
 			<TableContainer component={Paper}>
 				<Table>

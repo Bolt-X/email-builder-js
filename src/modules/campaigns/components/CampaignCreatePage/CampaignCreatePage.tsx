@@ -43,6 +43,9 @@ import { Snackbar, Alert } from "@mui/material";
 import SubscriberSelector from "../../../contacts/components/SubscriberSelector";
 import { SubscriberSelection } from "../../types";
 import { setMessage } from "../../../../contexts";
+import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 interface CampaignFormValues {
 	name: string;
@@ -691,19 +694,27 @@ export default function CampaignCreatePage() {
 											{t("campaigns.form.date_time_label")}{" "}
 											<span style={{ color: "red" }}>*</span>
 										</Typography>
-										<TextField
-											type="datetime-local"
-											value={values.scheduledAt}
-											onChange={handleScheduledAtChange}
-											fullWidth
-											size="small"
-											required
-											sx={{
-												"& .MuiOutlinedInput-root": {
-													bgcolor: "background.paper",
-												},
-											}}
-										/>
+										<LocalizationProvider dateAdapter={AdapterDayjs}>
+											<DateTimePicker
+												slotProps={{
+													textField: {
+														size: "small",
+														sx: { borderRadius: "8px" },
+														fullWidth: true,
+														InputLabelProps: {
+															shrink: true
+														}
+													}
+												}}
+												format="DD/MM/YYYY HH:mm"
+												value={values.scheduledAt ? dayjs(values.scheduledAt) : null}
+												onChange={(value) => {
+													setValues({ ...values, scheduledAt: value ? value.toISOString() : null });
+												}}
+											// disableFuture
+											// label={t("campaigns.form.date_time_label")}
+											/>
+										</LocalizationProvider>
 									</Box>
 								)}
 							</Box>

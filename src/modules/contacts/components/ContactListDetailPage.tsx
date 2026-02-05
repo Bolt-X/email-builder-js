@@ -37,6 +37,9 @@ import ContactTable from "./ContactTable";
 import CreateContactModal from "./CreateContactModal";
 import ImportContactsModal from "./ImportContactsModal";
 import MoveOrAddListModal from "./MoveOrAddListModal";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 export default function ContactListDetailPage() {
 	const { id } = useParams<{ id: string }>();
@@ -583,6 +586,26 @@ export default function ContactListDetailPage() {
 							▼
 						</Typography>
 					</Button>
+					<Stack
+						direction="row"
+						spacing={1}
+						justifyContent="flex-end"
+						sx={{ mt: 1 }}
+					>
+						<Button
+							size="small"
+							onClick={() => setFilter({ ...filter, from: undefined, to: undefined })}
+						>
+							Clear
+						</Button>
+						<Button
+							size="small"
+							variant="contained"
+							onClick={() => setFilter({ ...filter, from: filter.from ? dayjs(filter.from).toISOString() : undefined, to: filter.to ? dayjs(filter.to).toISOString() : undefined })}
+						>
+							Apply
+						</Button>
+					</Stack>
 				</Stack>
 
 				<Button
@@ -756,40 +779,40 @@ export default function ContactListDetailPage() {
 						{t("campaigns.date_created")}
 					</Typography>
 					<Stack spacing={2}>
-						<TextField
-							label="From"
-							type="date"
-							size="small"
-							fullWidth
-							InputLabelProps={{ shrink: true }}
-						/>
-						<TextField
-							label="To"
-							type="date"
-							size="small"
-							fullWidth
-							InputLabelProps={{ shrink: true }}
-						/>
-						<Stack
-							direction="row"
-							spacing={1}
-							justifyContent="flex-end"
-							sx={{ mt: 1 }}
-						>
-							<Button
-								size="small"
-								onClick={() => setDateAnchorEl(null)}
-							>
-								Clear
-							</Button>
-							<Button
-								size="small"
-								variant="contained"
-								onClick={() => setDateAnchorEl(null)}
-							>
-								Apply
-							</Button>
-						</Stack>
+						<LocalizationProvider dateAdapter={AdapterDayjs}>
+							<DatePicker
+								label="From"
+								slotProps={{
+									textField: {
+										size: "small",
+										InputLabelProps: {
+											shrink: true
+										}
+									}
+								}}
+								format="DD/MM/YYYY"
+								value={filter.from ? dayjs(filter.from) : null}
+								onChange={(value) => setFilter({ ...filter, from: value ? value.toISOString() : undefined })}
+								disableFuture
+							/>
+						</LocalizationProvider>
+						<LocalizationProvider dateAdapter={AdapterDayjs}>
+							<DatePicker
+								label="To"
+								slotProps={{
+									textField: {
+										size: "small",
+										InputLabelProps: {
+											shrink: true
+										}
+									}
+								}}
+								format="DD/MM/YYYY"
+								value={filter.to ? dayjs(filter.to) : null}
+								onChange={(value) => setFilter({ ...filter, to: value ? value.toISOString() : undefined })}
+								disableFuture
+							/>
+						</LocalizationProvider>
 					</Stack>
 				</Box>
 			</Popover>

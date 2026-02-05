@@ -63,6 +63,9 @@ import { useTranslation } from "react-i18next";
 import ModalCustomDelete from "../base/ModalCustomDelete";
 import ModalDuplicate from "./ModalDuplicate";
 import CampaignSelectorModal from "../CampaignSelectorModal";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 interface ContactListTableProps {
 	formDrawerOpen: boolean;
@@ -477,24 +480,40 @@ export default function ContactListTable({
 									Filter by date created
 								</Typography>
 								<Stack spacing={2}>
-									<TextField
-										label="From"
-										type="date"
-										size="small"
-										fullWidth
-										InputLabelProps={{ shrink: true }}
-										value={startDate === undefined ? "" : startDate}
-										onChange={(e) => setStartDate(e.target.value)}
-									/>
-									<TextField
-										label="To"
-										type="date"
-										size="small"
-										fullWidth
-										InputLabelProps={{ shrink: true }}
-										value={endDate === undefined ? "" : endDate}
-										onChange={(e) => setEndDate(e.target.value)}
-									/>
+									<LocalizationProvider dateAdapter={AdapterDayjs}>
+										<DatePicker
+											label="From"
+											slotProps={{
+												textField: {
+													size: "small",
+													InputLabelProps: {
+														shrink: true
+													}
+												}
+											}}
+											format="DD/MM/YYYY"
+											value={startDate ? dayjs(startDate) : null}
+											onChange={(value) => setStartDate(value ? value.toISOString() : undefined)}
+											disableFuture
+										/>
+									</LocalizationProvider>
+									<LocalizationProvider dateAdapter={AdapterDayjs}>
+										<DatePicker
+											label="To"
+											slotProps={{
+												textField: {
+													size: "small",
+													InputLabelProps: {
+														shrink: true
+													}
+												}
+											}}
+											format="DD/MM/YYYY"
+											value={endDate ? dayjs(endDate) : null}
+											onChange={(value) => setEndDate(value ? value.toISOString() : undefined)}
+											disableFuture
+										/>
+									</LocalizationProvider>
 								</Stack>
 							</Popover>
 							<Stack

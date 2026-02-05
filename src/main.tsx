@@ -35,6 +35,7 @@ import { useSettingsStore } from "./modules/settings/store";
 
 import "./i18n";
 import i18n from "./i18n";
+import { ToastContainer } from "react-toastify";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -177,6 +178,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 		<QueryClientProvider client={queryClient}>
 			<BrowserRouter>
 				<AppWrapper />
+				<ToastContainer position="top-center" />
 			</BrowserRouter>
 		</QueryClientProvider>
 	</React.StrictMode>,

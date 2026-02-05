@@ -26,6 +26,11 @@ import { useGetAllTags } from "../../../hooks/useTags";
 import ModalCreateTag from "../../tags/ModalCreateTag";
 import { getContactListBySlugWithSubscribers } from "../service";
 import { getWardsByProvinceId } from "../../../services/contact";
+import { DatePicker } from "@mui/x-date-pickers";
+
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 interface CreateContactModalProps {
 	open: boolean;
@@ -544,20 +549,23 @@ export default function CreateContactModal({
 								>
 									Birthday ℹ️
 								</Typography>
-								<TextField
-									fullWidth
-									size="small"
-									type="date"
-									{...form.register("birthday")}
-									// InputProps={{
-									// 	endAdornment: (
-									// 		<CalendarMonth
-									// 			sx={{ color: "text.secondary", fontSize: 20 }}
-									// 		/>
-									// 	),
-									// }}
-									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-								/>
+								<LocalizationProvider dateAdapter={AdapterDayjs}>
+									<DatePicker
+										slotProps={{
+											textField: {
+												size: "small",
+												sx: { borderRadius: "8px" },
+												fullWidth: true
+											}
+										}}
+										format="DD/MM/YYYY"
+										value={form.watch("birthday") ? dayjs(form.watch("birthday")) : null}
+										onChange={(value) => {
+											form.setValue("birthday", value ? value.toISOString() : null);
+										}}
+										disableFuture
+									/>
+								</LocalizationProvider>
 							</Box>
 						</Stack>
 

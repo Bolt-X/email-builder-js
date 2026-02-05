@@ -51,6 +51,9 @@ const statusOptions: CampaignStatus[] = [
 
 import { useGetAllContactLists } from "../../../hooks/useContactLists";
 import { useGetAllTags } from "../../../hooks/useTags";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 	const { t } = useTranslation();
@@ -400,32 +403,54 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							p={2}
 							spacing={2}
 						>
-							<TextField
-								label={t("campaigns.date_range.from")}
-								type="date"
-								size="small"
-								InputLabelProps={{ shrink: true }}
-								value={localDate?.start || ""}
-								onChange={(e) =>
-									setLocalDate({
-										start: e.target.value,
-										end: localDate?.end || "",
-									})
-								}
-							/>
-							<TextField
-								label={t("campaigns.date_range.to")}
-								type="date"
-								size="small"
-								InputLabelProps={{ shrink: true }}
-								value={localDate?.end || ""}
-								onChange={(e) =>
-									setLocalDate({
-										start: localDate?.start || "",
-										end: e.target.value,
-									})
-								}
-							/>
+							<LocalizationProvider dateAdapter={AdapterDayjs}>
+								<DatePicker
+									slotProps={{
+										textField: {
+											size: "small",
+											sx: { borderRadius: "8px" },
+											fullWidth: true,
+											InputLabelProps: {
+												shrink: true
+											}
+										}
+									}}
+									format="DD/MM/YYYY"
+									value={localDate?.start ? dayjs(localDate.start) : null}
+									onChange={(value) => {
+										setLocalDate({
+											start: value ? value.toISOString() : null,
+											end: localDate?.end ? dayjs(localDate.end).toISOString() : null,
+										});
+									}}
+									disableFuture
+									label={t("campaigns.date_range.from")}
+								/>
+							</LocalizationProvider>
+							<LocalizationProvider dateAdapter={AdapterDayjs}>
+								<DatePicker
+									slotProps={{
+										textField: {
+											size: "small",
+											sx: { borderRadius: "8px" },
+											fullWidth: true,
+											InputLabelProps: {
+												shrink: true
+											}
+										}
+									}}
+									format="DD/MM/YYYY"
+									value={localDate?.end ? dayjs(localDate.end) : null}
+									onChange={(value) => {
+										setLocalDate({
+											start: localDate?.start ? dayjs(localDate.start).toISOString() : null,
+											end: value ? value.toISOString() : null,
+										});
+									}}
+									disableFuture
+									label={t("campaigns.date_range.to")}
+								/>
+							</LocalizationProvider>
 						</Stack>
 					</Popover>
 				</Stack>
