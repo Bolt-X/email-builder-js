@@ -60,24 +60,79 @@ interface CampaignFormValues {
 	subscribers: SubscriberSelection[];
 }
 
-const schemaCampaignCreate = yup.object().shape({
-	name: yup.string().required("Name is required"),
-	subject: yup.string().required("Subject is required"),
-	fromAddress: yup.string().required("From Address is required"),
-	template: yup.number().required("Template is required"),
-	scheduledAt: yup.string().nullable().notRequired(),
-	subscribers: yup.array().of(yup.object().shape({
-		id: yup.string().required("ID is required"),
-		type: yup.string().required("Type is required"),
-		name: yup.string().required("Name is required"),
-	})).min(1, "At least one subscriber is required"),
-	tags: yup.array().of(yup.string().required("Tag is required")).min(1, "At least one tag is required"),
-	sendType: yup.string().required("Send Type is required"),
-	description: yup.string().nullable().notRequired(),
-});
-
 export default function CampaignCreatePage() {
 	const { t } = useTranslation();
+
+	const schemaCampaignCreate = React.useMemo(
+		() =>
+			yup.object().shape({
+				name: yup.string().required(
+					t("common.validation.required", {
+						field: t("campaigns.form.name_label"),
+					}),
+				),
+				subject: yup.string().required(
+					t("common.validation.required", {
+						field: t("campaigns.form.subject_label"),
+					}),
+				),
+				fromAddress: yup.string().required(
+					t("common.validation.required", {
+						field: t("campaigns.form.from_address_label"),
+					}),
+				),
+				template: yup.number().required(
+					t("common.validation.required", {
+						field: t("campaigns.form.template_label"),
+					}),
+				),
+				scheduledAt: yup.string().nullable().notRequired(),
+				subscribers: yup
+					.array()
+					.of(
+						yup.object().shape({
+							id: yup
+								.string()
+								.required(t("common.validation.required", { field: "ID" })),
+							type: yup
+								.string()
+								.required(t("common.validation.required", { field: "Type" })),
+							name: yup
+								.string()
+								.required(
+									t("common.validation.required", { field: t("common.name") }),
+								),
+						}),
+					)
+					.min(
+						1,
+						t("common.validation.at_least_one", {
+							field: t("campaigns.form.to_label"),
+						}),
+					),
+				tags: yup
+					.array()
+					.of(
+						yup.string().required(
+							t("common.validation.required", {
+								field: t("campaigns.form.tags_label"),
+							}),
+						),
+					)
+					.min(
+						1,
+						t("common.validation.at_least_one", {
+							field: t("campaigns.form.tags_label"),
+						}),
+					),
+				sendType: yup
+					.string()
+					.required(t("common.validation.required", { field: "Send Type" })),
+				description: yup.string().nullable().notRequired(),
+			}),
+		[t],
+	);
+
 	const navigate = useNavigate();
 
 	const { data: tags } = useGetAllTags();
@@ -149,7 +204,11 @@ export default function CampaignCreatePage() {
 				name: data.name,
 				subject: data.subject,
 				fromAddress: data.fromAddress,
-				status: !isRunning ? "draft" : data.sendType === "now" ? "running" : "scheduled",
+				status: !isRunning
+					? "draft"
+					: data.sendType === "now"
+						? "running"
+						: "scheduled",
 				subscribers: data.subscribers,
 				tags: data.tags,
 				sendTime: data.sendType === "now" ? "now" : "schedule",
@@ -219,7 +278,7 @@ export default function CampaignCreatePage() {
 
 	useEffect(() => {
 		form.reset(values as any);
-	}, [values])
+	}, [values]);
 
 	console.log("form.formState.errors", form.formState.errors);
 
@@ -556,7 +615,6 @@ export default function CampaignCreatePage() {
 											setValues({ ...values, tags: newValue })
 										}
 										renderTags={() => null}
-
 										noOptionsText={
 											<div style={{ padding: 16, textAlign: "center" }}>
 												<Typography>{t("campaigns.form.no_tags")}</Typography>
@@ -591,6 +649,7 @@ export default function CampaignCreatePage() {
 												key={tag.slug}
 												label={tag.title}
 												onDelete={() => handleRemoveTag(tag.slug)}
+												size="small"
 											/>
 										))}
 									</Box>

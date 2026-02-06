@@ -15,9 +15,10 @@ import {
 	Select,
 	Stack,
 	TextField,
-	Typography
+	Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import * as yup from "yup";
@@ -37,25 +38,64 @@ interface CreateContactModalProps {
 	onClose: () => void;
 }
 
-const formContactSchema = yup.object().shape({
-	contact_lists: yup.array().of(yup.number()).required("Contact list is required"),
-	email: yup.string().email("Invalid email address").required("Email is required"),
-	status: yup.string().required("Status is required"),
-	first_name: yup.string().required("First name is required"),
-	last_name: yup.string().required("Last name is required"),
-	address: yup.string().required("Address is required"),
-	phone_number: yup.string().required("Phone is required"),
-	province: yup.string().nullable().notRequired(),
-	ward: yup.string().nullable().notRequired(),
-	birthday: yup.string().nullable().notRequired(),
-	company: yup.string().nullable().notRequired(),
-	tags: yup.array().of(yup.string()).nullable().notRequired(),
-});
-
 export default function CreateContactModal({
 	open,
 	onClose,
 }: CreateContactModalProps) {
+	const { t } = useTranslation();
+
+	const formContactSchema = useMemo(
+		() =>
+			yup.object().shape({
+				contact_lists: yup
+					.array()
+					.of(yup.number())
+					.required(
+						t("common.validation.required", {
+							field: t("contacts.contact_list"),
+						}),
+					),
+				email: yup
+					.string()
+					.email(t("common.validation.invalid_email"))
+					.required(
+						t("common.validation.required", { field: t("contacts.email") }),
+					),
+				status: yup
+					.string()
+					.required(
+						t("common.validation.required", { field: t("common.status") }),
+					),
+				first_name: yup
+					.string()
+					.required(
+						t("common.validation.required", { field: t("common.first_name") }),
+					),
+				last_name: yup
+					.string()
+					.required(
+						t("common.validation.required", { field: t("common.last_name") }),
+					),
+				address: yup
+					.string()
+					.required(
+						t("common.validation.required", { field: t("contacts.address") }),
+					),
+				phone_number: yup
+					.string()
+					.required(
+						t("common.validation.required", {
+							field: t("contacts.phone_number"),
+						}),
+					),
+				province: yup.string().nullable().notRequired(),
+				ward: yup.string().nullable().notRequired(),
+				birthday: yup.string().nullable().notRequired(),
+				company: yup.string().nullable().notRequired(),
+				tags: yup.array().of(yup.string()).nullable().notRequired(),
+			}),
+		[t],
+	);
 	const { id } = useParams();
 	const mutateCreateContact = useCreateContact();
 	const { data: tags } = useGetAllTags();
@@ -70,7 +110,7 @@ export default function CreateContactModal({
 			console.log("res", res);
 
 			setContactList(res[0].id);
-		}
+		};
 		fetchContactList();
 	}, [id]);
 
@@ -116,7 +156,7 @@ export default function CreateContactModal({
 				const res = await getWardsByProvinceId(form.watch("province"));
 				setWards(res);
 			}
-		}
+		};
 		fetchWards();
 	}, [form.watch("province")]);
 
@@ -126,7 +166,7 @@ export default function CreateContactModal({
 		} catch (error) {
 			console.error("Failed to create contact:", error);
 		}
-	}
+	};
 
 	const handleSaveAndAdd = async () => {
 		try {
@@ -136,11 +176,10 @@ export default function CreateContactModal({
 			await handleSubmit({ contact: data, slug: id });
 		} catch (error) {
 			console.error("Failed to create contact:", error);
-		}
-		finally {
+		} finally {
 			form.reset();
 		}
-	}
+	};
 
 	const handleAddContact = async () => {
 		try {
@@ -154,7 +193,7 @@ export default function CreateContactModal({
 			onClose();
 			form.reset();
 		}
-	}
+	};
 
 	return (
 		<Dialog
@@ -185,7 +224,7 @@ export default function CreateContactModal({
 					variant="h6"
 					sx={{ fontWeight: 700 }}
 				>
-					New contact
+					{t("contacts.new_contact")}
 				</Typography>
 				<IconButton
 					onClick={() => {
@@ -213,7 +252,7 @@ export default function CreateContactModal({
 					onClick={() => setGeneralOpen(!generalOpen)}
 				>
 					<Typography sx={{ color: "white", fontWeight: 600, ml: 1 }}>
-						General information
+						{t("contacts.general_info")}
 					</Typography>
 					<IconButton
 						size="small"
@@ -270,7 +309,8 @@ export default function CreateContactModal({
 										variant="body2"
 										sx={{ mb: 1, fontWeight: 600 }}
 									>
-										Email Address <span style={{ color: "red" }}>*</span>
+										{t("contacts.email")}{" "}
+										<span style={{ color: "red" }}>*</span>
 									</Typography>
 									<TextField
 										fullWidth
@@ -287,25 +327,32 @@ export default function CreateContactModal({
 										variant="body2"
 										sx={{ mb: 1, fontWeight: 600 }}
 									>
-										Email marketing status <span style={{ color: "red" }}>*</span>
+										{t("contacts.email_marketing_status")}{" "}
+										<span style={{ color: "red" }}>*</span>
 									</Typography>
 									<Select
 										fullWidth
 										size="small"
 										value={form.watch("status") || ""}
 										onChange={(e) => {
-											form.setValue("status", e.target.value)
+											form.setValue("status", e.target.value);
 										}}
 										error={!!form.formState.errors.status}
 										sx={{ borderRadius: "8px" }}
 										displayEmpty
 									>
 										<MenuItem value="">
-											<em>Select status</em>
+											<em>{t("contacts.select_status")}</em>
 										</MenuItem>
-										<MenuItem value="subscribed">Subscribed</MenuItem>
-										<MenuItem value="non_subscribed">Non subscribed</MenuItem>
-										<MenuItem value="unsubscribed">Unsubscribed</MenuItem>
+										<MenuItem value="subscribed">
+											{t("contacts.status.subscribed")}
+										</MenuItem>
+										<MenuItem value="non_subscribed">
+											{t("contacts.status.non_subscribed")}
+										</MenuItem>
+										<MenuItem value="unsubscribed">
+											{t("contacts.status.unsubscribed")}
+										</MenuItem>
 									</Select>
 									{form.formState.errors.status && (
 										<Typography
@@ -317,13 +364,18 @@ export default function CreateContactModal({
 									)}
 								</Box>
 							</Stack>
-							<Stack direction="row" spacing={3} alignItems="cetner">
+							<Stack
+								direction="row"
+								spacing={3}
+								alignItems="cetner"
+							>
 								<Box sx={{ flex: 1 }}>
 									<Typography
 										variant="body2"
 										sx={{ mb: 1, fontWeight: 600 }}
 									>
-										First Name <span style={{ color: "red" }}>*</span>
+										{t("common.first_name")}{" "}
+										<span style={{ color: "red" }}>*</span>
 									</Typography>
 									<TextField
 										fullWidth
@@ -332,7 +384,7 @@ export default function CreateContactModal({
 										error={!!form.formState.errors.first_name}
 										helperText={form.formState.errors.first_name?.message}
 										sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-										placeholder="Enter full name"
+										placeholder={t("contacts.enter_full_name")}
 									/>
 								</Box>
 								<Box sx={{ flex: 1 }}>
@@ -340,7 +392,8 @@ export default function CreateContactModal({
 										variant="body2"
 										sx={{ mb: 1, fontWeight: 600 }}
 									>
-										Last Name <span style={{ color: "red" }}>*</span>
+										{t("common.last_name")}{" "}
+										<span style={{ color: "red" }}>*</span>
 									</Typography>
 									<TextField
 										fullWidth
@@ -349,10 +402,9 @@ export default function CreateContactModal({
 										error={!!form.formState.errors.last_name}
 										helperText={form.formState.errors.last_name?.message}
 										sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-										placeholder="Enter last name"
+										placeholder={t("contacts.enter_last_name")}
 									/>
 								</Box>
-
 							</Stack>
 
 							<Box>
@@ -360,7 +412,8 @@ export default function CreateContactModal({
 									variant="body2"
 									sx={{ mb: 1, fontWeight: 600 }}
 								>
-									Address<span style={{ color: "red" }}>*</span>
+									{t("contacts.address")}
+									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth
@@ -369,10 +422,9 @@ export default function CreateContactModal({
 									error={!!form.formState.errors.address}
 									helperText={form.formState.errors.address?.message}
 									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-									placeholder="Enter address"
+									placeholder={t("contacts.enter_address")}
 								/>
 							</Box>
-
 
 							<Stack
 								direction="row"
@@ -383,24 +435,29 @@ export default function CreateContactModal({
 										variant="body2"
 										sx={{ mb: 1, fontWeight: 600 }}
 									>
-										City/ Province
+										{t("contacts.province")}
 									</Typography>
 									<Select
 										fullWidth
 										size="small"
 										value={form.watch("province") || ""}
 										onChange={(e) => {
-											form.setValue("province", e.target.value)
-											form.setValue("ward", "") // reset district nếu có
+											form.setValue("province", e.target.value);
+											form.setValue("ward", ""); // reset district nếu có
 										}}
 										displayEmpty
 										sx={{ borderRadius: "8px" }}
 									>
 										<MenuItem value="">
-											<em>Select province</em>
+											<em>{t("contacts.select_province")}</em>
 										</MenuItem>
 										{provinces?.map((province: any) => (
-											<MenuItem key={province.slug} value={province.slug}>{province.name}</MenuItem>
+											<MenuItem
+												key={province.slug}
+												value={province.slug}
+											>
+												{province.name}
+											</MenuItem>
 										))}
 									</Select>
 								</Box>
@@ -409,24 +466,29 @@ export default function CreateContactModal({
 										variant="body2"
 										sx={{ mb: 1, fontWeight: 600 }}
 									>
-										District
+										{t("contacts.district")}
 									</Typography>
 									<Select
 										fullWidth
 										size="small"
 										value={form.watch("ward") || ""}
 										onChange={(e) => {
-											form.setValue("ward", e.target.value)
+											form.setValue("ward", e.target.value);
 										}}
 										displayEmpty
 										sx={{ borderRadius: "8px" }}
 										disabled={!form.watch("province")}
 									>
 										<MenuItem value="">
-											<em>Select district</em>
+											<em>{t("contacts.select_district")}</em>
 										</MenuItem>
 										{wards?.map((ward: any) => (
-											<MenuItem key={ward.slug} value={ward.slug}>{ward.name}</MenuItem>
+											<MenuItem
+												key={ward.slug}
+												value={ward.slug}
+											>
+												{ward.name}
+											</MenuItem>
 										))}
 									</Select>
 								</Box>
@@ -448,7 +510,7 @@ export default function CreateContactModal({
 					onClick={() => setAdditionalOpen(!additionalOpen)}
 				>
 					<Typography sx={{ color: "white", fontWeight: 600, ml: 1 }}>
-						Additional information
+						{t("contacts.additional_info")}
 					</Typography>
 					<IconButton
 						size="small"
@@ -468,7 +530,7 @@ export default function CreateContactModal({
 								variant="body2"
 								sx={{ mb: 1, fontWeight: 600 }}
 							>
-								Tags
+								{t("contacts.tags")}
 							</Typography>
 							<Autocomplete
 								multiple
@@ -480,20 +542,29 @@ export default function CreateContactModal({
 									const valueSlug = value?.slug || value;
 									return optionSlug === valueSlug;
 								}}
-								value={form.watch("tags")?.map((v: string) => tags?.find((t: any) => t.slug === v)) || []}
+								value={
+									form
+										.watch("tags")
+										?.map((v: string) =>
+											tags?.find((t: any) => t.slug === v),
+										) || []
+								}
 								onChange={(_, newValue) =>
-									form.setValue("tags", newValue.map((v: any) => v.slug))
+									form.setValue(
+										"tags",
+										newValue.map((v: any) => v.slug),
+									)
 								}
 								renderTags={() => null}
 								noOptionsText={
 									<div style={{ padding: 16, textAlign: "center" }}>
-										<Typography>No tags found</Typography>
+										<Typography>{t("contacts.no_tags_found")}</Typography>
 										<Button
 											onClick={handleAddTag}
 											variant="outlined"
 											size="small"
 										>
-											Add new tag
+											{t("contacts.add_new_tag")}
 										</Button>
 									</div>
 								}
@@ -501,7 +572,7 @@ export default function CreateContactModal({
 									<TextField
 										{...params}
 										variant="outlined"
-										placeholder="Select tags"
+										placeholder={t("contacts.select_tags")}
 									/>
 								)}
 							/>
@@ -516,7 +587,12 @@ export default function CreateContactModal({
 									<Chip
 										key={tag}
 										label={tag}
-										onDelete={() => form.setValue("tags", form.watch("tags")?.filter((t: string) => t !== tag))}
+										onDelete={() =>
+											form.setValue(
+												"tags",
+												form.watch("tags")?.filter((t: string) => t !== tag),
+											)
+										}
 									/>
 								))}
 							</Box>
@@ -531,7 +607,8 @@ export default function CreateContactModal({
 									variant="body2"
 									sx={{ mb: 1, fontWeight: 600 }}
 								>
-									Phone Number <span style={{ color: "red" }}>*</span>
+									{t("contacts.phone_number")}{" "}
+									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth
@@ -547,7 +624,7 @@ export default function CreateContactModal({
 									variant="body2"
 									sx={{ mb: 1, fontWeight: 600 }}
 								>
-									Birthday ℹ️
+									{t("contacts.birthday")}
 								</Typography>
 								<LocalizationProvider dateAdapter={AdapterDayjs}>
 									<DatePicker
@@ -555,13 +632,20 @@ export default function CreateContactModal({
 											textField: {
 												size: "small",
 												sx: { borderRadius: "8px" },
-												fullWidth: true
-											}
+												fullWidth: true,
+											},
 										}}
 										format="DD/MM/YYYY"
-										value={form.watch("birthday") ? dayjs(form.watch("birthday")) : null}
+										value={
+											form.watch("birthday")
+												? dayjs(form.watch("birthday"))
+												: null
+										}
 										onChange={(value) => {
-											form.setValue("birthday", value ? value.toISOString() : null);
+											form.setValue(
+												"birthday",
+												value ? value.toISOString() : null,
+											);
 										}}
 										disableFuture
 									/>
@@ -574,7 +658,7 @@ export default function CreateContactModal({
 								variant="body2"
 								sx={{ mb: 1, fontWeight: 600 }}
 							>
-								Company
+								{t("contacts.company")}
 							</Typography>
 							<TextField
 								fullWidth
@@ -599,7 +683,7 @@ export default function CreateContactModal({
 					onClick={onClose}
 					sx={{ textTransform: "none", color: "text.primary", fontWeight: 700 }}
 				>
-					Cancel
+					{t("common.cancel")}
 				</Button>
 				<Stack
 					direction="row"
@@ -609,7 +693,7 @@ export default function CreateContactModal({
 						onClick={form.handleSubmit(handleSaveAndAdd)}
 						sx={{ textTransform: "none", color: "#2196F3", fontWeight: 700 }}
 					>
-						Save & Add Another
+						{t("contacts.save_and_add_another")}
 					</Button>
 					<Button
 						variant="contained"
@@ -624,7 +708,7 @@ export default function CreateContactModal({
 							"&:hover": { boxShadow: "none" },
 						}}
 					>
-						Add contact
+						{t("contacts.add_contact")}
 					</Button>
 				</Stack>
 			</DialogActions>
