@@ -220,6 +220,10 @@ export default function CampaignCreatePage() {
 		}
 	};
 
+	useEffect(() => {
+		form.setValue("sendType", values.sendType || "now");
+	}, [values.sendType]);
+
 	return (
 		<Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
 			<ModalCreateTag
@@ -580,7 +584,8 @@ export default function CampaignCreatePage() {
 								</Typography>
 								<RadioGroup
 									row
-									{...form.register("sendType")}
+									value={values.sendType || "now"}
+									onChange={(e) => setValues({ ...values, sendType: e.target.value as "now" | "schedule" })}
 									sx={{
 										gap: 2,
 										width: "100%",
@@ -703,7 +708,7 @@ export default function CampaignCreatePage() {
 										sx={{ m: 0, flex: "1 1 0", width: "100%" }}
 									/>
 								</RadioGroup>
-								{values.sendType === "schedule" && (
+								{form.watch("sendType") === "schedule" && (
 									<Box mt={2}>
 										<Typography
 											variant="subtitle2"

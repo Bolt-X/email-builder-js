@@ -11,7 +11,7 @@ COPY . .
 WORKDIR /app
 
 # ---- Cài đặt dependencies ----
-RUN npm install --legacy-peer-deps
+RUN npm install --force
 
 # ---- Expose port cho Vite ----
 EXPOSE 5173

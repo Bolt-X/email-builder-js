@@ -409,6 +409,9 @@ function StepInitialise({
 							target="_blank"
 							rel="noopener noreferrer"
 							style={{ color: "#2563EB", fontWeight: 600 }}
+							onClick={(e) => {
+								e.stopPropagation();
+							}}
 						>
 							Download
 						</a>
