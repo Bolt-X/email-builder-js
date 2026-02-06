@@ -11,6 +11,7 @@ import {
 	Chip,
 	Paper,
 	ListItemText,
+	FormHelperText,
 } from "@mui/material";
 import { People, FilterList } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
@@ -21,20 +22,21 @@ import {
 import { useSegments, fetchSegments } from "../stores/segment.store";
 import { SubscriberSelection, SubscriberType } from "../../campaigns/types";
 import { useGetAllContactLists } from "../../../hooks/useContactLists";
-import { UseFormReturn } from "react-hook-form";
 
 interface SubscriberSelectorProps {
 	value: SubscriberSelection[];
 	onChange: (subscribers: SubscriberSelection[]) => void;
 	required?: boolean;
-	form?: UseFormReturn<any>;
+	error?: boolean;
+	helperText?: string;
 }
 
 export default function SubscriberSelector({
 	value,
 	onChange,
 	required = false,
-	form = null,
+	error = false,
+	helperText = "",
 }: SubscriberSelectorProps) {
 	const { t } = useTranslation();
 	// const contactLists = useContactLists();
@@ -125,6 +127,9 @@ export default function SubscriberSelector({
 			!value.find((r) => r.id === segment.id && r.type === "segment"),
 	);
 
+	console.log("error", error);
+	console.log("helperText", helperText);
+
 	return (
 		<Stack spacing={3}>
 			<Stack
@@ -135,15 +140,15 @@ export default function SubscriberSelector({
 				<FormControl fullWidth>
 					<InputLabel>{t("contacts.add_contact_list")}</InputLabel>
 					<Select
-						{...form?.register("subscribers")}
+						value=""
 						label={t("contacts.add_contact_list")}
-						{...form?.register("subscribers")}
-						error={!!form?.formState.errors.subscribers}
+						onChange={(e) => handleAddList(e.target.value)}
 						displayEmpty
 						size="small"
 						sx={{
 							minHeight: 46,
 						}}
+						error={error}
 					>
 						{availableLists?.length === 0 ? (
 							<MenuItem
@@ -183,6 +188,7 @@ export default function SubscriberSelector({
 							))
 						)}
 					</Select>
+					{error && <FormHelperText error>{helperText}</FormHelperText>}
 				</FormControl>
 
 				{/* Segment Selector */}

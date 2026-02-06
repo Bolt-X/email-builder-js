@@ -22,6 +22,7 @@ import {
 	DialogContent,
 	DialogActions,
 	Divider,
+	FormHelperText,
 } from "@mui/material";
 import {
 	ArrowBack,
@@ -43,9 +44,6 @@ import { Snackbar, Alert } from "@mui/material";
 import SubscriberSelector from "../../../contacts/components/SubscriberSelector";
 import { SubscriberSelection } from "../../types";
 import { setMessage } from "../../../../contexts";
-import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -62,29 +60,25 @@ interface CampaignFormValues {
 	subscribers: SubscriberSelection[];
 }
 
-const formCampaignSchema = yup.object().shape({
+const schemaCampaignCreate = yup.object().shape({
 	name: yup.string().required("Name is required"),
 	subject: yup.string().required("Subject is required"),
-	fromAddress: yup.string().required("From address is required"),
-	tags: yup.array().of(yup.string()).required("Tags are required"),
-	sendType: yup.string().required("Send type is required"),
-	description: yup.string().nullable().notRequired(),
-	template: yup.number().nullable().notRequired(),
+	fromAddress: yup.string().required("From Address is required"),
+	template: yup.number().required("Template is required"),
 	scheduledAt: yup.string().nullable().notRequired(),
 	subscribers: yup.array().of(yup.object().shape({
-		id: yup.string().required("Subscriber ID is required"),
-		type: yup.string().required("Subscriber type is required"),
-		name: yup.string().required("Subscriber name is required"),
-	})).required("Subscribers are required"),
+		id: yup.string().required("ID is required"),
+		type: yup.string().required("Type is required"),
+		name: yup.string().required("Name is required"),
+	})).min(1, "At least one subscriber is required"),
+	tags: yup.array().of(yup.string().required("Tag is required")).min(1, "At least one tag is required"),
+	sendType: yup.string().required("Send Type is required"),
+	description: yup.string().nullable().notRequired(),
 });
 
 export default function CampaignCreatePage() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-
-	const form = useForm({
-		resolver: yupResolver(formCampaignSchema),
-	});
 
 	const { data: tags } = useGetAllTags();
 	const { data: templates } = useGetAllTemplates();
@@ -115,6 +109,10 @@ export default function CampaignCreatePage() {
 	const mutateCreate = useCreateCampaign();
 	const mutateUpdate = useUpdateCampaign();
 	const location = useLocation();
+
+	const form = useForm({
+		resolver: yupResolver(schemaCampaignCreate),
+	});
 
 	useEffect(() => {
 		const params = new URLSearchParams(location.search);
@@ -151,7 +149,7 @@ export default function CampaignCreatePage() {
 				name: data.name,
 				subject: data.subject,
 				fromAddress: data.fromAddress,
-				status: status || "draft",
+				status: !isRunning ? "draft" : data.sendType === "now" ? "running" : "scheduled",
 				subscribers: data.subscribers,
 				tags: data.tags,
 				sendTime: data.sendType === "now" ? "now" : "schedule",
@@ -164,8 +162,7 @@ export default function CampaignCreatePage() {
 				template: data.template,
 				slug: data.name.toLowerCase().replace(/ /g, "-") + "-" + Date.now(), // Generate a basic slug
 			});
-			console.log("Campaign created:", res);
-			if (isRunning) {
+			if (isRunning && data.sendType === "now") {
 				mutateUpdate.mutateAsync({
 					slug: res.slug,
 					payload: { status: "running" },
@@ -221,8 +218,10 @@ export default function CampaignCreatePage() {
 	};
 
 	useEffect(() => {
-		form.setValue("sendType", values.sendType || "now");
-	}, [values.sendType]);
+		form.reset(values as any);
+	}, [values])
+
+	console.log("form.formState.errors", form.formState.errors);
 
 	return (
 		<Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
@@ -378,9 +377,11 @@ export default function CampaignCreatePage() {
 									placeholder={t("campaigns.form.name_placeholder")}
 									variant="outlined"
 									size="small"
-									{...form.register("name")}
+									value={values.name}
 									error={!!form.formState.errors.name}
-									helperText={form.formState.errors.name?.message as string}
+									helperText={form.formState.errors.name?.message}
+									onChange={handleChange("name")}
+									required
 								/>
 							</Box>
 
@@ -397,10 +398,12 @@ export default function CampaignCreatePage() {
 									fullWidth
 									placeholder={t("campaigns.form.subject_placeholder")}
 									variant="outlined"
-									size="small"
-									{...form.register("subject")}
 									error={!!form.formState.errors.subject}
-									helperText={form.formState.errors.subject?.message as string}
+									helperText={form.formState.errors.subject?.message}
+									size="small"
+									value={values.subject}
+									onChange={handleChange("subject")}
+									required
 								/>
 							</Box>
 
@@ -417,7 +420,8 @@ export default function CampaignCreatePage() {
 									placeholder={t("campaigns.form.description_placeholder")}
 									variant="outlined"
 									size="small"
-									{...form.register("description")}
+									value={values.description}
+									onChange={handleChange("description")}
 									multiline
 									rows={3}
 								/>
@@ -437,7 +441,8 @@ export default function CampaignCreatePage() {
 									size="small"
 								>
 									<Select
-										{...form.register("fromAddress")}
+										value={values.fromAddress}
+										onChange={handleChange("fromAddress")}
 										error={!!form.formState.errors.fromAddress}
 									>
 										<MenuItem value="BoltX Digital <norereply@boltxmail.com>">
@@ -447,6 +452,11 @@ export default function CampaignCreatePage() {
 											BoltX Worker &lt;norereply@boltxworker.com&gt;
 										</MenuItem>
 									</Select>
+									{form.formState.errors.fromAddress && (
+										<FormHelperText error>
+											{form.formState.errors.fromAddress?.message}
+										</FormHelperText>
+									)}
 								</FormControl>
 							</Box>
 
@@ -470,7 +480,14 @@ export default function CampaignCreatePage() {
 										isOptionEqualToValue={(option, value) =>
 											option.id === value.id
 										}
-										{...form.register("template")}
+										value={
+											templates?.find(
+												(template) => template.id === values.template,
+											) || null
+										}
+										onChange={(_, newValue) =>
+											setValues({ ...values, template: newValue?.id as number })
+										}
 										renderTags={() => null}
 										renderInput={(params) => (
 											<TextField
@@ -479,10 +496,14 @@ export default function CampaignCreatePage() {
 												placeholder={t("campaigns.form.template_placeholder")}
 												size="small"
 												error={!!form.formState.errors.template}
-												helperText={form.formState.errors.template?.message as string}
 											/>
 										)}
 									/>
+									{form.formState.errors.template && (
+										<FormHelperText error>
+											{form.formState.errors.template?.message}
+										</FormHelperText>
+									)}
 								</FormControl>
 							</Box>
 
@@ -497,10 +518,11 @@ export default function CampaignCreatePage() {
 									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<SubscriberSelector
-									value={values.subscribers || []}
+									value={values.subscribers}
 									onChange={handleSubscribersChange}
 									required
-									form={form}
+									error={!!form.formState.errors.subscribers}
+									helperText={form.formState.errors.subscribers?.message}
 								/>
 							</Box>
 
@@ -529,11 +551,12 @@ export default function CampaignCreatePage() {
 											const valueSlug = value?.slug || value;
 											return optionSlug === valueSlug;
 										}}
-										{...form.register("tags")}
+										value={values.tags}
 										onChange={(_, newValue) =>
 											setValues({ ...values, tags: newValue })
 										}
 										renderTags={() => null}
+
 										noOptionsText={
 											<div style={{ padding: 16, textAlign: "center" }}>
 												<Typography>{t("campaigns.form.no_tags")}</Typography>
@@ -552,7 +575,7 @@ export default function CampaignCreatePage() {
 												variant="outlined"
 												placeholder={t("campaigns.form.tags_placeholder")}
 												error={!!form.formState.errors.tags}
-												helperText={form.formState.errors.tags?.message as string}
+												helperText={form.formState.errors.tags?.message}
 											/>
 										)}
 									/>
@@ -584,8 +607,8 @@ export default function CampaignCreatePage() {
 								</Typography>
 								<RadioGroup
 									row
-									value={values.sendType || "now"}
-									onChange={(e) => setValues({ ...values, sendType: e.target.value as "now" | "schedule" })}
+									value={values.sendType}
+									onChange={handleChange("sendType")}
 									sx={{
 										gap: 2,
 										width: "100%",
@@ -708,7 +731,7 @@ export default function CampaignCreatePage() {
 										sx={{ m: 0, flex: "1 1 0", width: "100%" }}
 									/>
 								</RadioGroup>
-								{form.watch("sendType") === "schedule" && (
+								{values.sendType === "schedule" && (
 									<Box mt={2}>
 										<Typography
 											variant="subtitle2"
@@ -717,27 +740,19 @@ export default function CampaignCreatePage() {
 											{t("campaigns.form.date_time_label")}{" "}
 											<span style={{ color: "red" }}>*</span>
 										</Typography>
-										<LocalizationProvider dateAdapter={AdapterDayjs}>
-											<DateTimePicker
-												slotProps={{
-													textField: {
-														size: "small",
-														sx: { borderRadius: "8px" },
-														fullWidth: true,
-														InputLabelProps: {
-															shrink: true
-														}
-													}
-												}}
-												format="DD/MM/YYYY HH:mm"
-												value={values.scheduledAt ? dayjs(values.scheduledAt) : null}
-												onChange={(value) => {
-													setValues({ ...values, scheduledAt: value ? value.toISOString() : null });
-												}}
-											// disableFuture
-											// label={t("campaigns.form.date_time_label")}
-											/>
-										</LocalizationProvider>
+										<TextField
+											type="datetime-local"
+											value={values.scheduledAt}
+											onChange={handleScheduledAtChange}
+											fullWidth
+											size="small"
+											required
+											sx={{
+												"& .MuiOutlinedInput-root": {
+													bgcolor: "background.paper",
+												},
+											}}
+										/>
 									</Box>
 								)}
 							</Box>
