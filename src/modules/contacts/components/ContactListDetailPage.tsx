@@ -28,10 +28,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetContactListById } from "../../../hooks/useContact";
-import {
-	setVisibleColumns,
-	useVisibleColumns
-} from "../store";
+import { setVisibleColumns, useVisibleColumns } from "../store";
 import { useSegments } from "../stores/segment.store";
 import ContactTable from "./ContactTable";
 import CreateContactModal from "./CreateContactModal";
@@ -52,7 +49,7 @@ export default function ContactListDetailPage() {
 		status: [],
 		tags: [],
 		segments: [],
-	})
+	});
 	// const contactLists = useContactLists();
 	const { data: contactListData } = useGetContactListById(id, {
 		from: "",
@@ -92,6 +89,7 @@ export default function ContactListDetailPage() {
 
 	const [importModalOpen, setImportModalOpen] = useState(false);
 	const [createModalOpen, setCreateModalOpen] = useState(false);
+	const [editingContact, setEditingContact] = useState<any>(null);
 	const [moveModalOpen, setMoveModalOpen] = useState(false);
 	const [moveModalType, setMoveModalType] = useState<"move" | "add">("move");
 
@@ -190,27 +188,43 @@ export default function ContactListDetailPage() {
 
 		try {
 			// Lấy thông tin contacts được chọn
-			const selectedContactData = contactListData?.subscribers?.filter((c) =>
-				selectedContacts.includes(c.id!)
-			) || [];
+			const selectedContactData =
+				contactListData?.subscribers?.filter((c) =>
+					selectedContacts.includes(c.id!),
+				) || [];
 
 			// Tạo CSV content
-			const headers = ["Email", "First Name", "Last Name", "Status", "Date Created", "Date Updated"];
+			const headers = [
+				"Email",
+				"First Name",
+				"Last Name",
+				"Status",
+				"Date Created",
+				"Date Updated",
+			];
 			const rows = selectedContactData.map((contact) => {
 				return [
 					contact.email || "",
 					contact.first_name || "",
 					contact.last_name || "",
 					contact.status || "",
-					contact.date_created ? new Date(contact.date_created).toLocaleString() : "",
-					contact.date_updated ? new Date(contact.date_updated).toLocaleString() : "",
+					contact.date_created
+						? new Date(contact.date_created).toLocaleString()
+						: "",
+					contact.date_updated
+						? new Date(contact.date_updated).toLocaleString()
+						: "",
 				];
 			});
 
 			// Escape CSV values
 			const escapeCSV = (value: string | undefined | null): string => {
 				const strValue = value?.toString() || "";
-				if (strValue.includes(",") || strValue.includes('"') || strValue.includes("\n")) {
+				if (
+					strValue.includes(",") ||
+					strValue.includes('"') ||
+					strValue.includes("\n")
+				) {
 					return `"${strValue.replace(/"/g, '""')}"`;
 				}
 				return strValue;
@@ -224,7 +238,9 @@ export default function ContactListDetailPage() {
 
 			// Tạo BOM để hỗ trợ UTF-8 trong Excel
 			const BOM = "\uFEFF";
-			const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+			const blob = new Blob([BOM + csvContent], {
+				type: "text/csv;charset=utf-8;",
+			});
 
 			// Tạo link download
 			const link = document.createElement("a");
@@ -301,7 +317,10 @@ export default function ContactListDetailPage() {
 					<Button
 						variant="outlined"
 						startIcon={<Add />}
-						onClick={() => setCreateModalOpen(true)}
+						onClick={() => {
+							setEditingContact(null);
+							setCreateModalOpen(true);
+						}}
 						sx={{
 							textTransform: "none",
 							fontWeight: 600,
@@ -594,14 +613,24 @@ export default function ContactListDetailPage() {
 					>
 						<Button
 							size="small"
-							onClick={() => setFilter({ ...filter, from: undefined, to: undefined })}
+							onClick={() =>
+								setFilter({ ...filter, from: undefined, to: undefined })
+							}
 						>
 							Clear
 						</Button>
 						<Button
 							size="small"
 							variant="contained"
-							onClick={() => setFilter({ ...filter, from: filter.from ? dayjs(filter.from).toISOString() : undefined, to: filter.to ? dayjs(filter.to).toISOString() : undefined })}
+							onClick={() =>
+								setFilter({
+									...filter,
+									from: filter.from
+										? dayjs(filter.from).toISOString()
+										: undefined,
+									to: filter.to ? dayjs(filter.to).toISOString() : undefined,
+								})
+							}
 						>
 							Apply
 						</Button>
@@ -662,8 +691,8 @@ export default function ContactListDetailPage() {
 								variant="body2"
 								sx={{ fontWeight: 600 }}
 							>
-								{selectedContacts.length} item{selectedContacts.length > 1 ? "s" : ""}{" "}
-								selected
+								{selectedContacts.length} item
+								{selectedContacts.length > 1 ? "s" : ""} selected
 							</Typography>
 							<Typography
 								variant="body2"
@@ -761,6 +790,10 @@ export default function ContactListDetailPage() {
 					setRowsPerPage(r);
 					setPage(0);
 				}}
+				onEdit={(contact) => {
+					setEditingContact(contact);
+					setCreateModalOpen(true);
+				}}
 			/>
 
 			{/* Date Popover */}
@@ -786,13 +819,18 @@ export default function ContactListDetailPage() {
 									textField: {
 										size: "small",
 										InputLabelProps: {
-											shrink: true
-										}
-									}
+											shrink: true,
+										},
+									},
 								}}
 								format="DD/MM/YYYY"
 								value={filter.from ? dayjs(filter.from) : null}
-								onChange={(value) => setFilter({ ...filter, from: value ? value.toISOString() : undefined })}
+								onChange={(value) =>
+									setFilter({
+										...filter,
+										from: value ? value.toISOString() : undefined,
+									})
+								}
 								disableFuture
 							/>
 						</LocalizationProvider>
@@ -803,13 +841,18 @@ export default function ContactListDetailPage() {
 									textField: {
 										size: "small",
 										InputLabelProps: {
-											shrink: true
-										}
-									}
+											shrink: true,
+										},
+									},
 								}}
 								format="DD/MM/YYYY"
 								value={filter.to ? dayjs(filter.to) : null}
-								onChange={(value) => setFilter({ ...filter, to: value ? value.toISOString() : undefined })}
+								onChange={(value) =>
+									setFilter({
+										...filter,
+										to: value ? value.toISOString() : undefined,
+									})
+								}
 								disableFuture
 							/>
 						</LocalizationProvider>
@@ -858,7 +901,11 @@ export default function ContactListDetailPage() {
 
 			<CreateContactModal
 				open={createModalOpen}
-				onClose={() => setCreateModalOpen(false)}
+				onClose={() => {
+					setCreateModalOpen(false);
+					setEditingContact(null);
+				}}
+				initialData={editingContact}
 			/>
 
 			<MoveOrAddListModal

@@ -6,6 +6,13 @@ export interface Contact {
 	first_name?: string;
 	last_name?: string;
 	status: ContactStatus;
+	phone_number?: string;
+	address?: string;
+	province?: string;
+	ward?: string;
+	company?: string;
+	birthday?: string;
+	tags?: string[];
 	date_created?: string;
 	date_updated?: string;
 }
