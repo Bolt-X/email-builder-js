@@ -182,6 +182,13 @@ export default function CampaignCreatePage() {
 				scheduledAt: `${dateParam}T09:00`,
 			}));
 		}
+
+		if (location.state && (location.state as any).subscribers) {
+			setValues((prev) => ({
+				...prev,
+				subscribers: (location.state as any).subscribers,
+			}));
+		}
 	}, [location]);
 	const handleChange = (prop: keyof CampaignFormValues) => (event: any) => {
 		setValues({ ...values, [prop]: event.target.value });

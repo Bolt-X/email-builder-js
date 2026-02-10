@@ -352,7 +352,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							color: "text.primary",
 							borderColor: "rgba(0,0,0,0.12)",
 							px: 2,
-							minHeight: 42,
+							minHeight: 38,
 							justifyContent: "flex-start",
 							minWidth: 140,
 							fontWeight: 400,
@@ -381,7 +381,7 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 							color="inherit"
 							onClick={handleClear}
 							sx={{
-								height: 40,
+								height: 38,
 								textTransform: "none",
 								color: "text.secondary",
 							}}
@@ -411,16 +411,18 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 											sx: { borderRadius: "8px" },
 											fullWidth: true,
 											InputLabelProps: {
-												shrink: true
-											}
-										}
+												shrink: true,
+											},
+										},
 									}}
 									format="DD/MM/YYYY"
 									value={localDate?.start ? dayjs(localDate.start) : null}
 									onChange={(value) => {
 										setLocalDate({
 											start: value ? value.toISOString() : null,
-											end: localDate?.end ? dayjs(localDate.end).toISOString() : null,
+											end: localDate?.end
+												? dayjs(localDate.end).toISOString()
+												: null,
 										});
 									}}
 									disableFuture
@@ -435,15 +437,17 @@ export default function CampaignFilters({ disabled }: { disabled?: boolean }) {
 											sx: { borderRadius: "8px" },
 											fullWidth: true,
 											InputLabelProps: {
-												shrink: true
-											}
-										}
+												shrink: true,
+											},
+										},
 									}}
 									format="DD/MM/YYYY"
 									value={localDate?.end ? dayjs(localDate.end) : null}
 									onChange={(value) => {
 										setLocalDate({
-											start: localDate?.start ? dayjs(localDate.start).toISOString() : null,
+											start: localDate?.start
+												? dayjs(localDate.start).toISOString()
+												: null,
 											end: value ? value.toISOString() : null,
 										});
 									}}

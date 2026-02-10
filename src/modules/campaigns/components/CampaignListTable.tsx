@@ -547,7 +547,6 @@ export default function CampaignListTable({
 			)}
 			{/* Modal Delete Campaign */}
 			{openModalDelete && (
-
 				<ModalDeleteCampaign
 					open={openModalDelete}
 					onClose={() => setOpenModalDelete(false)}
@@ -962,8 +961,8 @@ export default function CampaignListTable({
 														Create:{" "}
 														{campaign.date_created
 															? new Date(
-																campaign.date_created,
-															).toLocaleDateString()
+																	campaign.date_created,
+																).toLocaleDateString()
 															: "-"}
 													</Typography>
 													<Typography
@@ -973,8 +972,8 @@ export default function CampaignListTable({
 														Update:{" "}
 														{campaign.date_updated
 															? new Date(
-																campaign.date_updated,
-															).toLocaleDateString()
+																	campaign.date_updated,
+																).toLocaleDateString()
 															: "-"}
 													</Typography>
 												</Stack>
@@ -984,6 +983,9 @@ export default function CampaignListTable({
 											<TableCell>
 												<Box
 													sx={{
+														display: "grid",
+														gridTemplateColumns: "1fr 1fr",
+														gap: 1,
 														fontSize: "0.75rem",
 														color: "neutral.black.60",
 													}}
@@ -991,9 +993,9 @@ export default function CampaignListTable({
 													<Box
 														display="flex"
 														flexDirection="row"
-														gap={2}
+														gap={1}
 													>
-														{t("campaigns.stats_lbl.views")}{" "}
+														{t("campaigns.stats_lbl.views")}
 														<Typography
 															variant="body2"
 															color="neutral.black.80"
@@ -1004,9 +1006,9 @@ export default function CampaignListTable({
 													<Box
 														display="flex"
 														flexDirection="row"
-														gap={2}
+														gap={1}
 													>
-														{t("campaigns.stats_lbl.clicks")}{" "}
+														{t("campaigns.stats_lbl.clicks")}
 														<Typography
 															variant="body2"
 															color="neutral.black.80"
@@ -1017,9 +1019,9 @@ export default function CampaignListTable({
 													<Box
 														display="flex"
 														flexDirection="row"
-														gap={2}
+														gap={1}
 													>
-														{t("campaigns.stats_lbl.sent")}{" "}
+														{t("campaigns.stats_lbl.sent")}
 														<Typography
 															variant="body2"
 															color="neutral.black.80"
@@ -1030,9 +1032,9 @@ export default function CampaignListTable({
 													<Box
 														display="flex"
 														flexDirection="row"
-														gap={2}
+														gap={1}
 													>
-														{t("campaigns.stats_lbl.bounces")}{" "}
+														{t("campaigns.stats_lbl.bounces")}
 														<Typography
 															variant="body2"
 															color="neutral.black.80"

@@ -62,7 +62,7 @@ import { downloadContactListAsCSV } from "../../service";
 import { useTranslation } from "react-i18next";
 import ModalCustomDelete from "../base/ModalCustomDelete";
 import ModalDuplicate from "./ModalDuplicate";
-import CampaignSelectorModal from "../CampaignSelectorModal";
+
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
@@ -105,8 +105,6 @@ export default function ContactListTable({
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [openModalDuplicate, setOpenModalDuplicate] = useState(false);
-	const [openCampaignSelector, setOpenCampaignSelector] = useState(false);
-	const [campaignSelected, setCampaignSelected] = useState<string | null>(null);
 	const [filtered, setFiltered] = useState({
 		from: undefined,
 		to: undefined,
@@ -177,19 +175,22 @@ export default function ContactListTable({
 	};
 
 	const handleSendCampaign = (selectedId?: string) => {
-		setCampaignSelected(selectedId || null);
-		setOpenCampaignSelector(true);
-	};
+		let listsToSelect: any[] = [];
 
-	const handleCampaignSelect = (campaignSlug: string) => {
-		const queryParams = new URLSearchParams();
-		if (selectedIds.length > 0) {
-			queryParams.set("contact-list", selectedIds.join(","));
+		if (selectedId) {
+			const list = contactLists?.find((l) => l.slug === selectedId);
+			if (list) {
+				listsToSelect = [{ id: list.slug!, name: list.name, type: "list" }];
+			}
+		} else if (selectedIds.length > 0) {
+			listsToSelect = (contactLists || [])
+				.filter((l) => selectedIds.includes(l.slug!) && l.slug)
+				.map((l) => ({ id: l.slug!, name: l.name, type: "list" }));
 		}
-		if (campaignSelected) {
-			queryParams.set("contact-list", campaignSelected);
+
+		if (listsToSelect.length > 0) {
+			navigate("/campaigns/new", { state: { subscribers: listsToSelect } });
 		}
-		navigate(`/campaigns/${campaignSlug}?${queryParams.toString()}`);
 	};
 
 	const handleDelete = async () => {
@@ -275,11 +276,7 @@ export default function ContactListTable({
 				}}
 				slug={selectedId}
 			/>
-			<CampaignSelectorModal
-				open={openCampaignSelector}
-				onClose={() => setOpenCampaignSelector(false)}
-				onSelect={handleCampaignSelect}
-			/>
+
 			<ModalCustomDelete
 				open={confirmDelete}
 				isPending={isDeleting}
@@ -487,13 +484,15 @@ export default function ContactListTable({
 												textField: {
 													size: "small",
 													InputLabelProps: {
-														shrink: true
-													}
-												}
+														shrink: true,
+													},
+												},
 											}}
 											format="DD/MM/YYYY"
 											value={startDate ? dayjs(startDate) : null}
-											onChange={(value) => setStartDate(value ? value.toISOString() : undefined)}
+											onChange={(value) =>
+												setStartDate(value ? value.toISOString() : undefined)
+											}
 											disableFuture
 										/>
 									</LocalizationProvider>
@@ -504,13 +503,15 @@ export default function ContactListTable({
 												textField: {
 													size: "small",
 													InputLabelProps: {
-														shrink: true
-													}
-												}
+														shrink: true,
+													},
+												},
 											}}
 											format="DD/MM/YYYY"
 											value={endDate ? dayjs(endDate) : null}
-											onChange={(value) => setEndDate(value ? value.toISOString() : undefined)}
+											onChange={(value) =>
+												setEndDate(value ? value.toISOString() : undefined)
+											}
 											disableFuture
 										/>
 									</LocalizationProvider>
@@ -522,17 +523,25 @@ export default function ContactListTable({
 								justifyContent="flex-end"
 							>
 								<Button
+									variant="contained"
 									size="small"
-									onClick={handleClearFilter}
+									onClick={handleFiltered}
+									sx={{ height: 38, px: 2, borderRadius: "6px" }}
 								>
-									Clear
+									{t("common.search")}
 								</Button>
 								<Button
+									variant="text"
 									size="small"
-									variant="contained"
-									onClick={handleFiltered}
+									color="inherit"
+									onClick={handleClearFilter}
+									sx={{
+										height: 38,
+										textTransform: "none",
+										color: "text.secondary",
+									}}
 								>
-									Apply
+									{t("common.clear")}
 								</Button>
 							</Stack>
 						</Stack>
@@ -761,13 +770,13 @@ export default function ContactListTable({
 												>
 													{list.date_created
 														? new Date(list.date_created).toLocaleDateString(
-															"en-GB",
-															{
-																day: "2-digit",
-																month: "2-digit",
-																year: "numeric",
-															},
-														)
+																"en-GB",
+																{
+																	day: "2-digit",
+																	month: "2-digit",
+																	year: "numeric",
+																},
+															)
 														: "25/10/2025"}
 												</Typography>
 											</TableCell>
