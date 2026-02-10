@@ -8,6 +8,11 @@ export interface Contact {
 	status: ContactStatus;
 	date_created?: string;
 	date_updated?: string;
+	address?: string;
+	phone_number?: string;
+	company?: string;
+	birthday?: string;
+	tags?: any[];
 }
 
 export type ContactListStatus = "published" | "draft" | "archived";

@@ -47,6 +47,9 @@ import { setMessage } from "../../../../contexts";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 interface CampaignFormValues {
 	name: string;
@@ -194,10 +197,8 @@ export default function CampaignCreatePage() {
 		setValues({ ...values, [prop]: event.target.value });
 	};
 
-	const handleScheduledAtChange = (
-		event: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setValues({ ...values, scheduledAt: event.target.value });
+	const handleScheduledAtChange = (value: string) => {
+		setValues({ ...values, scheduledAt: value });
 	};
 
 	const handleSubscribersChange = (subscribers: SubscriberSelection[]) => {
@@ -806,7 +807,22 @@ export default function CampaignCreatePage() {
 											{t("campaigns.form.date_time_label")}{" "}
 											<span style={{ color: "red" }}>*</span>
 										</Typography>
-										<TextField
+										<LocalizationProvider dateAdapter={AdapterDayjs}>
+											<DateTimePicker
+												value={dayjs(values.scheduledAt)}
+												onChange={(value) => handleScheduledAtChange(value.toISOString())}
+												slotProps={{
+													textField: {
+														size: "small",
+														sx: { borderRadius: "8px" },
+														fullWidth: true,
+													},
+												}}
+												format="DD/MM/YYYY HH:mm"
+												disablePast
+											/>
+										</LocalizationProvider>
+										{/* <TextField
 											type="datetime-local"
 											value={values.scheduledAt}
 											onChange={handleScheduledAtChange}
@@ -818,7 +834,7 @@ export default function CampaignCreatePage() {
 													bgcolor: "background.paper",
 												},
 											}}
-										/>
+										/> */}
 									</Box>
 								)}
 							</Box>

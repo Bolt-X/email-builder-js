@@ -11,6 +11,7 @@ import { directusClientWithRest } from "../../services/directus";
 import { Contact, ContactList, Segment, ContactStatus } from "./types";
 import i18n from "../../i18n";
 import { toast } from "react-toastify";
+import JSZip from "jszip";
 
 /**
  * Transform Directus Subscriber to Contact model
@@ -595,83 +596,94 @@ export async function exportContactList(slug: string | number): Promise<void> {
 }
 
 /**
- * Download contact list as CSV file
+ * Build CSV content from contact list (NO DOWNLOAD)
  */
-export async function downloadContactListAsCSV(slug: string): Promise<void> {
-  try {
-    // Lấy contact list với tất cả subscribers
-    const contactList = await getContactListBySlug(slug);
-    if (!contactList) {
-      throw new Error("Contact list not found");
-    }
-
-    // Lấy tất cả subscribers từ contact list
-    const subscribersData = await getContactListBySlugWithSubscribers(slug);
-
-    // Chuyển đổi subscribers thành format Contact
-    const subscribers: Contact[] = subscribersData
-      .map((item: any) => {
-        const subscriber = item.subscriber;
-        // Nếu subscriber là object thì transform, nếu là string/ID thì bỏ qua (cần fetch riêng)
-        if (subscriber && typeof subscriber === "object") {
-          return transformContactFromDirectus(subscriber);
-        }
-        return null;
-      })
-      .filter((contact): contact is Contact => contact !== null);
-
-    // Tạo CSV content
-    const headers = ["Email", "First Name", "Last Name", "Status", "Date Created", "Date Updated"];
-    const rows = subscribers.map((subscriber) => {
-      return [
-        subscriber.email || "",
-        subscriber.first_name || "",
-        subscriber.last_name || "",
-        subscriber.status || "",
-        subscriber.date_created ? new Date(subscriber.date_created).toLocaleString() : "",
-        subscriber.date_updated ? new Date(subscriber.date_updated).toLocaleString() : "",
-      ];
-    });
-
-    // Escape CSV values (xử lý dấu phẩy và dấu ngoặc kép)
-    const escapeCSV = (value: string | undefined | null): string => {
-      const strValue = value?.toString() || "";
-      if (strValue.includes(",") || strValue.includes('"') || strValue.includes("\n")) {
-        return `"${strValue.replace(/"/g, '""')}"`;
-      }
-      return strValue;
-    };
-
-    // Tạo CSV string
-    const csvContent = [
-      headers.map(escapeCSV).join(","),
-      ...rows.map((row) => row.map(escapeCSV).join(",")),
-    ].join("\n");
-
-    // Tạo BOM để hỗ trợ UTF-8 trong Excel
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
-
-    // Tạo link download
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-
-    // Tên file: sanitize tên contact list
-    const fileName = `${slug}.csv`;
-    link.setAttribute("download", fileName);
-
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Cleanup
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Error downloading contact list as CSV:", error);
-    throw error;
+export async function buildContactListCSV(slug: string): Promise<string> {
+  const contactList = await getContactListBySlug(slug);
+  if (!contactList) {
+    throw new Error(`Contact list not found: ${slug}`);
   }
+
+  const subscribersData = await getContactListBySlugWithSubscribers(slug);
+
+  const subscribers: Contact[] = subscribersData
+    .map((item: any) => {
+      const subscriber = item.subscriber;
+      if (subscriber && typeof subscriber === "object") {
+        return transformContactFromDirectus(subscriber);
+      }
+      return null;
+    })
+    .filter((contact): contact is Contact => contact !== null);
+
+  const headers = [
+    "Email",
+    "First Name",
+    "Last Name",
+    "Address",
+    "Phone Number",
+    "Company",
+    "Birthday",
+    "Tags",
+  ];
+
+  const escapeCSV = (value: any): string => {
+    const str = value?.toString() || "";
+    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  const rows = subscribers.map((subscriber) => [
+    subscriber.email || "",
+    subscriber.first_name || "",
+    subscriber.last_name || "",
+    subscriber.address || "",
+    subscriber.phone_number || "",
+    subscriber.company || "",
+    subscriber.birthday || "",
+    subscriber.tags?.map((tag: any) => tag.name).join(",") || "",
+  ]);
+
+  const csvContent = [
+    headers.map(escapeCSV).join(","),
+    ...rows.map((row) => row.map(escapeCSV).join(",")),
+  ].join("\n");
+
+  // BOM để Excel đọc UTF-8
+  return "\uFEFF" + csvContent;
+}
+
+/**
+ * Download multiple contact lists as ONE ZIP file
+ */
+export async function downloadContactListsAsZip(slugs: string[]): Promise<void> {
+  if (slugs.length === 0) return;
+
+  const zip = new JSZip();
+
+  // chạy song song cho nhanh
+  await Promise.all(
+    slugs.map(async (slug) => {
+      const csvContent = await buildContactListCSV(slug);
+      zip.file(`${slug}.csv`, csvContent);
+    })
+  );
+
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(zipBlob);
+
+  link.href = url;
+  link.download = "contact-lists.zip";
+  link.style.display = "none";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 export const getContactListBySlugWithSubscribers = async (slug: string) => {

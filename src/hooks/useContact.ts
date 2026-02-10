@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createContact, deleteContatsFromList, getContactListById, getProvinces, getWardsByProvinceId } from "../services/contact";
+import { createContact, deleteContatsFromList, getContactListById, getProvinces, getWardsByProvinceId, moveContactToList } from "../services/contact";
 import { Contact } from "../modules/contacts";
 import { toast } from "react-toastify";
 import i18n from "../i18n";
@@ -35,7 +35,7 @@ export const useGetWardsByProvinceId = (provinceId: string | number) => {
     });
 };
 
-export const useGetContactListById = (slug: string, filter: any) => {
+export const useGetContactListById = (slug: string, filter?: any) => {
     return useQuery({
         queryKey: ["contact_list_by_id", slug, filter],
         queryFn: () => getContactListById(slug, filter),
@@ -53,6 +53,20 @@ export const useDeleteContatsFromList = () => {
         },
         onError: () => {
             toast.error(i18n.t("contacts.delete_contact_error"));
+        },
+    });
+};
+
+export const useMoveContactToList = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ contactId, newListId, oldListId }: { contactId: string, newListId: string, oldListId: string }) => moveContactToList(contactId, newListId, oldListId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["contact_list_by_id"] });
+            toast.success(i18n.t("contacts.move_contact_success"));
+        },
+        onError: () => {
+            toast.error(i18n.t("contacts.move_contact_error"));
         },
     });
 };

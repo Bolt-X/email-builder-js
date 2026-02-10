@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useGetAllContactLists } from "../../../hooks/useContactLists";
 import { useNavigate } from "react-router-dom";
 import { addContactToList, moveContactToList } from "../../../services/contact";
+import { useMoveContactToList } from "../../../hooks/useContact";
 
 interface MoveOrAddListModalProps {
     open: boolean;
@@ -24,6 +25,7 @@ const MoveOrAddListModal = ({
     const [selectedList, setSelectedList] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const { data: contactLists } = useGetAllContactLists();
+    const { mutateAsync: moveContactToList } = useMoveContactToList();
 
     const handleMove = async () => {
         if (!selectedList || !oldListId) {
@@ -35,11 +37,11 @@ const MoveOrAddListModal = ({
         try {
             // Move từng contact
             for (const contactId of contactIds) {
-                await moveContactToList(
-                    contactId.toString(),
-                    selectedList.slug,
-                    oldListId
-                );
+                await moveContactToList({
+                    contactId: contactId.toString(),
+                    newListId: selectedList.slug,
+                    oldListId: oldListId
+                });
             }
             onSuccess?.();
             onClose();

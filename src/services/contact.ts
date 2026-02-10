@@ -55,40 +55,84 @@ export const getWardsByProvinceId = async (provinceId: string | number) => {
 
 export const getContactListById = async (slug: string, filter?: any) => {
     try {
-        const deepFilter: any = {};
+        const subscriberFilter: any = {};
+        const otherFilters: any = {};
 
-        if (filter.from || filter.to) {
-            deepFilter.date_created = {};
-            if (filter.from) deepFilter.date_created._gte = filter.from;
-            if (filter.to) deepFilter.date_created._lte = filter.to;
+        // Filter theo ngày tạo
+        if (filter?.from || filter?.to) {
+            const dateFilter: any = {};
+            if (filter.from) dateFilter._gte = filter.from;
+            if (filter.to) dateFilter._lte = filter.to;
+            otherFilters.date_created = dateFilter;
         }
 
-        if (filter.status) {
-            deepFilter.status = { _eq: filter.status };
+        // Filter theo status (có thể là array hoặc single value)
+        if (filter?.status) {
+            if (Array.isArray(filter.status) && filter.status.length > 0) {
+                otherFilters.status = { _in: filter.status };
+            } else if (typeof filter.status === 'string' && filter.status) {
+                otherFilters.status = { _eq: filter.status };
+            }
         }
 
-        if (filter.tags?.length) {
-            deepFilter.tags = {
+        // Filter theo tags
+        if (filter?.tags?.length) {
+            otherFilters.tags = {
                 tags_slug: { _in: filter.tags },
             };
         }
 
-        const hasDeepFilter = Object.keys(deepFilter).length > 0;
-        console.log("hasDeepFilter", deepFilter);
+        // Filter theo text search
+        if (filter?.text && filter.text.trim()) {
+            const isValidDate = (value: string) =>
+                /^\d{4}-\d{2}-\d{2}$/.test(value);
+            otherFilters._or = [
+                { email: { _icontains: filter.text } },
+                { first_name: { _icontains: filter.text } },
+                { last_name: { _icontains: filter.text } },
+                { address: { _icontains: filter.text } },
+                { phone_number: { _icontains: filter.text } },
+                { company: { _icontains: filter.text } },
+                ...(isValidDate(filter.text)
+                    ? [{ birthday: { _eq: filter.text } }]
+                    : []),
+            ];
+        }
+
+        // Kết hợp tất cả các filter
+        const filterKeys = Object.keys(otherFilters);
+        if (filterKeys.length > 0) {
+            if (filterKeys.length === 1) {
+                // Chỉ có một điều kiện
+                Object.assign(subscriberFilter, otherFilters);
+            } else {
+                // Có nhiều điều kiện, cần dùng _and
+                const andConditions: any[] = [];
+                Object.keys(otherFilters).forEach(key => {
+                    andConditions.push({ [key]: otherFilters[key] });
+                });
+                subscriberFilter._and = andConditions;
+            }
+        }
+
+        const hasFilter = Object.keys(subscriberFilter).length > 0;
+
+        const queryOptions: any = {
+            fields: ["*", "subscribers.subscriber.*", "subscribers.subscriber.tags.*"],
+        };
+
+        if (hasFilter) {
+            queryOptions.deep = {
+                subscribers: {
+                    _filter: {
+                        subscriber: subscriberFilter,
+                    }
+                },
+            };
+        }
 
         const res = await directusClientWithRest.request(
-            readItem("contact_lists", slug, {
-                fields: ["*", "subscribers.subscriber.*"],
-                ...(hasDeepFilter && {
-                    deep: {
-                        subscribers: {
-                            _filter: {
-                                subscriber: deepFilter,
-                            }
-                        },
-                    },
-                }),
-            }),
+            readItem("contact_lists", slug, queryOptions),
         );
 
         return transformContactListFromDirectus(res);
@@ -152,8 +196,6 @@ export const moveContactToList = async (
             );
             return res;
         }
-        await getContactListById(oldListId)
-        // Nếu đã có trong list mới rồi thì chỉ cần xóa khỏi list cũ (đã làm ở bước 2)
         return { message: "Contact already in new list, removed from old list" };
     } catch (error) {
         console.error("Error moving contact to list:", error);

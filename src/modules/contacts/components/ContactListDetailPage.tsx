@@ -13,6 +13,7 @@ import {
 	Box,
 	Button,
 	Checkbox,
+	CircularProgress,
 	Divider,
 	FormControlLabel,
 	FormGroup,
@@ -51,16 +52,12 @@ export default function ContactListDetailPage() {
 		to: undefined,
 		status: [],
 		tags: [],
-		segments: [],
+		text: "",
 	})
+
+	const [confirmSearch, setConfirmSearch] = useState<any | null>(null);
 	// const contactLists = useContactLists();
-	const { data: contactListData } = useGetContactListById(id, {
-		from: "",
-		to: "",
-		status: "",
-		tags: [],
-		segments: [],
-	});
+	const { data: contactListData, isLoading, isFetching } = useGetContactListById(id, confirmSearch);
 
 	const visibleColumns = useVisibleColumns();
 
@@ -112,37 +109,30 @@ export default function ContactListDetailPage() {
 		}
 	};
 
-	// const contactList = contactListData.find(
-	// 	(list) => String(list.slug) === String(id),
-	// );
+	const handleConfirmSearch = () => {
+		setConfirmSearch({
+			from: filter.from,
+			to: filter.to,
+			status: filter.status,
+			tags: filter.tags,
+			text: filter.text,
+		});
+	};
 
-	// const contactsInList = contactList?.subscribers || [];
-
-	// const filteredContacts = contactsInList.filter((contact) => {
-	// 	// 1. Search Query
-	// 	const query = searchQuery.toLowerCase();
-	// 	const matchesSearch =
-	// 		!searchQuery ||
-	// 		contact.email.toLowerCase().includes(query) ||
-	// 		contact.first_name?.toLowerCase().includes(query) ||
-	// 		contact.last_name?.toLowerCase().includes(query);
-
-	// 	// 2. Status Filter
-	// 	const matchesStatus =
-	// 		selectedStatus.length === 0 || selectedStatus.includes(contact.status);
-
-	// 	// 3. Tag Filter (Subscribers in schema don't have tags field directly, skipping for now)
-	// 	const matchesTags = true;
-
-	// 	// 4. Segment Filter
-	// 	const matchesSegment = true;
-
-	// 	return matchesSearch && matchesStatus && matchesTags && matchesSegment;
-	// });
+	const handleClearSearch = () => {
+		setConfirmSearch(null);
+		setFilter({
+			from: undefined,
+			to: undefined,
+			status: [],
+			tags: [],
+			text: "",
+		});
+	};
 
 	// Get unique tags (skipping as model changed)
 	const allTags: string[] = [];
-	const statusOptions = ["enabled", "blocklisted", "duplicate"];
+	const statusOptions = ["subscribed", "non_subscribed", "unsubscribed"];
 
 	// Pagination logic
 	const totalContacts = contactListData?.subscribers?.length;
@@ -244,7 +234,31 @@ export default function ContactListDetailPage() {
 		}
 	};
 
-	if (!contactListData) {
+	const handleMoveOneContactToList = (id: string | number) => {
+		setSelectedContacts([id]);
+		setMoveModalType("move");
+		setMoveModalOpen(true);
+	};
+
+	// Hiển thị loading khi đang fetch data
+	if (isLoading || isFetching) {
+		return (
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "center",
+					alignItems: "center",
+					minHeight: "400px",
+					flexDirection: "column",
+					gap: 2,
+				}}
+			>
+				<CircularProgress size={24} />
+			</Box>
+		);
+	}
+
+	if (!contactListData || !contactListData.name) {
 		return (
 			<Box sx={{ p: 4, textAlign: "center" }}>
 				<Typography variant="h6">Contact list not found</Typography>
@@ -348,8 +362,8 @@ export default function ContactListDetailPage() {
 					<TextField
 						size="small"
 						placeholder="Search"
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
+						value={filter.text}
+						onChange={(e) => setFilter({ ...filter, text: e.target.value })}
 						InputProps={{
 							startAdornment: (
 								<InputAdornment position="start">
@@ -470,13 +484,9 @@ export default function ContactListDetailPage() {
 										key={status}
 										control={
 											<Checkbox
-												checked={selectedStatus.includes(status)}
+												checked={filter.status.includes(status)}
 												onChange={() => {
-													setSelectedStatus((prev) =>
-														prev.includes(status)
-															? prev.filter((s) => s !== status)
-															: [...prev, status],
-													);
+													setFilter({ ...filter, status: filter.status.includes(status) ? filter.status.filter((s) => s !== status) : [...filter.status, status] });
 												}}
 												size="small"
 											/>
@@ -589,21 +599,28 @@ export default function ContactListDetailPage() {
 					<Stack
 						direction="row"
 						spacing={1}
-						justifyContent="flex-end"
-						sx={{ mt: 1 }}
 					>
 						<Button
-							size="small"
-							onClick={() => setFilter({ ...filter, from: undefined, to: undefined })}
-						>
-							Clear
-						</Button>
-						<Button
-							size="small"
 							variant="contained"
-							onClick={() => setFilter({ ...filter, from: filter.from ? dayjs(filter.from).toISOString() : undefined, to: filter.to ? dayjs(filter.to).toISOString() : undefined })}
+							size="small"
+							onClick={handleConfirmSearch}
+							sx={{ height: 38, px: 2, borderRadius: "6px" }}
 						>
-							Apply
+							{t("common.search")}
+						</Button>
+
+						<Button
+							variant="text"
+							size="small"
+							color="inherit"
+							onClick={handleClearSearch}
+							sx={{
+								height: 40,
+								textTransform: "none",
+								color: "text.secondary",
+							}}
+						>
+							{t("common.clear")}
 						</Button>
 					</Stack>
 				</Stack>
@@ -761,6 +778,7 @@ export default function ContactListDetailPage() {
 					setRowsPerPage(r);
 					setPage(0);
 				}}
+				handleMoveOneContactToList={handleMoveOneContactToList}
 			/>
 
 			{/* Date Popover */}
@@ -863,7 +881,7 @@ export default function ContactListDetailPage() {
 
 			<MoveOrAddListModal
 				open={moveModalOpen}
-				onClose={() => setMoveModalOpen(false)}
+				onClose={() => { setMoveModalOpen(false); setSelectedContacts([]); }}
 				type={moveModalType}
 				contactIds={selectedContacts}
 				oldListId={id}

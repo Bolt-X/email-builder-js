@@ -309,6 +309,7 @@ const resources = {
 				},
 				no_contacts_found: "No contacts found",
 				add_contact: "Add contact",
+				move_contact: "Move contact",
 				edit_contact: "Edit contact",
 				delete_contact: "Delete contact",
 				new_contact: "New contact",

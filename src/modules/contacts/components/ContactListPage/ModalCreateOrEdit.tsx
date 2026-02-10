@@ -84,25 +84,30 @@ const ModalCreateOrEditContactList = ({
 	};
 
 	useEffect(() => {
+		if (!open) {
+			form.reset();
+			return;
+		}
+
 		if (dataContactList) {
 			form.reset({
 				name: dataContactList.name,
 				description: dataContactList.description,
 			});
+		} else {
+			form.reset({
+				name: null,
+				description: null,
+			});
 		}
-	}, [dataContactList]);
-
-	useEffect(() => {
-		if (!open) {
-			form.reset();
-		}
-	}, [open]);
+	}, [open, dataContactList]);
 
 	return (
 		<Dialog
 			open={open}
 			onClose={() => {
 				onClose();
+				form.reset();
 			}}
 		>
 			<Stack

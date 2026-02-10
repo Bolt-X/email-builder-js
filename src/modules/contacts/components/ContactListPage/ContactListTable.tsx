@@ -58,7 +58,7 @@ import {
 	setVisibleColumns,
 } from "../../stores/contactList.store";
 import { ContactList } from "../../types";
-import { downloadContactListAsCSV } from "../../service";
+import { downloadContactListsAsZip } from "../../service";
 import { useTranslation } from "react-i18next";
 import ModalCustomDelete from "../base/ModalCustomDelete";
 import ModalDuplicate from "./ModalDuplicate";
@@ -66,6 +66,7 @@ import ModalDuplicate from "./ModalDuplicate";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+import ImportContactsModal from "../ImportContactsModal";
 
 interface ContactListTableProps {
 	formDrawerOpen: boolean;
@@ -112,6 +113,7 @@ export default function ContactListTable({
 	});
 
 	const [confirmDelete, setConfirmDelete] = useState(false);
+	const [openImportContactsModal, setOpenImportContactsModal] = useState(false);
 
 	const handleFiltered = () => {
 		setFiltered({
@@ -254,12 +256,7 @@ export default function ContactListTable({
 	const handleDownload = async () => {
 		if (selectedIds.length > 0) {
 			try {
-				// Download từng file CSV cho mỗi contact list được chọn
-				for (const slug of selectedIds) {
-					await downloadContactListAsCSV(slug as string);
-					// Thêm delay nhỏ giữa các lần download để tránh browser block
-					await new Promise((resolve) => setTimeout(resolve, 300));
-				}
+				await downloadContactListsAsZip(selectedIds as string[]);
 			} catch (error) {
 				console.error("Failed to download contact lists:", error);
 			}
@@ -268,6 +265,11 @@ export default function ContactListTable({
 
 	return (
 		<>
+			<ImportContactsModal
+				open={openImportContactsModal}
+				onClose={() => { setOpenImportContactsModal(false); setSelectedId(null) }}
+				contactListSlug={selectedId}
+			/>
 			<ModalDuplicate
 				open={openModalDuplicate}
 				onClose={() => {
@@ -520,7 +522,6 @@ export default function ContactListTable({
 							<Stack
 								direction="row"
 								spacing={1}
-								justifyContent="flex-end"
 							>
 								<Button
 									variant="contained"
@@ -770,13 +771,13 @@ export default function ContactListTable({
 												>
 													{list.date_created
 														? new Date(list.date_created).toLocaleDateString(
-																"en-GB",
-																{
-																	day: "2-digit",
-																	month: "2-digit",
-																	year: "numeric",
-																},
-															)
+															"en-GB",
+															{
+																day: "2-digit",
+																month: "2-digit",
+																year: "numeric",
+															},
+														)
 														: "25/10/2025"}
 												</Typography>
 											</TableCell>
@@ -804,6 +805,7 @@ export default function ContactListTable({
 													<IconButton
 														size="small"
 														sx={{ color: "#666" }}
+														onClick={() => { setOpenImportContactsModal(true); setSelectedId(list.slug) }}
 													>
 														<PostAdd fontSize="small" />
 													</IconButton>

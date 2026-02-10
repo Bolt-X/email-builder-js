@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { MoreVert, Edit, Delete, PostAdd, Campaign } from "@mui/icons-material";
+import { MoreVert, Edit, Delete, PostAdd, Campaign, DriveFileMoveOutlined } from "@mui/icons-material";
 import { Contact, ContactStatus } from "../types";
 import ModalCustomDelete from "./base/ModalCustomDelete";
 import { useDeleteContatsFromList } from "../../../hooks/useContact";
@@ -37,6 +37,7 @@ interface ContactTableProps {
 	rowsPerPage?: number;
 	onPageChange?: (page: number) => void;
 	onRowsPerPageChange?: (rows: number) => void;
+	handleMoveOneContactToList?: (id: string | number) => void;
 }
 
 const statusStyles: Record<
@@ -79,6 +80,7 @@ export default function ContactTable({
 	rowsPerPage = 25,
 	onPageChange,
 	onRowsPerPageChange,
+	handleMoveOneContactToList
 }: ContactTableProps) {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -279,13 +281,13 @@ export default function ContactTable({
 											>
 												{contact.date_created
 													? new Date(contact.date_created).toLocaleDateString(
-															"en-GB",
-															{
-																day: "2-digit",
-																month: "2-digit",
-																year: "numeric",
-															},
-														)
+														"en-GB",
+														{
+															day: "2-digit",
+															month: "2-digit",
+															year: "numeric",
+														},
+													)
 													: "-"}
 											</Typography>
 										</TableCell>
@@ -308,12 +310,13 @@ export default function ContactTable({
 														<Edit fontSize="small" />
 													</IconButton>
 												</Tooltip>
-												<Tooltip title={t("contacts.add_contact")}>
+												<Tooltip title={t("contacts.move_contact")}>
 													<IconButton
 														size="small"
 														sx={{ color: "#666" }}
+														onClick={() => handleMoveOneContactToList?.(contact.id)}
 													>
-														<PostAdd fontSize="small" />
+														<DriveFileMoveOutlined fontSize="small" />
 													</IconButton>
 												</Tooltip>
 												<IconButton
