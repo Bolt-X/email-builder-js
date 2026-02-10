@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createContact, deleteContatsFromList, getContactListById, getProvinces, getWardsByProvinceId, moveContactToList } from "../services/contact";
+import {
+    createContact,
+    deleteContatsFromList,
+    getContactListById,
+    getProvinces,
+    getWardsByProvinceId,
+    moveContactToList,
+    updateContact,
+} from "../services/contact";
 import { Contact } from "../modules/contacts";
 import { toast } from "react-toastify";
 import i18n from "../i18n";
@@ -7,13 +15,29 @@ import i18n from "../i18n";
 export const useCreateContact = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ contact, slug }: { contact: any, slug: string }) => createContact(contact, slug),
+        mutationFn: ({ contact, slug }: { contact: any; slug: string }) =>
+            createContact(contact, slug),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["contact_list_by_id"] });
             toast.success(i18n.t("contacts.create_contact_success"));
         },
         onError: () => {
             toast.error(i18n.t("contacts.create_contact_error"));
+        },
+    });
+};
+
+export const useUpdateContact = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, contact }: { id: string | number; contact: any }) =>
+            updateContact(id, contact),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["contact_list_by_id"] });
+            toast.success(i18n.t("contacts.update_contact_success"));
+        },
+        onError: () => {
+            toast.error(i18n.t("contacts.update_contact_error"));
         },
     });
 };
@@ -27,7 +51,7 @@ export const useGetProvinces = () => {
 };
 
 export const useGetWardsByProvinceId = (provinceId: string | number) => {
-    if (!provinceId) return { data: [] }
+    if (!provinceId) return { data: [] };
     return useQuery({
         queryKey: ["wards", provinceId],
         queryFn: () => getWardsByProvinceId(provinceId),

@@ -22,7 +22,11 @@ import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import * as yup from "yup";
-import { useCreateContact, useGetProvinces } from "../../../hooks/useContact";
+import {
+	useCreateContact,
+	useGetProvinces,
+	useUpdateContact,
+} from "../../../hooks/useContact";
 import { useGetAllTags } from "../../../hooks/useTags";
 import ModalCreateTag from "../../tags/ModalCreateTag";
 import { getContactListBySlugWithSubscribers } from "../service";
@@ -36,11 +40,13 @@ import dayjs from "dayjs";
 interface CreateContactModalProps {
 	open: boolean;
 	onClose: () => void;
+	initialData?: any;
 }
 
 export default function CreateContactModal({
 	open,
 	onClose,
+	initialData,
 }: CreateContactModalProps) {
 	const { t } = useTranslation();
 
@@ -81,13 +87,11 @@ export default function CreateContactModal({
 					.required(
 						t("common.validation.required", { field: t("contacts.address") }),
 					),
-				phone_number: yup
-					.string()
-					.required(
-						t("common.validation.required", {
-							field: t("contacts.phone_number"),
-						}),
-					),
+				phone_number: yup.string().required(
+					t("common.validation.required", {
+						field: t("contacts.phone_number"),
+					}),
+				),
 				province: yup.string().nullable().notRequired(),
 				ward: yup.string().nullable().notRequired(),
 				birthday: yup.string().nullable().notRequired(),
@@ -98,6 +102,7 @@ export default function CreateContactModal({
 	);
 	const { id } = useParams();
 	const mutateCreateContact = useCreateContact();
+	const mutateUpdateContact = useUpdateContact();
 	const { data: tags } = useGetAllTags();
 
 	const [contactList, setContactList] = useState<any | null>(null);
@@ -128,7 +133,22 @@ export default function CreateContactModal({
 	});
 
 	useEffect(() => {
-		if (contactList) {
+		if (initialData) {
+			form.reset({
+				contact_lists: initialData.contact_lists || [],
+				email: initialData.email || "",
+				status: initialData.status || "subscribed",
+				first_name: initialData.first_name || "",
+				last_name: initialData.last_name || "",
+				address: initialData.address || "",
+				phone_number: initialData.phone_number || "",
+				province: initialData.province || "",
+				ward: initialData.ward || "",
+				birthday: initialData.birthday || null,
+				company: initialData.company || "",
+				tags: initialData.tags || [],
+			});
+		} else if (contactList) {
 			form.reset({
 				contact_lists: [contactList],
 				email: "",
@@ -139,7 +159,7 @@ export default function CreateContactModal({
 				phone_number: "",
 			});
 		}
-	}, [contactList]);
+	}, [contactList, initialData]);
 
 	const { data: provinces } = useGetProvinces();
 
@@ -162,9 +182,16 @@ export default function CreateContactModal({
 
 	const handleSubmit = async (data: any) => {
 		try {
-			await mutateCreateContact.mutateAsync(data);
+			if (initialData) {
+				await mutateUpdateContact.mutateAsync({
+					id: initialData.id,
+					contact: data,
+				});
+			} else {
+				await mutateCreateContact.mutateAsync(data);
+			}
 		} catch (error) {
-			console.error("Failed to create contact:", error);
+			console.error("Failed to save contact:", error);
 		}
 	};
 
@@ -177,7 +204,9 @@ export default function CreateContactModal({
 		} catch (error) {
 			console.error("Failed to create contact:", error);
 		} finally {
-			form.reset();
+			if (!initialData) {
+				form.reset();
+			}
 		}
 	};
 
@@ -191,7 +220,9 @@ export default function CreateContactModal({
 			console.error("Failed to create contact:", error);
 		} finally {
 			onClose();
-			form.reset();
+			if (!initialData) {
+				form.reset();
+			}
 		}
 	};
 
@@ -224,12 +255,12 @@ export default function CreateContactModal({
 					variant="h6"
 					sx={{ fontWeight: 700 }}
 				>
-					{t("contacts.new_contact")}
+					{initialData ? t("contacts.edit_contact") : t("contacts.new_contact")}
 				</Typography>
 				<IconButton
 					onClick={() => {
 						onClose();
-						form.reset();
+						if (!initialData) form.reset();
 					}}
 					size="small"
 					sx={{ color: "text.secondary" }}
@@ -437,29 +468,33 @@ export default function CreateContactModal({
 									>
 										{t("contacts.province")}
 									</Typography>
-									<Select
+									<Autocomplete
 										fullWidth
 										size="small"
-										value={form.watch("province") || ""}
-										onChange={(e) => {
-											form.setValue("province", e.target.value);
-											form.setValue("ward", ""); // reset district nếu có
+										options={provinces ?? []}
+										getOptionLabel={(option) => option.name}
+										isOptionEqualToValue={(option, value) =>
+											option.slug === value.slug
+										}
+										value={
+											provinces?.find(
+												(p: any) => p.slug === form.watch("province"),
+											) || null
+										}
+										onChange={(_, newValue) => {
+											form.setValue("province", newValue?.slug || "");
+											form.setValue("ward", ""); // reset district
 										}}
-										displayEmpty
-										sx={{ borderRadius: "8px" }}
-									>
-										<MenuItem value="">
-											<em>{t("contacts.select_province")}</em>
-										</MenuItem>
-										{provinces?.map((province: any) => (
-											<MenuItem
-												key={province.slug}
-												value={province.slug}
-											>
-												{province.name}
-											</MenuItem>
-										))}
-									</Select>
+										renderInput={(params) => (
+											<TextField
+												{...params}
+												placeholder={t("contacts.select_province")}
+												sx={{
+													"& .MuiOutlinedInput-root": { borderRadius: "8px" },
+												}}
+											/>
+										)}
+									/>
 								</Box>
 								<Box sx={{ flex: 1 }}>
 									<Typography
@@ -468,29 +503,32 @@ export default function CreateContactModal({
 									>
 										{t("contacts.district")}
 									</Typography>
-									<Select
+									<Autocomplete
 										fullWidth
 										size="small"
-										value={form.watch("ward") || ""}
-										onChange={(e) => {
-											form.setValue("ward", e.target.value);
+										options={wards ?? []}
+										getOptionLabel={(option) => option.name}
+										isOptionEqualToValue={(option, value) =>
+											option.slug === value.slug
+										}
+										value={
+											wards?.find((w: any) => w.slug === form.watch("ward")) ||
+											null
+										}
+										onChange={(_, newValue) => {
+											form.setValue("ward", newValue?.slug || "");
 										}}
-										displayEmpty
-										sx={{ borderRadius: "8px" }}
 										disabled={!form.watch("province")}
-									>
-										<MenuItem value="">
-											<em>{t("contacts.select_district")}</em>
-										</MenuItem>
-										{wards?.map((ward: any) => (
-											<MenuItem
-												key={ward.slug}
-												value={ward.slug}
-											>
-												{ward.name}
-											</MenuItem>
-										))}
-									</Select>
+										renderInput={(params) => (
+											<TextField
+												{...params}
+												placeholder={t("contacts.select_district")}
+												sx={{
+													"& .MuiOutlinedInput-root": { borderRadius: "8px" },
+												}}
+											/>
+										)}
+									/>
 								</Box>
 							</Stack>
 						</Stack>
@@ -689,12 +727,14 @@ export default function CreateContactModal({
 					direction="row"
 					spacing={2}
 				>
-					<Button
-						onClick={form.handleSubmit(handleSaveAndAdd)}
-						sx={{ textTransform: "none", color: "#2196F3", fontWeight: 700 }}
-					>
-						{t("contacts.save_and_add_another")}
-					</Button>
+					{!initialData && (
+						<Button
+							onClick={form.handleSubmit(handleSaveAndAdd)}
+							sx={{ textTransform: "none", color: "#2196F3", fontWeight: 700 }}
+						>
+							{t("contacts.save_and_add_another")}
+						</Button>
+					)}
 					<Button
 						variant="contained"
 						onClick={form.handleSubmit(handleAddContact)}
@@ -708,7 +748,7 @@ export default function CreateContactModal({
 							"&:hover": { boxShadow: "none" },
 						}}
 					>
-						{t("contacts.add_contact")}
+						{initialData ? t("common.save") : t("contacts.add_contact")}
 					</Button>
 				</Stack>
 			</DialogActions>

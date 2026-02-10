@@ -6,13 +6,15 @@ export interface Contact {
 	first_name?: string;
 	last_name?: string;
 	status: ContactStatus;
-	date_created?: string;
-	date_updated?: string;
-	address?: string;
 	phone_number?: string;
+	address?: string;
+	province?: string;
+	ward?: string;
 	company?: string;
 	birthday?: string;
-	tags?: any[];
+	tags?: string[];
+	date_created?: string;
+	date_updated?: string;
 }
 
 export type ContactListStatus = "published" | "draft" | "archived";

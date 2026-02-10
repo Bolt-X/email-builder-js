@@ -4,7 +4,7 @@ import {
   deleteItems,
   readItem,
   readItems,
-  updateItem
+  updateItem,
 } from "@directus/sdk";
 import * as XLSX from "xlsx";
 import { directusClientWithRest } from "../../services/directus";
@@ -25,6 +25,13 @@ export function transformContactFromDirectus(item: any): Contact {
     status: item?.status,
     date_created: item?.date_created,
     date_updated: item?.date_updated,
+    phone_number: item?.phone_number,
+    address: item?.address,
+    province: item?.province,
+    ward: item?.ward,
+    company: item?.company,
+    birthday: item?.birthday,
+    tags: item?.tags?.map((t: any) => t.tags_slug || t) || [],
   };
 }
 
@@ -34,9 +41,21 @@ export function transformContactFromDirectus(item: any): Contact {
 export function transformContactToDirectus(contact: Partial<Contact>): any {
   const directusContact: any = {};
   if (contact.email !== undefined) directusContact.email = contact.email;
-  if (contact.first_name !== undefined) directusContact.first_name = contact.first_name;
-  if (contact.last_name !== undefined) directusContact.last_name = contact.last_name;
+  if (contact.first_name !== undefined)
+    directusContact.first_name = contact.first_name;
+  if (contact.last_name !== undefined)
+    directusContact.last_name = contact.last_name;
   if (contact.status !== undefined) directusContact.status = contact.status;
+  if (contact.phone_number !== undefined)
+    directusContact.phone_number = contact.phone_number;
+  if (contact.address !== undefined) directusContact.address = contact.address;
+  if (contact.province !== undefined)
+    directusContact.province = contact.province;
+  if (contact.ward !== undefined) directusContact.ward = contact.ward;
+  if (contact.company !== undefined) directusContact.company = contact.company;
+  if (contact.birthday !== undefined)
+    directusContact.birthday = contact.birthday;
+  // Tags are handled separately in create/update service
   return directusContact;
 }
 
@@ -95,7 +114,7 @@ export async function getAllContacts(): Promise<Contact[]> {
 export async function getAllContactLists(
   from?: string,
   to?: string,
-  searchText?: string
+  searchText?: string,
 ): Promise<ContactList[]> {
   try {
     const filter =
@@ -113,7 +132,7 @@ export async function getAllContactLists(
         fields: ["*", "subscribers.subscriber.*"],
         sort: ["-date_created"],
         ...(filter && { filter }),
-        ...(searchText && { search: searchText })
+        ...(searchText && { search: searchText }),
       }),
     );
 
@@ -199,20 +218,22 @@ export async function deleteContactList(slugs: string[]): Promise<void> {
 
 const createContactListSubscriber = async (payload: any): Promise<any> => {
   try {
-    const res = await directusClientWithRest.request(createItems("contact_lists_subscribers", payload));
+    const res = await directusClientWithRest.request(
+      createItems("contact_lists_subscribers", payload),
+    );
     return res as any;
   } catch (error) {
     console.error("Error creating contact list subscriber:", error);
     throw error;
   }
-}
+};
 
 /**
  * Tạo subscriber mới hoặc cập nhật subscriber đã tồn tại
  */
 export async function createOrUpdateSubscriber(
   contact: Partial<Contact>,
-  updateExisting: boolean = true
+  updateExisting: boolean = true,
 ): Promise<Contact> {
   try {
     // Kiểm tra subscriber đã tồn tại chưa (theo email)
@@ -225,7 +246,7 @@ export async function createOrUpdateSubscriber(
             },
           },
           limit: 1,
-        })
+        }),
       );
 
       if (existing && (existing as any[]).length > 0) {
@@ -234,7 +255,7 @@ export async function createOrUpdateSubscriber(
           const existingId = (existing as any[])[0].id;
           const updateData = transformContactToDirectus(contact);
           const updated = await directusClientWithRest.request(
-            updateItem("subscribers", existingId, updateData)
+            updateItem("subscribers", existingId, updateData),
           );
           return transformContactFromDirectus(updated as any);
         } else {
@@ -247,9 +268,9 @@ export async function createOrUpdateSubscriber(
     // Tạo subscriber mới
     const newSubscriber = transformContactToDirectus(contact);
     const created = await directusClientWithRest.request(
-      createItem("subscribers", newSubscriber)
+      createItem("subscribers", newSubscriber),
     );
-    await getAllContacts()
+    await getAllContacts();
     return transformContactFromDirectus(created as any);
   } catch (error) {
     console.error("Error creating or updating subscriber:", error);
@@ -261,7 +282,7 @@ export async function createOrUpdateSubscriber(
  * Parse CSV file - xử lý đúng các trường hợp có dấu phẩy trong giá trị
  */
 function parseCSV(csvText: string): any[] {
-  const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+  const lines = csvText.split(/\r?\n/).filter((line) => line.trim());
   if (lines.length === 0) return [];
 
   // Hàm parse một dòng CSV
@@ -283,7 +304,7 @@ function parseCSV(csvText: string): any[] {
           // Toggle quote state
           inQuotes = !inQuotes;
         }
-      } else if (char === ',' && !inQuotes) {
+      } else if (char === "," && !inQuotes) {
         // End of field
         result.push(current.trim());
         current = "";
@@ -298,12 +319,12 @@ function parseCSV(csvText: string): any[] {
   };
 
   // Parse header
-  const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, ""));
+  const headers = parseCSVLine(lines[0]).map((h) => h.replace(/^"|"$/g, ""));
 
   // Parse rows
   const rows: any[] = [];
   for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, ""));
+    const values = parseCSVLine(lines[i]).map((v) => v.replace(/^"|"$/g, ""));
     const row: any = {};
     headers.forEach((header, index) => {
       row[header] = values[index] || "";
@@ -342,7 +363,11 @@ async function parseXLSX(file: File): Promise<any[]> {
         // Chuyển đổi về format giống CSV (array of objects với keys là header)
         resolve(jsonData as any[]);
       } catch (error) {
-        reject(new Error(`Failed to parse XLSX file: ${error instanceof Error ? error.message : "Unknown error"}`));
+        reject(
+          new Error(
+            `Failed to parse XLSX file: ${error instanceof Error ? error.message : "Unknown error"}`,
+          ),
+        );
       }
     };
 
@@ -371,7 +396,13 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
   failed: number;
   errors: Array<{ row: number; email: string; error: string }>;
 }> {
-  const { file, contactListSlug, status = "subscribed", updateExisting = "both", tags = [] } = options;
+  const {
+    file,
+    contactListSlug,
+    status = "subscribed",
+    updateExisting = "both",
+    tags = [],
+  } = options;
 
   let rows: any[] = [];
   const errors: Array<{ row: number; email: string; error: string }> = [];
@@ -395,8 +426,8 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
 
     // Map columns - tìm các cột email, first_name, last_name
     const firstRow = rows[0];
-    const emailColumn = Object.keys(firstRow).find(
-      key => key.toLowerCase().includes("email")
+    const emailColumn = Object.keys(firstRow).find((key) =>
+      key.toLowerCase().includes("email"),
     );
 
     if (!emailColumn) {
@@ -404,10 +435,14 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
     }
 
     const firstNameColumn = Object.keys(firstRow).find(
-      key => key.toLowerCase().includes("first") && key.toLowerCase().includes("name")
+      (key) =>
+        key.toLowerCase().includes("first") &&
+        key.toLowerCase().includes("name"),
     );
     const lastNameColumn = Object.keys(firstRow).find(
-      key => key.toLowerCase().includes("last") && key.toLowerCase().includes("name")
+      (key) =>
+        key.toLowerCase().includes("last") &&
+        key.toLowerCase().includes("name"),
     );
 
     // Xử lý từng row
@@ -431,18 +466,28 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
         // Tạo hoặc update subscriber
         const contactData: Partial<Contact> = {
           email,
-          first_name: firstNameColumn ? row[firstNameColumn]?.trim() : undefined,
+          first_name: firstNameColumn
+            ? row[firstNameColumn]?.trim()
+            : undefined,
           last_name: lastNameColumn ? row[lastNameColumn]?.trim() : undefined,
           status: status as ContactStatus,
         };
 
-
-        const subscriber = await createOrUpdateSubscriber(contactData, updateExisting === "both" ? true : updateExisting === "add" ? false : true);
+        const subscriber = await createOrUpdateSubscriber(
+          contactData,
+          updateExisting === "both"
+            ? true
+            : updateExisting === "add"
+              ? false
+              : true,
+        );
         const payload = tags.map((tag) => ({
           subscribers_id: subscriber.id,
           tags_slug: tag,
         }));
-        await directusClientWithRest.request(createItems("subscribers_tags", payload))
+        await directusClientWithRest.request(
+          createItems("subscribers_tags", payload),
+        );
         subscriberIds.push(subscriber.id!);
         successCount++;
       } catch (error: any) {
@@ -470,14 +515,14 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
               },
             },
             fields: ["subscriber"],
-          })
+          }),
         );
 
         const existingSubscriberIds = (existingRelations as any[]).map(
-          (rel) => rel.subscriber
+          (rel) => rel.subscriber,
         );
         const newSubscriberIds = subscriberIds.filter(
-          (id) => !existingSubscriberIds.includes(id)
+          (id) => !existingSubscriberIds.includes(id),
         );
 
         if (newSubscriberIds.length > 0) {
@@ -488,7 +533,9 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
 
           await createContactListSubscriber(payload);
         }
-        toast.success(i18n.t("contacts.create_contact_list_subscribers_success"));
+        toast.success(
+          i18n.t("contacts.create_contact_list_subscribers_success"),
+        );
       } catch (error) {
         console.error("Error creating contact list subscribers:", error);
         // Không throw error ở đây vì subscribers đã được tạo
@@ -592,7 +639,6 @@ export async function getContactListById(id: string | number) {
 
 export async function exportContactList(slug: string | number): Promise<void> {
   console.log("Exporting contact list:", slug);
-
 }
 
 /**
@@ -697,7 +743,7 @@ export const getContactListBySlugWithSubscribers = async (slug: string) => {
         },
         fields: ["*", "subscriber.*"], // thường là subscriber chứ không phải subscribers
         limit: -1, // -1 để lấy tất cả records, không giới hạn
-      })
+      }),
     );
 
     return res;

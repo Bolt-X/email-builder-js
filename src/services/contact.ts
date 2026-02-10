@@ -1,33 +1,103 @@
-import { createItem, createItems, deleteItems, readItem, readItems } from "@directus/sdk";
+import {
+    createItem,
+    createItems,
+    deleteItems,
+    readItem,
+    readItems,
+    updateItem,
+} from "@directus/sdk";
 import { directusClientWithRest } from "./directus";
-import { transformContactFromDirectus, transformContactListFromDirectus } from "../modules/contacts";
+import {
+    transformContactFromDirectus,
+    transformContactListFromDirectus,
+} from "../modules/contacts";
 
 export const createContact = async (contact: any, slug: string) => {
     try {
         const { tags, ...subscriberData } = contact;
-        const res = await directusClientWithRest.request(createItem("subscribers", subscriberData));
-        await directusClientWithRest.request(createItem("contact_lists_subscribers", {
-            list: slug,
-            subscriber: res.id,
-        }));
-        const payload = contact.tags.map((tag) => ({
-            subscribers_id: res.id,
-            tags_slug: tag,
-        }));
-        await directusClientWithRest.request(createItems("subscribers_tags", payload))
+        const res = await directusClientWithRest.request(
+            createItem("subscribers", subscriberData),
+        );
+        await directusClientWithRest.request(
+            createItem("contact_lists_subscribers", {
+                list: slug,
+                subscriber: res.id,
+            }),
+        );
+        if (tags && tags.length > 0) {
+            const payload = tags.map((tag: string) => ({
+                subscribers_id: res.id,
+                tags_slug: tag,
+            }));
+            await directusClientWithRest.request(
+                createItems("subscribers_tags", payload),
+            );
+        }
         return res;
     } catch (error) {
         console.error("Error creating contact:", error);
         throw error;
     }
-}
+};
+
+export const updateContact = async (
+    contactId: string | number,
+    contact: any,
+) => {
+    try {
+        const { tags, ...subscriberData } = contact;
+
+        // 1. Update subscriber basic info
+        const res = await directusClientWithRest.request(
+            updateItem("subscribers", contactId, subscriberData),
+        );
+
+        // 2. Update tags if provided
+        if (tags) {
+            // First delete existing tags
+            const existingTags = await directusClientWithRest.request(
+                readItems("subscribers_tags", {
+                    filter: {
+                        subscribers_id: {
+                            _eq: contactId,
+                        },
+                    },
+                    fields: ["id"],
+                }),
+            );
+
+            if (existingTags && existingTags.length > 0) {
+                const idsToDelete = existingTags.map((item: any) => item.id);
+                await directusClientWithRest.request(
+                    deleteItems("subscribers_tags", idsToDelete),
+                );
+            }
+
+            // Then add new tags
+            if (tags.length > 0) {
+                const payload = tags.map((tag: string) => ({
+                    subscribers_id: contactId,
+                    tags_slug: tag,
+                }));
+                await directusClientWithRest.request(
+                    createItems("subscribers_tags", payload),
+                );
+            }
+        }
+
+        return res;
+    } catch (error) {
+        console.error("Error updating contact:", error);
+        throw error;
+    }
+};
 
 export const getProvinces = async () => {
     try {
         const res = await directusClientWithRest.request(
             readItems("provinces", {
                 fields: ["name", "slug"],
-            })
+            }),
         );
 
         return res as { name: string; slug: string }[];
@@ -38,12 +108,12 @@ export const getProvinces = async () => {
 };
 
 export const getWardsByProvinceId = async (provinceId: string | number) => {
-    if (!provinceId) return []
+    if (!provinceId) return [];
     try {
         const res = await directusClientWithRest.request(
             readItem("provinces", provinceId, {
                 fields: ["wards.slug", "wards.name"],
-            })
+            }),
         );
 
         return (res as any).wards as { slug: string; name: string }[];
@@ -145,7 +215,7 @@ export const getContactListById = async (slug: string, filter?: any) => {
 export const moveContactToList = async (
     contactId: string,
     newListId: string,
-    oldListId: string
+    oldListId: string,
 ) => {
     try {
         // 1. Tìm record trong junction table để xóa (contact đang ở list cũ)
@@ -160,14 +230,14 @@ export const moveContactToList = async (
                     },
                 },
                 fields: ["id"],
-            })
+            }),
         );
 
         // 2. Xóa record cũ nếu tìm thấy
         if (existingRelations && (existingRelations as any[]).length > 0) {
             const relationIds = (existingRelations as any[]).map((rel) => rel.id);
             await directusClientWithRest.request(
-                deleteItems("contact_lists_subscribers", relationIds)
+                deleteItems("contact_lists_subscribers", relationIds),
             );
         }
 
@@ -183,7 +253,7 @@ export const moveContactToList = async (
                     },
                 },
                 fields: ["id"],
-            })
+            }),
         );
 
         // 4. Chỉ thêm vào list mới nếu chưa có
@@ -203,26 +273,35 @@ export const moveContactToList = async (
     }
 }
 
-export const addContactToList = async (contactIds: string[], listId: string) => {
+export const addContactToList = async (
+    contactIds: string[],
+    listId: string,
+) => {
     try {
-        const res = await directusClientWithRest.request(createItems("contact_lists_subscribers", contactIds.map((contactId) => ({
-            list: listId,
-            subscriber: contactId,
-        })))
+        const res = await directusClientWithRest.request(
+            createItems(
+                "contact_lists_subscribers",
+                contactIds.map((contactId) => ({
+                    list: listId,
+                    subscriber: contactId,
+                })),
+            ),
         );
         return res;
     } catch (error) {
         console.error("Error adding contacts to list:", error);
         throw error;
     }
-}
+};
 
 export const deleteContatsFromList = async (contactIds: string[]) => {
     try {
-        const res = await directusClientWithRest.request(deleteItems("subscribers", contactIds))
+        const res = await directusClientWithRest.request(
+            deleteItems("subscribers", contactIds),
+        );
         return res;
     } catch (error) {
         console.error("Error deleting contacts from list:", error);
         throw error;
     }
-}
+};

@@ -37,6 +37,7 @@ interface ContactTableProps {
 	rowsPerPage?: number;
 	onPageChange?: (page: number) => void;
 	onRowsPerPageChange?: (rows: number) => void;
+	onEdit?: (contact: Contact) => void;
 	handleMoveOneContactToList?: (id: string | number) => void;
 }
 
@@ -80,14 +81,16 @@ export default function ContactTable({
 	rowsPerPage = 25,
 	onPageChange,
 	onRowsPerPageChange,
-	handleMoveOneContactToList
+	onEdit,
+	handleMoveOneContactToList,
 }: ContactTableProps) {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | number | null>(null);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-	const { mutateAsync: deleteContatsFromList, isPending: isDeleting } = useDeleteContatsFromList();
+	const { mutateAsync: deleteContatsFromList, isPending: isDeleting } =
+		useDeleteContatsFromList();
 	console.log("selectedContacts", selectedId);
 
 	const handleDelete = () => {
@@ -97,7 +100,7 @@ export default function ContactTable({
 			deleteContatsFromList([selectedId as string]);
 		}
 		setDeleteModalOpen(false);
-	}
+	};
 	const handleMenuOpen = (
 		event: React.MouseEvent<HTMLElement>,
 		id: string | number,
@@ -154,7 +157,11 @@ export default function ContactTable({
 				title="Delete Contacts"
 				content={
 					<Typography>
-						Are you sure you want to delete {selectedContacts.length > 1 ? `${selectedContacts.length} items` : "this item"}? You won't be able to undo this action.
+						Are you sure you want to delete{" "}
+						{selectedContacts.length > 1
+							? `${selectedContacts.length} items`
+							: "this item"}
+						? You won't be able to undo this action.
 					</Typography>
 				}
 				isPending={false}
@@ -306,6 +313,7 @@ export default function ContactTable({
 													<IconButton
 														size="small"
 														sx={{ color: "#666" }}
+														onClick={() => onEdit?.(contact)}
 													>
 														<Edit fontSize="small" />
 													</IconButton>
@@ -354,7 +362,15 @@ export default function ContactTable({
 				open={Boolean(anchorEl)}
 				onClose={handleMenuClose}
 			>
-				<MenuItem onClick={handleMenuClose}>
+				<MenuItem
+					onClick={() => {
+						const contact = contacts?.find((c) => c.id === selectedId);
+						if (contact && onEdit) {
+							onEdit(contact);
+						}
+						handleMenuClose();
+					}}
+				>
 					<Edit sx={{ mr: 1, fontSize: 20 }} />
 					{t("contacts.edit_contact")}
 				</MenuItem>
