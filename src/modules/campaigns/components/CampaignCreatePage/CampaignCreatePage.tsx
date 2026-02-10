@@ -116,16 +116,9 @@ export default function CampaignCreatePage() {
 				tags: yup
 					.array()
 					.of(
-						yup.string().required(
-							t("common.validation.required", {
-								field: t("campaigns.form.tags_label"),
-							}),
-						),
-					)
-					.min(
-						1,
-						t("common.validation.at_least_one", {
-							field: t("campaigns.form.tags_label"),
+						yup.object().shape({
+							slug: yup.string().required(t("common.validation.required", { field: "Tag" })),
+							title: yup.string().required(t("common.validation.required", { field: "Tag" })),
 						}),
 					),
 				sendType: yup
@@ -602,7 +595,6 @@ export default function CampaignCreatePage() {
 									sx={{ mb: 1 }}
 								>
 									{t("campaigns.form.tags_label")}{" "}
-									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<FormControl
 									fullWidth
