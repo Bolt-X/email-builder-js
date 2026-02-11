@@ -43,7 +43,7 @@ export default function TextSidebarPanel({
 				// 		updateData({ ...data, props: { ...data.props, text } })
 				// 	}
 				// />
-				<RichTextEditorInputAlt
+				<RichTextEditorInput
 					defaultValue={data.props?.text ?? ""}
 					onChange={(text) =>
 						updateData({ ...data, props: { ...data.props, text } })

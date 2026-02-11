@@ -26,6 +26,8 @@ import {
 	MenuDivider,
 	MenuSelectHeading,
 	RichTextEditor,
+	MenuButtonUndo,
+	MenuButtonRedo,
 	type RichTextEditorRef,
 } from "mui-tiptap";
 import { useRef } from "react";
@@ -102,6 +104,8 @@ const RichTextEditorInput = ({ defaultValue, onChange }: Props) => {
 					<MenuDivider />
 					<MenuButtonOrderedList />
 					<MenuButtonBulletedList />
+					<MenuButtonUndo />
+					<MenuButtonRedo />
 				</MenuControlsContainer>
 			)}
 		/>
