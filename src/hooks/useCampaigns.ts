@@ -15,6 +15,7 @@ export const useGetAllCampaigns = (filters?: any) => {
 		queryKey: ["campaigns", filters],
 		queryFn: () => getCampaigns(filters),
 		select: (data) => data ?? [],
+		refetchOnWindowFocus: false,
 	});
 };
 

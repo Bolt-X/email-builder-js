@@ -533,13 +533,8 @@ export async function importContacts(options: ImportContactsOptions): Promise<{
 
           await createContactListSubscriber(payload);
         }
-        toast.success(
-          i18n.t("contacts.create_contact_list_subscribers_success"),
-        );
       } catch (error) {
         console.error("Error creating contact list subscribers:", error);
-        // Không throw error ở đây vì subscribers đã được tạo
-        toast.error(i18n.t("contacts.create_contact_list_subscribers_error"));
       }
     }
 

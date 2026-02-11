@@ -76,6 +76,7 @@ export default function CampaignEditPage() {
 		message: "",
 		severity: "info",
 	});
+	const [formInstance, setFormInstance] = useState<any>(null);
 
 	// Load campaign data
 	useEffect(() => {
@@ -149,6 +150,21 @@ export default function CampaignEditPage() {
 	const handleSave = useCallback(async () => {
 		if (!id || !campaign) return;
 
+		// Validate form before saving
+		if (formInstance) {
+			// Sync form values with current campaign state
+			formInstance.reset(campaign as any);
+			const isValid = await formInstance.trigger();
+			if (!isValid) {
+				setSnackbar({
+					open: true,
+					message: t("campaigns.required_fields_error"),
+					severity: "error",
+				});
+				return;
+			}
+		}
+
 		try {
 			// Save campaign metadata if dirty
 			if (autosaveState.isDirty) {
@@ -176,7 +192,7 @@ export default function CampaignEditPage() {
 				severity: "error",
 			});
 		}
-	}, [id, campaign, autosaveState.isDirty, templateDirty, document]);
+	}, [id, campaign, autosaveState.isDirty, templateDirty, document, formInstance, t]);
 
 	// Handle send test email
 	const handleSendTestEmail = useCallback(async () => {
@@ -283,6 +299,7 @@ export default function CampaignEditPage() {
 					<CampaignSettingsForm
 						campaign={campaign}
 						onChange={handleCampaignChange}
+						onFormReady={setFormInstance}
 					/>
 				</Grid>
 

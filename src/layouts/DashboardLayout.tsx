@@ -27,6 +27,8 @@ import {
 	DialogContentText,
 	DialogActions,
 	Button,
+	Menu,
+	MenuItem,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import {
@@ -45,6 +47,7 @@ import {
 	Check as CheckIcon,
 	MenuBook as ToggleIcon,
 	PersonAdd,
+	Description as TemplateIcon,
 } from "@mui/icons-material";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../contexts/auth";
@@ -162,6 +165,9 @@ export default function DashboardLayout() {
 	const [profileAnchorEl, setProfileAnchorEl] = useState<HTMLElement | null>(
 		null,
 	);
+	const [createMenuAnchorEl, setCreateMenuAnchorEl] = useState<HTMLElement | null>(
+		null,
+	);
 	const navigate = useNavigate();
 	const location = useLocation();
 	const {
@@ -184,6 +190,26 @@ export default function DashboardLayout() {
 	};
 
 	const profileOpen = Boolean(profileAnchorEl);
+
+	const handleCreateMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+		setCreateMenuAnchorEl(event.currentTarget);
+	};
+
+	const handleCreateMenuClose = () => {
+		setCreateMenuAnchorEl(null);
+	};
+
+	const handleCreateCampaign = () => {
+		navigate("/campaigns/new");
+		handleCreateMenuClose();
+	};
+
+	const handleCreateTemplate = () => {
+		navigate("/templates/new");
+		handleCreateMenuClose();
+	};
+
+	const createMenuOpen = Boolean(createMenuAnchorEl);
 
 	useEffect(() => {
 		if (!user) {
@@ -297,48 +323,266 @@ export default function DashboardLayout() {
 				}}
 			>
 				{open ? (
-					<ListItemButton
-						onClick={() => navigate("/campaigns/new")}
-						sx={{
-							bgcolor: "action.hover",
-							borderRadius: 10,
-							py: 1.5,
-							width: "100%",
-							justifyContent: "center",
-							alignItems: "center",
-							"&:hover": { bgcolor: "action.selected" },
-						}}
-					>
-						<ListItemIcon sx={{ minWidth: 0, mr: 1, color: "text.primary" }}>
-							<AddIcon />
-						</ListItemIcon>
-						<ListItemText
-							primary={t("sidebar.create")}
-							primaryTypographyProps={{
-								fontWeight: 700,
-								color: "text.primary",
-							}}
+					<>
+						<ListItemButton
+							onClick={handleCreateMenuClick}
 							sx={{
-								maxWidth: "fit-content",
-								display: "inline-block",
-								mt: 0.75,
+								bgcolor: "action.hover",
+								borderRadius: 10,
+								py: 1.5,
+								width: "100%",
+								justifyContent: "center",
+								alignItems: "center",
+								"&:hover": { bgcolor: "action.selected" },
 							}}
-						/>
-					</ListItemButton>
+						>
+							<ListItemIcon sx={{ minWidth: 0, mr: 1, color: "text.primary" }}>
+								<AddIcon />
+							</ListItemIcon>
+							<ListItemText
+								primary={t("sidebar.create")}
+								primaryTypographyProps={{
+									fontWeight: 700,
+									color: "text.primary",
+								}}
+								sx={{
+									maxWidth: "fit-content",
+									display: "inline-block",
+									mt: 0.75,
+								}}
+							/>
+						</ListItemButton>
+						<Menu
+							anchorEl={createMenuAnchorEl}
+							open={createMenuOpen}
+							onClose={handleCreateMenuClose}
+							anchorOrigin={{
+								vertical: "bottom",
+								horizontal: "left",
+							}}
+							transformOrigin={{
+								vertical: "top",
+								horizontal: "left",
+							}}
+							slotProps={{
+								paper: {
+									sx: {
+										mt: 1,
+										minWidth: 200,
+										borderRadius: 2,
+										boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+										border: "1px solid",
+										borderColor: "divider",
+									},
+								},
+							}}
+						>
+							<MenuItem
+								onClick={handleCreateCampaign}
+								sx={{
+									py: 1.5,
+									px: 2,
+									gap: 1.5,
+									"&:hover": {
+										bgcolor: "action.hover",
+									},
+								}}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										width: 40,
+										height: 40,
+										borderRadius: 1,
+										bgcolor: "#2686E5",
+										color: "white",
+									}}
+								>
+									<CampaignsIcon fontSize="small" />
+								</Box>
+								<Box sx={{ flex: 1 }}>
+									<Typography
+										variant="body2"
+										sx={{ fontWeight: 600, color: "text.primary" }}
+									>
+										{t("sidebar.campaigns")}
+									</Typography>
+									<Typography
+										variant="caption"
+										sx={{ color: "text.secondary", display: "block" }}
+									>
+										Create new campaign
+									</Typography>
+								</Box>
+							</MenuItem>
+							<MenuItem
+								onClick={handleCreateTemplate}
+								sx={{
+									py: 1.5,
+									px: 2,
+									gap: 1.5,
+									"&:hover": {
+										bgcolor: "action.hover",
+									},
+								}}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										width: 40,
+										height: 40,
+										borderRadius: 1,
+										bgcolor: "#2686E5",
+										color: "white",
+									}}
+								>
+									<TemplateIcon fontSize="small" />
+								</Box>
+								<Box sx={{ flex: 1 }}>
+									<Typography
+										variant="body2"
+										sx={{ fontWeight: 600, color: "text.primary" }}
+									>
+										{t("sidebar.templates")}
+									</Typography>
+									<Typography
+										variant="caption"
+										sx={{ color: "text.secondary", display: "block" }}
+									>
+										Create new template
+									</Typography>
+								</Box>
+							</MenuItem>
+						</Menu>
+					</>
 				) : (
-					<IconButton
-						onClick={() => navigate("/campaigns/new")}
-						sx={{
-							bgcolor: "action.hover",
-							width: 54,
-							height: 54,
-							mx: "auto",
-							display: "flex",
-							"&:hover": { bgcolor: "action.selected" },
-						}}
-					>
-						<AddIcon />
-					</IconButton>
+					<>
+						<Tooltip title={t("sidebar.create")} placement="right">
+							<IconButton
+								onClick={handleCreateMenuClick}
+								sx={{
+									bgcolor: "action.hover",
+									width: 54,
+									height: 54,
+									mx: "auto",
+									display: "flex",
+									"&:hover": { bgcolor: "action.selected" },
+								}}
+							>
+								<AddIcon />
+							</IconButton>
+						</Tooltip>
+						<Menu
+							anchorEl={createMenuAnchorEl}
+							open={createMenuOpen}
+							onClose={handleCreateMenuClose}
+							anchorOrigin={{
+								vertical: "bottom",
+								horizontal: "right",
+							}}
+							transformOrigin={{
+								vertical: "top",
+								horizontal: "right",
+							}}
+							slotProps={{
+								paper: {
+									sx: {
+										mt: 1,
+										minWidth: 200,
+										borderRadius: 2,
+										boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+										border: "1px solid",
+										borderColor: "divider",
+									},
+								},
+							}}
+						>
+							<MenuItem
+								onClick={handleCreateCampaign}
+								sx={{
+									py: 1.5,
+									px: 2,
+									gap: 1.5,
+									"&:hover": {
+										bgcolor: "action.hover",
+									},
+								}}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										width: 40,
+										height: 40,
+										borderRadius: 1,
+										bgcolor: "#2686E5",
+										color: "white",
+									}}
+								>
+									<CampaignsIcon fontSize="small" />
+								</Box>
+								<Box sx={{ flex: 1 }}>
+									<Typography
+										variant="body2"
+										sx={{ fontWeight: 600, color: "text.primary" }}
+									>
+										{t("sidebar.campaigns")}
+									</Typography>
+									<Typography
+										variant="caption"
+										sx={{ color: "text.secondary", display: "block" }}
+									>
+										Create new campaign
+									</Typography>
+								</Box>
+							</MenuItem>
+							<MenuItem
+								onClick={handleCreateTemplate}
+								sx={{
+									py: 1.5,
+									px: 2,
+									gap: 1.5,
+									"&:hover": {
+										bgcolor: "action.hover",
+									},
+								}}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										width: 40,
+										height: 40,
+										borderRadius: 1,
+										bgcolor: "#2686E5",
+										color: "white",
+									}}
+								>
+									<TemplateIcon fontSize="small" />
+								</Box>
+								<Box sx={{ flex: 1 }}>
+									<Typography
+										variant="body2"
+										sx={{ fontWeight: 600, color: "text.primary" }}
+									>
+										{t("sidebar.templates")}
+									</Typography>
+									<Typography
+										variant="caption"
+										sx={{ color: "text.secondary", display: "block" }}
+									>
+										Create new template
+									</Typography>
+								</Box>
+							</MenuItem>
+						</Menu>
+					</>
 				)}
 			</Box>
 

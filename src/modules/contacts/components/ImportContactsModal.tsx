@@ -24,6 +24,7 @@ import {
 	FormControl,
 	InputLabel,
 	Autocomplete,
+	LinearProgress,
 } from "@mui/material";
 import {
 	Close,
@@ -35,6 +36,7 @@ import {
 import { useGetAllTags } from "../../../hooks/useTags";
 import ModalCreateTag from "../../tags/ModalCreateTag";
 import { importContacts } from "../service";
+import { useImportContacts } from "../../../hooks/useContact";
 
 interface ImportContactsModalProps {
 	open: boolean;
@@ -60,7 +62,9 @@ export default function ImportContactsModal({
 		errors: Array<{ row: number; email: string; error: string }>;
 	} | null>(null);
 	const [selectedStatus, setSelectedStatus] = useState("non_subscribed");
-	const [selectedUpdateExisting, setSelectedUpdateExisting] = useState<string>("both");
+	const [selectedUpdateExisting, setSelectedUpdateExisting] = useState<string>("add");
+
+	const mutateImportContacts = useImportContacts();
 
 	const handleNext = () => {
 		if (!selectedFile) {
@@ -107,7 +111,7 @@ export default function ImportContactsModal({
 
 		setIsImporting(true);
 		try {
-			const result = await importContacts({
+			const result = await mutateImportContacts.mutateAsync({
 				file: selectedFile,
 				contactListSlug,
 				status: selectedStatus as string || "",
@@ -118,7 +122,6 @@ export default function ImportContactsModal({
 			setActiveStep(2); // Chuyển sang step confirm
 		} catch (error: any) {
 			console.error("Import error:", error);
-			alert(error.message || "Failed to import contacts");
 		} finally {
 			setIsImporting(false);
 		}
@@ -170,6 +173,12 @@ export default function ImportContactsModal({
 			<DialogContent sx={{ p: 2 }}>
 				{renderStepContent(activeStep)}
 			</DialogContent>
+
+			{isImporting && (
+				<Box sx={{ width: "100%", px: 2 }}>
+					<LinearProgress />
+				</Box>
+			)}
 
 			<DialogActions sx={{ p: 2, justifyContent: "flex-end", gap: 1 }}>
 				<Button
@@ -343,10 +352,11 @@ function StepInitialise({
 					<span style={{ color: "red" }}>*</span>
 				</Typography>
 				<Select
-					defaultValue="both"
+					defaultValue="add"
 					value={selectedUpdateExisting}
 					onChange={(e) => setSelectedUpdateExisting(e.target.value as string)}
-					sx={{ borderRadius: "8px" }}
+					sx={{ borderRadius: "8px", bgcolor: "#F9FAFB" }}
+					disabled
 				>
 					<MenuItem value="both">Add and update existing</MenuItem>
 					<MenuItem value="add">Only add new</MenuItem>

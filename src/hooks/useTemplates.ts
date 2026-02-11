@@ -6,5 +6,6 @@ export const useGetAllTemplates = () => {
         queryKey: ["templates"],
         queryFn: getAllTemplates,
         select: (data) => data ?? [],
+        refetchOnWindowFocus: false,
     });
 }

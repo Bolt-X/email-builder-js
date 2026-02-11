@@ -71,12 +71,10 @@ const ModalCreateOrEditContactList = ({
 				const res = await mutateCreateContactList.mutateAsync(data);
 				if (res) {
 					navigate(`/contacts/${res.slug}`);
-					toast.success(i18n.t("contacts.create_success"));
 				}
 			}
 		} catch (error) {
 			console.error("Failed to create contact list:", error);
-			toast.error(i18n.t("contacts.create_error"));
 		} finally {
 			onClose();
 			form.reset();

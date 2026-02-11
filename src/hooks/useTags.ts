@@ -6,6 +6,7 @@ export const useGetAllTags = () => {
         queryKey: ["tags"],
         queryFn: getAllTags,
         select: (data) => data ?? [],
+        refetchOnWindowFocus: false,
     });
 };
 

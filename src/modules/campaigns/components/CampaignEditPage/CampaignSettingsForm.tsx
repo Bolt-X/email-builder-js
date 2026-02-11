@@ -3,7 +3,6 @@ import {
 	Box,
 	TextField,
 	FormControl,
-	InputLabel,
 	Select,
 	MenuItem,
 	Stack,
@@ -15,6 +14,7 @@ import {
 	RadioGroup,
 	FormControlLabel,
 	Radio,
+	FormHelperText,
 } from "@mui/material";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -23,20 +23,106 @@ import SubscriberSelector from "../../../contacts/components/SubscriberSelector"
 import { useGetAllTemplates } from "../../../../hooks/useTemplates";
 import { useGetAllTags } from "../../../../hooks/useTags";
 import ModalCreateTag from "../../../tags/ModalCreateTag";
+import * as yup from "yup";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 interface CampaignSettingsFormProps {
 	campaign: Campaign;
 	onChange: (updates: Partial<Campaign>) => void;
+	onFormReady?: (form: ReturnType<typeof useForm>) => void;
 }
 
 export default function CampaignSettingsForm({
 	campaign,
 	onChange,
+	onFormReady,
 }: CampaignSettingsFormProps) {
 	const { t } = useTranslation();
 	const { data: templates } = useGetAllTemplates();
 	const { data: tags } = useGetAllTags();
 	const [addTagModalOpen, setAddTagModalOpen] = useState(false);
+
+	const schemaCampaignSettings = React.useMemo(
+		() =>
+			yup.object().shape({
+				name: yup.string().required(
+					t("common.validation.required", {
+						field: t("campaigns.form.name_label"),
+					}),
+				),
+				subject: yup.string().required(
+					t("common.validation.required", {
+						field: t("campaigns.form.subject_label"),
+					}),
+				),
+				fromAddress: yup.string().required(
+					t("common.validation.required", {
+						field: t("campaigns.form.from_address_label"),
+					}),
+				),
+				template: yup.number().required(
+					t("common.validation.required", {
+						field: t("campaigns.form.template_label"),
+					}),
+				),
+				date_scheduled: yup.string().nullable().notRequired(),
+				subscribers: yup
+					.array()
+					.of(
+						yup.object().shape({
+							id: yup
+								.string()
+								.required(t("common.validation.required", { field: "ID" })),
+							type: yup
+								.string()
+								.required(t("common.validation.required", { field: "Type" })),
+							name: yup
+								.string()
+								.required(
+									t("common.validation.required", { field: t("common.name") }),
+								),
+						}),
+					)
+					.min(
+						1,
+						t("common.validation.at_least_one", {
+							field: t("campaigns.form.to_label"),
+						}),
+					),
+				tags: yup
+					.array()
+					.of(
+						yup.object().shape({
+							slug: yup.string().required(t("common.validation.required", { field: "Tag" })),
+							title: yup.string().required(t("common.validation.required", { field: "Tag" })),
+						}),
+					),
+				sendTime: yup
+					.string()
+					.required(t("common.validation.required", { field: "Send Type" })),
+				description: yup.string().nullable().notRequired(),
+			}),
+		[t],
+	);
+
+	const form = useForm({
+		resolver: yupResolver(schemaCampaignSettings) as any,
+		defaultValues: campaign as any,
+	});
+
+	useEffect(() => {
+		form.reset(campaign as any);
+	}, [campaign]);
+
+	useEffect(() => {
+		if (onFormReady) {
+			onFormReady(form);
+		}
+	}, [form, onFormReady]);
 
 	const handleSubscribersChange = (subscribers: SubscriberSelection[]) => {
 		onChange({ subscribers });
@@ -101,31 +187,16 @@ export default function CampaignSettingsForm({
 		onChange({ sendTime });
 	};
 
-	const handleScheduledAtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = e.target.value;
+	const handleScheduledAtChange = (value: dayjs.Dayjs | null) => {
 		if (value) {
-			// Convert local datetime to ISO string
-			const date = new Date(value);
-			onChange({ date_scheduled: date.toISOString() });
+			onChange({ date_scheduled: value.toISOString() });
 		} else {
 			onChange({ date_scheduled: undefined });
 		}
 	};
 
-	const getLocalDateTimeString = (isoString?: string) => {
-		if (!isoString) return "";
-		const date = new Date(isoString);
-		// Format as YYYY-MM-DDTHH:mm for datetime-local input
-		const year = date.getFullYear();
-		const month = String(date.getMonth() + 1).padStart(2, "0");
-		const day = String(date.getDate()).padStart(2, "0");
-		const hours = String(date.getHours()).padStart(2, "0");
-		const minutes = String(date.getMinutes()).padStart(2, "0");
-		return `${year}-${month}-${day}T${hours}:${minutes}`;
-	};
-
 	return (
-		<Box sx={{ p: 3 }}>
+		<Box sx={{ px: 6, py: 3 }}>
 			<Stack spacing={3}>
 				{/* Campaign Name */}
 				<Box>
@@ -142,6 +213,8 @@ export default function CampaignSettingsForm({
 						variant="outlined"
 						size="small"
 						value={campaign.name || ""}
+						error={!!form.formState.errors.name}
+						helperText={form.formState.errors.name?.message as string}
 						onChange={handleNameChange}
 						required
 					/>
@@ -160,6 +233,8 @@ export default function CampaignSettingsForm({
 						fullWidth
 						placeholder={t("campaigns.form.subject_placeholder")}
 						variant="outlined"
+						error={!!form.formState.errors.subject}
+						helperText={form.formState.errors.subject?.message as string}
 						size="small"
 						value={campaign.subject || ""}
 						onChange={handleSubjectChange}
@@ -205,6 +280,7 @@ export default function CampaignSettingsForm({
 							onChange={(e) =>
 								onChange({ fromAddress: e.target.value as string })
 							}
+							error={!!form.formState.errors.fromAddress}
 						>
 							<MenuItem value="BoltX Digital <norereply@boltxmail.com>">
 								BoltX Digital &lt;norereply@boltxmail.com&gt;
@@ -213,6 +289,11 @@ export default function CampaignSettingsForm({
 								BoltX Worker &lt;norereply@boltxworker.com&gt;
 							</MenuItem>
 						</Select>
+						{form.formState.errors.fromAddress && (
+							<FormHelperText error>
+								{form.formState.errors.fromAddress?.message as string}
+							</FormHelperText>
+						)}
 					</FormControl>
 				</Box>
 
@@ -233,25 +314,34 @@ export default function CampaignSettingsForm({
 							size="small"
 							options={templates ?? []}
 							getOptionLabel={(option) => option.name}
+							isOptionEqualToValue={(option, value) =>
+								option.id === value.id
+							}
 							value={templates?.find((t) => t.id === campaign.template) || null}
 							onChange={(_, newValue) =>
 								onChange({ template: newValue?.id as number })
 							}
+							renderTags={() => null}
 							renderInput={(params) => (
 								<TextField
 									{...params}
 									variant="outlined"
 									placeholder={t("campaigns.form.template_placeholder")}
 									size="small"
+									error={!!form.formState.errors.template}
 								/>
 							)}
 						/>
+						{form.formState.errors.template && (
+							<FormHelperText error>
+								{form.formState.errors.template?.message as string}
+							</FormHelperText>
+						)}
 					</FormControl>
 				</Box>
 
-				<Divider sx={{ my: 1 }} />
-
 				{/* To lists or segments */}
+				<Divider sx={{ my: 1 }} />
 				<Box>
 					<Typography
 						variant="subtitle2"
@@ -264,12 +354,13 @@ export default function CampaignSettingsForm({
 						value={campaign.subscribers || []}
 						onChange={handleSubscribersChange}
 						required
+						error={!!form.formState.errors.subscribers}
+						helperText={form.formState.errors.subscribers?.message as string}
 					/>
 				</Box>
 
-				<Divider sx={{ my: 1 }} />
-
 				{/* Tags */}
+				<Divider sx={{ my: 1 }} />
 				<Box>
 					<ModalCreateTag
 						open={addTagModalOpen}
@@ -280,7 +371,6 @@ export default function CampaignSettingsForm({
 						sx={{ mb: 1 }}
 					>
 						{t("campaigns.form.tags_label")}{" "}
-						<span style={{ color: "red" }}>*</span>
 					</Typography>
 					<FormControl
 						fullWidth
@@ -290,7 +380,7 @@ export default function CampaignSettingsForm({
 							multiple
 							size="small"
 							options={tags ?? []}
-							getOptionLabel={(option) => option.title || option}
+							getOptionLabel={(option) => option.title}
 							isOptionEqualToValue={(option, value) => {
 								const optionSlug = option?.slug || option;
 								const valueSlug = value?.slug || value;
@@ -306,7 +396,6 @@ export default function CampaignSettingsForm({
 										onClick={handleAddTag}
 										variant="outlined"
 										size="small"
-										sx={{ mt: 1 }}
 									>
 										{t("campaigns.form.add_tag")}
 									</Button>
@@ -317,6 +406,8 @@ export default function CampaignSettingsForm({
 									{...params}
 									variant="outlined"
 									placeholder={t("campaigns.form.tags_placeholder")}
+									error={!!form.formState.errors.tags}
+									helperText={form.formState.errors.tags?.message as string}
 								/>
 							)}
 						/>
@@ -339,9 +430,7 @@ export default function CampaignSettingsForm({
 					</FormControl>
 				</Box>
 
-				<Divider sx={{ my: 1 }} />
-
-				{/* Send time */}
+				{/* Send Time */}
 				<Box sx={{ width: "100%" }}>
 					<Typography
 						variant="subtitle2"
@@ -410,7 +499,11 @@ export default function CampaignSettingsForm({
 									/>
 									<Typography
 										variant="body2"
-										sx={{ userSelect: "none", fontWeight: 500 }}
+										sx={{
+											color: "text.primary",
+											userSelect: "none",
+											fontWeight: 500,
+										}}
 									>
 										{t("campaigns.form.send_now")}
 									</Typography>
@@ -458,7 +551,11 @@ export default function CampaignSettingsForm({
 									/>
 									<Typography
 										variant="body2"
-										sx={{ userSelect: "none", fontWeight: 500 }}
+										sx={{
+											color: "text.primary",
+											userSelect: "none",
+											fontWeight: 500,
+										}}
 									>
 										{t("campaigns.form.schedule_later")}
 									</Typography>
@@ -476,19 +573,21 @@ export default function CampaignSettingsForm({
 								{t("campaigns.form.date_time_label")}{" "}
 								<span style={{ color: "red" }}>*</span>
 							</Typography>
-							<TextField
-								type="datetime-local"
-								value={getLocalDateTimeString(campaign.date_scheduled)}
-								onChange={handleScheduledAtChange}
-								fullWidth
-								size="small"
-								required
-								sx={{
-									"& .MuiOutlinedInput-root": {
-										bgcolor: "background.paper",
-									},
-								}}
-							/>
+							<LocalizationProvider dateAdapter={AdapterDayjs}>
+								<DateTimePicker
+									value={campaign.date_scheduled ? dayjs(campaign.date_scheduled) : null}
+									onChange={(value) => handleScheduledAtChange(value)}
+									slotProps={{
+										textField: {
+											size: "small",
+											sx: { borderRadius: "8px" },
+											fullWidth: true,
+										},
+									}}
+									format="DD/MM/YYYY HH:mm"
+									disablePast
+								/>
+							</LocalizationProvider>
 						</Box>
 					)}
 				</Box>

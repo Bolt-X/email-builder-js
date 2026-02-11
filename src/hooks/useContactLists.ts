@@ -15,6 +15,7 @@ export const useGetAllContactLists = (from?: string, to?: string, searchText?: s
 		queryKey: ["contact_lists", from, to, searchText],
 		queryFn: () => getAllContactLists(from, to, searchText),
 		select: (data) => data ?? [],
+		refetchOnWindowFocus: false,
 	});
 };
 
@@ -24,10 +25,10 @@ export const useCreateContactList = () => {
 		mutationFn: (payload: any) => createContactList(payload),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["contact_lists"] });
-			toast.success(i18n.t("contacts.create_contact_list_success"));
+			toast.success(i18n.t("contacts.create_success"));
 		},
 		onError: () => {
-			toast.error(i18n.t("contacts.create_contact_list_error"));
+			toast.error(i18n.t("contacts.create_error"));
 		},
 	});
 };

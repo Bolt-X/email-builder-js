@@ -87,11 +87,7 @@ export default function CreateContactModal({
 					.required(
 						t("common.validation.required", { field: t("contacts.address") }),
 					),
-				phone_number: yup.string().required(
-					t("common.validation.required", {
-						field: t("contacts.phone_number"),
-					}),
-				),
+				phone_number: yup.string().nullable().notRequired(),
 				province: yup.string().nullable().notRequired(),
 				ward: yup.string().nullable().notRequired(),
 				birthday: yup.string().nullable().notRequired(),
@@ -201,12 +197,11 @@ export default function CreateContactModal({
 			delete data.province;
 			delete data.contact_lists;
 			await handleSubmit({ contact: data, slug: id });
-		} catch (error) {
-			console.error("Failed to create contact:", error);
-		} finally {
 			if (!initialData) {
 				form.reset();
 			}
+		} catch (error) {
+			console.error("Failed to create contact:", error);
 		}
 	};
 
@@ -216,13 +211,12 @@ export default function CreateContactModal({
 			delete data.province;
 			delete data.contact_lists;
 			await handleSubmit({ contact: data, slug: id });
-		} catch (error) {
-			console.error("Failed to create contact:", error);
-		} finally {
 			onClose();
 			if (!initialData) {
 				form.reset();
 			}
+		} catch (error) {
+			console.error("Failed to create contact:", error);
 		}
 	};
 
@@ -646,14 +640,11 @@ export default function CreateContactModal({
 									sx={{ mb: 1, fontWeight: 600 }}
 								>
 									{t("contacts.phone_number")}{" "}
-									<span style={{ color: "red" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth
 									size="small"
 									{...form.register("phone_number")}
-									error={!!form.formState.errors.phone_number}
-									helperText={form.formState.errors.phone_number?.message}
 									sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
 								/>
 							</Box>
