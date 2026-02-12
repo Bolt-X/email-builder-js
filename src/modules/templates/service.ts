@@ -7,6 +7,8 @@ import {
 } from "@directus/sdk";
 import { directusClientWithRest } from "../../services/directus";
 import { DirectusTemplate, Template } from "./types";
+import { toast } from "react-toastify";
+import { fetchTemplates } from "./store";
 export type { Template };
 
 /**
@@ -26,6 +28,7 @@ function transformFromDirectus(directusTemplate: DirectusTemplate): Template {
 		thumbnail: directusTemplate.thumbnail,
 		createdAt: directusTemplate.date_created,
 		updatedAt: directusTemplate.date_updated,
+		userName: directusTemplate.user_created ? `${directusTemplate.user_created?.first_name} ${directusTemplate.user_created?.last_name}` : "",
 	};
 }
 
@@ -66,7 +69,7 @@ export async function getTemplatesByCampaign(
 						_eq: campaignId,
 					},
 				},
-				sort: ["name"],
+				sort: ["-date_created"],
 			}),
 		);
 		return (res as DirectusTemplate[]).map(transformFromDirectus);
@@ -83,8 +86,8 @@ export async function getAllTemplates(): Promise<Template[]> {
 	try {
 		const res = await directusClientWithRest.request(
 			readItems("templates", {
-				fields: ["*"],
-				sort: ["name"],
+				fields: ["*", "user_created.first_name", "user_created.last_name"],
+				sort: ["-date_created"],
 			}),
 		);
 		return (res as DirectusTemplate[]).map(transformFromDirectus);
@@ -175,14 +178,20 @@ export async function duplicateTemplate(
 			throw new Error("Template not found");
 		}
 
-		return await createTemplate(original.campaignId, {
+		const duplicatedTemplate = await createTemplate(original.campaignId, {
 			name: newName || `${original.name} (Copy)`,
 			description: original.description,
 			json: original.json,
 			html: original.html,
 			thumbnail: original.thumbnail,
 		});
+		if (duplicatedTemplate) {
+			await fetchTemplates();
+			toast.success("Template duplicated successfully");
+		}
+		return duplicatedTemplate;
 	} catch (error) {
+		toast.error("Error duplicating template");
 		console.error("Error duplicating template:", error);
 		throw error;
 	}

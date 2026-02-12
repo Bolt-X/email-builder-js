@@ -37,18 +37,18 @@ export default function TextSidebarPanel({
 	return (
 		<BaseSidebarPanel title="Text block">
 			{data.props?.markdown ? (
-				// <RichTextEditorInput
-				// 	defaultValue={data.props?.text ?? ""}
-				// 	onChange={(text) =>
-				// 		updateData({ ...data, props: { ...data.props, text } })
-				// 	}
-				// />
 				<RichTextEditorInput
 					defaultValue={data.props?.text ?? ""}
 					onChange={(text) =>
 						updateData({ ...data, props: { ...data.props, text } })
 					}
 				/>
+				// <RichTextEditorInputAlt
+				// 	defaultValue={data.props?.text ?? ""}
+				// 	onChange={(text) =>
+				// 		updateData({ ...data, props: { ...data.props, text } })
+				// 	}
+				// />
 			) : (
 				<TextInput
 					label="Content"

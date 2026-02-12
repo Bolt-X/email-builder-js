@@ -163,6 +163,20 @@ export default function TemplateFilters({
 								<FormControlLabel
 									control={
 										<Checkbox
+											checked={visibleColumns.includes("user_name")}
+											onChange={() => handleColumnToggle("user_name")}
+											size="small"
+										/>
+									}
+									label={
+										<Typography variant="body2">
+											{t("templates.columns.user_name")}
+										</Typography>
+									}
+								/>
+								<FormControlLabel
+									control={
+										<Checkbox
 											checked={visibleColumns.includes("context")}
 											onChange={() => handleColumnToggle("context")}
 											size="small"

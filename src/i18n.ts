@@ -222,6 +222,8 @@ const resources = {
 					timestamps: "Timestamps",
 					actions: "Actions",
 					title: "Columns",
+					user_name: "User Created",
+					no_user_created: "No user created",
 				},
 				actions: {
 					edit_legacy: "Edit in Legacy Editor",
@@ -601,6 +603,8 @@ const resources = {
 					timestamps: "Thời gian",
 					actions: "Thao tác",
 					title: "Cột",
+					user_name: "Người tạo",
+					no_user_created: "Không có người tạo",
 				},
 				actions: {
 					edit_legacy: "Chỉnh sửa trong Legacy Editor",

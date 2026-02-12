@@ -12,6 +12,7 @@ export interface Template {
 	thumbnail?: string;
 	createdAt?: string;
 	updatedAt?: string;
+	userName?: string;
 }
 
 // Directus format (for API compatibility)
@@ -25,4 +26,9 @@ export interface DirectusTemplate {
 	thumbnail?: string;
 	date_created?: string;
 	date_updated?: string;
+	user_created?: {
+		first_name?: string;
+		last_name?: string;
+	};
+	user_name?: string;
 }

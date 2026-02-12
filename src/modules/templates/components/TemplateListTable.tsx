@@ -32,6 +32,9 @@ import {
 	duplicateTemplateAction,
 	useVisibleColumns,
 } from "../store";
+import ModalDuplicateTemplate from "./ModalDuplicateTemplate";
+import { setSelectedMainTab } from "../../../documents/editor/EditorContext";
+import DrawerPreview from "./DrawerPreview";
 
 interface TemplateListTableProps {
 	templates: Template[];
@@ -46,6 +49,9 @@ export default function TemplateListTable({
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedId, setSelectedId] = useState<string | number | null>(null);
 	const [selectedRows, setSelectedRows] = useState<(string | number)[]>([]);
+	const [openModalDuplicate, setOpenModalDuplicate] = useState(false);
+	const [openDrawerPreview, setOpenDrawerPreview] = useState(false);
+	const [selectedTemplateId, setSelectedTemplateId] = useState<string | number | null>(null);
 
 	// Pagination state
 	const [page, setPage] = useState(0);
@@ -124,6 +130,7 @@ export default function TemplateListTable({
 
 	return (
 		<>
+			<ModalDuplicateTemplate open={openModalDuplicate} onClose={() => setOpenModalDuplicate(false)} id={selectedId} />
 			<Box
 				sx={{
 					p: 0,
@@ -164,6 +171,11 @@ export default function TemplateListTable({
 								<TableCell sx={{ fontWeight: 600 }}>
 									{t("templates.columns.name")}
 								</TableCell>
+								{visibleColumns.includes("user_name") && (
+									<TableCell sx={{ fontWeight: 600 }}>
+										{t("templates.columns.user_name")}
+									</TableCell>
+								)}
 								{visibleColumns.includes("context") && (
 									<TableCell sx={{ fontWeight: 600 }}>
 										{t("templates.columns.context")}
@@ -191,7 +203,7 @@ export default function TemplateListTable({
 										hover
 										selected={isSelected}
 										sx={{ cursor: "pointer" }}
-										onClick={() => navigate(`/templates/${template.id}`)}
+										onClick={(e) => { e.stopPropagation(); navigate(`/templates/${template.id}`) }}
 									>
 										<TableCell
 											padding="checkbox"
@@ -238,6 +250,16 @@ export default function TemplateListTable({
 												</Box>
 											</Box>
 										</TableCell>
+										{visibleColumns.includes("user_name") && (
+											<TableCell>
+												<Typography
+													variant="body2"
+													color="text.secondary"
+												>
+													{template.userName || t("templates.columns.no_user_created")}
+												</Typography>
+											</TableCell>
+										)}
 										{visibleColumns.includes("context") && (
 											<TableCell>
 												<Typography
@@ -257,16 +279,16 @@ export default function TemplateListTable({
 														{t("common.created_at")}{" "}
 														{template.createdAt
 															? new Date(
-																	template.createdAt,
-																).toLocaleDateString()
+																template.createdAt,
+															).toLocaleDateString()
 															: "-"}
 													</Box>
 													<Box>
 														{t("common.updated_at")}{" "}
 														{template.updatedAt
 															? new Date(
-																	template.updatedAt,
-																).toLocaleDateString()
+																template.updatedAt,
+															).toLocaleDateString()
 															: "-"}
 													</Box>
 												</Box>
@@ -282,7 +304,12 @@ export default function TemplateListTable({
 												justifyContent="flex-end"
 											>
 												<Tooltip title={t("templates.actions.view_preview")}>
-													<IconButton size="small">
+													<IconButton size="small" onClick={(e) => {
+														e.stopPropagation();
+														setSelectedMainTab("preview")
+														setSelectedTemplateId(template.id);
+														setOpenDrawerPreview(true);
+													}}>
 														<VisibilityOutlined fontSize="small" />
 													</IconButton>
 												</Tooltip>
@@ -349,7 +376,7 @@ export default function TemplateListTable({
 				>
 					<Edit sx={{ mr: 1, fontSize: 20 }} /> {t("common.edit")}
 				</MenuItem>
-				<MenuItem onClick={handleDuplicate}>
+				<MenuItem onClick={() => setOpenModalDuplicate(true)}>
 					<ContentCopy sx={{ mr: 1, fontSize: 20 }} /> {t("common.duplicate")}
 				</MenuItem>
 				<MenuItem
@@ -359,6 +386,7 @@ export default function TemplateListTable({
 					<Delete sx={{ mr: 1, fontSize: 20 }} /> {t("common.delete")}
 				</MenuItem>
 			</Menu>
+			<DrawerPreview open={openDrawerPreview} onClose={() => { setOpenDrawerPreview(false); setSelectedTemplateId(null); }} id={selectedTemplateId} />
 		</>
 	);
 }
