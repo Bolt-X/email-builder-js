@@ -45,6 +45,7 @@ import {
 import { sendTestEmail, startCampaign } from "../../service";
 import { useDocument } from "../../../../documents/editor/EditorContext";
 import { renderToStaticMarkup } from "@usewaypoint/email-builder";
+import { READER_DICTIONARY } from "../../../../documents/editor/core";
 import CampaignHeader from "./CampaignHeader";
 import CampaignSettingsForm from "./CampaignSettingsForm";
 import { setMessage } from "../../../../contexts";
@@ -127,9 +128,17 @@ export default function CampaignEditPage() {
 			setEditorJson(document);
 			// Generate HTML from document
 			try {
-				const generatedHtml = renderToStaticMarkup(document as any, {
-					rootBlockId: "root",
-				});
+				const baseCode = renderToStaticMarkup(
+					document as any,
+					{
+						rootBlockId: "root",
+						blockConfigurationDictionary: READER_DICTIONARY,
+					} as any,
+				);
+				const generatedHtml = baseCode.replace(
+					"padding:32px 0",
+					"padding:32px 12px",
+				);
 				setHtml(generatedHtml);
 			} catch (error) {
 				console.error("Error generating HTML:", error);
@@ -173,9 +182,17 @@ export default function CampaignEditPage() {
 
 			// Save template if dirty
 			if (templateDirty && document) {
-				const generatedHtml = renderToStaticMarkup(document as any, {
-					rootBlockId: "root",
-				});
+				const baseCode = renderToStaticMarkup(
+					document as any,
+					{
+						rootBlockId: "root",
+						blockConfigurationDictionary: READER_DICTIONARY,
+					} as any,
+				);
+				const generatedHtml = baseCode.replace(
+					"padding:32px 0",
+					"padding:32px 12px",
+				);
 				await saveCampaignTemplate(id, document, generatedHtml);
 			}
 
@@ -192,7 +209,15 @@ export default function CampaignEditPage() {
 				severity: "error",
 			});
 		}
-	}, [id, campaign, autosaveState.isDirty, templateDirty, document, formInstance, t]);
+	}, [
+		id,
+		campaign,
+		autosaveState.isDirty,
+		templateDirty,
+		document,
+		formInstance,
+		t,
+	]);
 
 	// Handle send test email
 	const handleSendTestEmail = useCallback(async () => {

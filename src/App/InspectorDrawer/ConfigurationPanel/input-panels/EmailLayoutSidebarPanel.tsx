@@ -9,6 +9,7 @@ import BaseSidebarPanel from "./helpers/BaseSidebarPanel";
 import ColorInput, { NullableColorInput } from "./helpers/inputs/ColorInput";
 import { NullableFontFamily } from "./helpers/inputs/FontFamily";
 import SliderInput from "./helpers/inputs/SliderInput";
+import ImageInput from "./helpers/inputs/ImageInput";
 
 type EmailLayoutSidebarFieldsProps = {
 	data: EmailLayoutProps;
@@ -42,6 +43,11 @@ export default function EmailLayoutSidebarFields({
 				label={t("templates.editor.canvas_color")}
 				defaultValue={data.canvasColor ?? "#FFFFFF"}
 				onChange={(canvasColor) => updateData({ ...data, canvasColor })}
+			/>
+			<ImageInput
+				label="Background image"
+				defaultValue={data.backgroundImage ?? ""}
+				onChange={(backgroundImage) => updateData({ ...data, backgroundImage })}
 			/>
 			<NullableColorInput
 				label={t("templates.editor.canvas_border_color")}

@@ -31,6 +31,7 @@ import {
 	useSelectedMainTab,
 	useSelectedScreenSize,
 } from "../../documents/editor/EditorContext";
+import { READER_DICTIONARY } from "../../documents/editor/core";
 import ToggleInspectorPanelButton from "../InspectorDrawer/ToggleInspectorPanelButton";
 import ToggleSamplesPanelButton from "../SamplesDrawer/ToggleSamplesPanelButton";
 
@@ -127,6 +128,7 @@ export default function TemplatePanel() {
 						<Reader
 							document={document as any}
 							rootBlockId="root"
+							{...({ blockConfigurationDictionary: READER_DICTIONARY } as any)}
 						/>
 					</Box>
 				);

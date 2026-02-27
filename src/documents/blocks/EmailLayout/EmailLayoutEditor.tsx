@@ -46,6 +46,12 @@ export default function EmailLayoutEditor(props: EmailLayoutProps) {
 			}}
 			style={{
 				backgroundColor: props.backdropColor ?? "#F5F5F5",
+				backgroundImage: props.backgroundImage
+					? `url('${props.backgroundImage}')`
+					: undefined,
+				backgroundRepeat: "no-repeat",
+				backgroundSize: "cover",
+				backgroundPosition: "center center",
 				color: props.textColor ?? "#262626",
 				fontFamily: getFontFamily(props.fontFamily),
 				fontSize: "16px",
@@ -53,7 +59,7 @@ export default function EmailLayoutEditor(props: EmailLayoutProps) {
 				letterSpacing: "0.15008px",
 				lineHeight: "1.5",
 				margin: "0",
-				padding: "32px 0",
+				padding: "32px 12px",
 				width: "100%",
 				minHeight: "100%",
 			}}

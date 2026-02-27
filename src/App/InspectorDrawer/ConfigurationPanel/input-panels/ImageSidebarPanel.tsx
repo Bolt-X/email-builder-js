@@ -1,6 +1,7 @@
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LinkIcon from "@mui/icons-material/Link";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import {
 	Alert,
 	Box,
@@ -28,6 +29,7 @@ import TextDimensionInput from "./helpers/inputs/TextDimensionInput";
 import TextInput from "./helpers/inputs/TextInput";
 import MultiStylePropertyPanel from "./helpers/style-inputs/MultiStylePropertyPanel";
 import { CircularProgress } from "@mui/material";
+import ImageLibrary from "./helpers/inputs/ImageLibrary";
 
 type ImageSidebarPanelProps = {
 	data: ImageProps;
@@ -47,11 +49,11 @@ export default function ImageSidebarPanel({
 	const [preview, setPreview] = useState<string | null>(null);
 
 	const updateData = (d: unknown) => {
-		const res = ImagePropsSchema.safeParse(d);
+		const res: any = ImagePropsSchema.safeParse(d);
 
 		// Override res with success = true, data = d
 		res.success = true;
-		res.data = d;
+		res.data = d as any;
 
 		if (res.success) {
 			setData(res.data);
@@ -64,13 +66,13 @@ export default function ImageSidebarPanel({
 		setProgress(0);
 		try {
 			const res = await uploadImageWithProgress(file, (percent: number) =>
-				setProgress(percent)
+				setProgress(percent),
 			);
 			const url = assetURL + res?.id;
 			updateData({ ...data, props: { ...data.props, url } });
-		} catch (err) {
+		} catch (err: any) {
 			console.error(err);
-			setError("Upload successfully. Please try again!");
+			setError("Upload failed. Please try again!");
 		} finally {
 			setUploading(false);
 		}
@@ -83,7 +85,9 @@ export default function ImageSidebarPanel({
 		// ✅ Kiểm tra dung lượng tối đa (5MB)
 		const maxSize = 5 * 1024 * 1024; // 5MB
 		if (file.size > maxSize) {
-			setError("Your file exceeds the 5MB limit. Please upload a smaller one!");
+			setError(
+				"Your file exceeds the 5MB limit. Please upload a smaller one!" as any,
+			);
 			return;
 		}
 		setPreview(URL.createObjectURL(file));
@@ -118,6 +122,11 @@ export default function ImageSidebarPanel({
 					icon={<CloudUploadIcon fontSize="small" />}
 					iconPosition="start"
 					label="Upload"
+				/>
+				<Tab
+					icon={<PhotoLibraryIcon fontSize="small" />}
+					iconPosition="start"
+					label="Library"
 				/>
 				<Tab
 					icon={<LinkIcon fontSize="small" />}
@@ -179,7 +188,7 @@ export default function ImageSidebarPanel({
 					{(preview || data.props?.url) && (
 						<Box sx={{ position: "relative", display: "inline-block" }}>
 							<img
-								src={preview || data.props.url}
+								src={preview || data.props?.url || ""}
 								alt="preview"
 								style={{
 									maxWidth: "100%",
@@ -257,8 +266,22 @@ export default function ImageSidebarPanel({
 				</Box>
 			)}
 
-			{/* URL tab */}
+			{/* Library tab */}
 			{tab === 1 && (
+				<ImageLibrary
+					selectedValue={data.props?.url}
+					onSelect={(url) => {
+						updateData({ ...data, props: { ...data.props, url } });
+					}}
+					onClear={() => {
+						updateData({ ...data, props: { ...data.props, url: null } });
+						setPreview(null);
+					}}
+				/>
+			)}
+
+			{/* URL tab */}
+			{tab === 2 && (
 				<Box mt={2}>
 					<TextInput
 						label="Image URL"

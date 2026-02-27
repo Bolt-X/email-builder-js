@@ -22,6 +22,8 @@ interface SaveNewTemplateDialogProps {
 	campaignId: string | number;
 }
 
+import { READER_DICTIONARY } from "../../../documents/editor/core";
+
 export default function SaveNewTemplateDialog({
 	open,
 	onClose,
@@ -40,7 +42,13 @@ export default function SaveNewTemplateDialog({
 		}
 
 		try {
-			const html = renderToStaticMarkup(document, { rootBlockId: "root" });
+			const html = renderToStaticMarkup(
+				document as any,
+				{
+					rootBlockId: "root",
+					blockConfigurationDictionary: READER_DICTIONARY,
+				} as any,
+			);
 			await createTemplateAction(campaignId, {
 				name: name.trim(),
 				description: "",

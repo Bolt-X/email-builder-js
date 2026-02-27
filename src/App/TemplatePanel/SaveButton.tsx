@@ -12,6 +12,7 @@ import {
 	updateTemplateAction,
 	fetchTemplates,
 } from "../../modules/templates/store";
+import { READER_DICTIONARY } from "../../documents/editor/core";
 
 export default function SaveButton() {
 	const { t } = useTranslation();
@@ -21,10 +22,16 @@ export default function SaveButton() {
 
 	const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
 
-	const code = useMemo(
-		() => renderToStaticMarkup(document as any, { rootBlockId: "root" }),
-		[document],
-	);
+	const code = useMemo(() => {
+		const baseCode = renderToStaticMarkup(
+			document as any,
+			{
+				rootBlockId: "root",
+				blockConfigurationDictionary: READER_DICTIONARY,
+			} as any,
+		);
+		return baseCode.replace("padding:32px 0", "padding:32px 12px");
+	}, [document]);
 
 	const handleCreateTemplate = async () => {
 		try {
