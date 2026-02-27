@@ -19,8 +19,8 @@ export default function TextSidebarPanel({
 }: TextSidebarPanelProps) {
 	const [, setErrors] = useState<Zod.ZodError | null>(null);
 
-	const updateData = (d: unknown) => {
-		const res = TextPropsSchema.safeParse(d);
+	const updateData = (d: any) => {
+		const res = TextPropsSchema.safeParse(d) as any;
 
 		// Overwrite trường success = true, data = d để apply style khác cho text
 		res.success = true;
@@ -37,19 +37,19 @@ export default function TextSidebarPanel({
 	return (
 		<BaseSidebarPanel title="Text block">
 			{data.props?.markdown ? (
-				// <RichTextEditorInput
-				// 	defaultValue={data.props?.text ?? ""}
-				// 	onChange={(text) =>
-				// 		updateData({ ...data, props: { ...data.props, text } })
-				// 	}
-				// />
-				<RichTextEditorInputAlt
+				<RichTextEditorInput
 					defaultValue={data.props?.text ?? ""}
 					onChange={(text) =>
 						updateData({ ...data, props: { ...data.props, text } })
 					}
 				/>
 			) : (
+				// <RichTextEditorInputAlt
+				// 	defaultValue={data.props?.text ?? ""}
+				// 	onChange={(text) =>
+				// 		updateData({ ...data, props: { ...data.props, text } })
+				// 	}
+				// />
 				<TextInput
 					label="Content"
 					rows={5}
@@ -72,7 +72,7 @@ export default function TextSidebarPanel({
 				names={[
 					"color",
 					"backgroundColor",
-					// "backgroundImage",
+					"backgroundImage",
 					"fontFamily",
 					"fontSize",
 					"fontWeight",

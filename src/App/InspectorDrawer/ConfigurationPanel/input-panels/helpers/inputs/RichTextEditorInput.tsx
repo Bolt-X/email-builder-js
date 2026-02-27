@@ -26,7 +26,15 @@ import {
 	MenuDivider,
 	MenuSelectHeading,
 	RichTextEditor,
+	MenuButtonUndo,
+	MenuButtonRedo,
 	type RichTextEditorRef,
+	MenuButtonStrikethrough,
+	MenuButtonAlignLeft,
+	MenuButtonAlignCenter,
+	MenuButtonAlignRight,
+	MenuButtonAlignJustify,
+	MenuButtonCodeBlock,
 } from "mui-tiptap";
 import { useRef } from "react";
 
@@ -72,6 +80,7 @@ const RichTextEditorInput = ({ defaultValue, onChange }: Props) => {
 					<MenuButtonBold />
 					<MenuButtonItalic />
 					<MenuButtonUnderline />
+					<MenuButtonStrikethrough />
 					<MenuDivider />
 
 					<MenuButtonTextColor
@@ -94,14 +103,21 @@ const RichTextEditorInput = ({ defaultValue, onChange }: Props) => {
 					/>
 
 					<MenuDivider />
+					<MenuButtonAlignLeft />
+					<MenuButtonAlignCenter />
+					<MenuButtonAlignRight />
+					<MenuButtonAlignJustify />
+					<MenuDivider />
 					<MenuButtonBlockquote />
+					<MenuButtonCodeBlock />
+					<MenuDivider />
 					<MenuButtonEditLink />
 					<LinkBubbleMenu />
-					<MenuButtonSubscript />
-					<MenuButtonSuperscript />
 					<MenuDivider />
 					<MenuButtonOrderedList />
 					<MenuButtonBulletedList />
+					<MenuButtonUndo />
+					<MenuButtonRedo />
 				</MenuControlsContainer>
 			)}
 		/>

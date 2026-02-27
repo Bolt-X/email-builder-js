@@ -1,6 +1,6 @@
 import { Button } from "@mui/material";
 import React from "react";
-import { useCurrentTemplate } from "../../contexts/templates";
+import { useCurrentTemplate } from "../../modules/templates/store";
 import { setSelectedMainTab } from "../../documents/editor/EditorContext";
 
 type Props = {};

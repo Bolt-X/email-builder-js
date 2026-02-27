@@ -1,6 +1,7 @@
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LinkIcon from "@mui/icons-material/Link";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import {
 	Box,
 	Button,
@@ -15,6 +16,7 @@ import {
 import { useState } from "react";
 import TextInput from "./TextInput";
 import { uploadImageWithProgress } from "../../../../../../services/files";
+import ImageLibrary from "./ImageLibrary";
 
 type Props = {
 	label: string;
@@ -45,7 +47,7 @@ const ImageInput = ({ label, defaultValue, onChange }: Props) => {
 
 		try {
 			const res = await uploadImageWithProgress(file, (percent: number) =>
-				setProgress(percent)
+				setProgress(percent),
 			);
 			const url = assetURL + res?.id;
 			onChange(url);
@@ -100,6 +102,11 @@ const ImageInput = ({ label, defaultValue, onChange }: Props) => {
 					label="Upload"
 				/>
 				<Tab
+					icon={<PhotoLibraryIcon fontSize="small" />}
+					iconPosition="start"
+					label="Library"
+				/>
+				<Tab
 					icon={<LinkIcon fontSize="small" />}
 					iconPosition="start"
 					label="URL"
@@ -117,6 +124,7 @@ const ImageInput = ({ label, defaultValue, onChange }: Props) => {
 						textAlign: "center",
 						backgroundColor: "#f9fbfc",
 						position: "relative",
+						width: "100%",
 					}}
 				>
 					{error && (
@@ -226,9 +234,23 @@ const ImageInput = ({ label, defaultValue, onChange }: Props) => {
 				</Box>
 			)}
 
-			{/* URL tab */}
+			{/* Library tab */}
 			{tab === 1 && (
-				<Box mt={2}>
+				<ImageLibrary
+					selectedValue={defaultValue}
+					onSelect={(url) => {
+						onChange(url);
+					}}
+					onClear={handleClear}
+				/>
+			)}
+
+			{/* URL tab */}
+			{tab === 2 && (
+				<Box
+					mt={2}
+					sx={{ width: "100%" }}
+				>
 					<TextInput
 						label={null}
 						defaultValue={defaultValue}

@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es2015",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "target": "es2020",
     "module": "esnext",
     "outDir": "dist",
     "jsx": "react-jsx",
-    "moduleResolution": "node", // hoặc "nodenext" nếu project dùng ESM
-    "baseUrl": "/", // tùy chọn
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "baseUrl": "/",
     "paths": {
       "@/*": [
         "*"

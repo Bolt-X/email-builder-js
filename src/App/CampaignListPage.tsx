@@ -1,11 +1,4 @@
 import React from 'react'
-
-type Props = {}
-
-const CampaignListPage = (props: Props) => {
-  return (
-    <div>CampaignListPage</div>
-  )
-}
+import CampaignListPage from '../modules/campaigns/components/CampaignListPage'
 
 export default CampaignListPage

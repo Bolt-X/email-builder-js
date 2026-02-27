@@ -32,16 +32,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { setMessage } from "../../contexts";
 import {
 	setCurrentTemplate,
-	useFetchTemplates,
+	fetchTemplates,
 	useTemplates,
-} from "../../contexts/templates";
+	deleteTemplateAction,
+	updateTemplateAction,
+	createTemplateAction,
+} from "../../modules/templates/store";
 import { setDocument } from "../../documents/editor/EditorContext";
 import EMPTY_EMAIL_MESSAGE from "../../getConfiguration/sample/empty-email-message";
-import {
-	createTemplate,
-	deleteTemplate,
-	updateTemplate,
-} from "../../services/template";
 
 type Props = {};
 
@@ -85,16 +83,16 @@ const TemplateSidebarList = (props: Props) => {
 
 	const handleConfirmDelete = async () => {
 		try {
-			await deleteTemplate(selectedId);
+			await deleteTemplateAction(selectedId!);
 			setCurrentTemplate(null);
 			setDocument(EMPTY_EMAIL_MESSAGE);
 			navigate("/");
-		} catch (error) {
-			setMessage(error);
+		} catch (error: any) {
+			setMessage(error.message || "Error deleting template");
 		} finally {
 			setOpenConfirm(false);
 			handleMenuClose();
-			useFetchTemplates();
+			fetchTemplates();
 		}
 	};
 
@@ -110,11 +108,11 @@ const TemplateSidebarList = (props: Props) => {
 
 	const handleRenameSave = async () => {
 		try {
-			await updateTemplate(renameId, { name: renameValue });
+			await updateTemplateAction(renameId!, { name: renameValue });
 			setRenameId(null);
-			useFetchTemplates();
-		} catch (error) {
-			setMessage(error);
+			fetchTemplates();
+		} catch (error: any) {
+			setMessage(error.message || "Error updating template");
 		}
 	};
 
@@ -127,15 +125,17 @@ const TemplateSidebarList = (props: Props) => {
 		try {
 			const tpl = templates.find((t) => t.id === selectedId);
 			if (tpl) {
-				await createTemplate({
-					...tpl,
-					id: undefined, // bỏ id
+				await createTemplateAction(tpl.campaignId, {
 					name: `${tpl.name} copy`,
+					description: tpl.description,
+					json: tpl.json,
+					html: tpl.html,
+					thumbnail: tpl.thumbnail,
 				});
-				useFetchTemplates();
+				fetchTemplates();
 			}
-		} catch (error) {
-			setMessage(error);
+		} catch (error: any) {
+			setMessage(error.message || "Error duplicating template");
 		} finally {
 			handleMenuClose();
 		}

@@ -6,6 +6,8 @@ import {
 	HtmlOutlined,
 	MonitorOutlined,
 	PhoneIphoneOutlined,
+	ChevronLeft,
+	SaveOutlined,
 } from "@mui/icons-material";
 import {
 	Box,
@@ -20,7 +22,7 @@ import {
 	ToggleButtonGroup,
 	Tooltip,
 } from "@mui/material";
-import { Reader } from "@usewaypoint/email-builder";
+import { Reader, renderToStaticMarkup } from "@usewaypoint/email-builder";
 
 import EditorBlock from "../../documents/editor/EditorBlock";
 import {
@@ -29,6 +31,7 @@ import {
 	useSelectedMainTab,
 	useSelectedScreenSize,
 } from "../../documents/editor/EditorContext";
+import { READER_DICTIONARY } from "../../documents/editor/core";
 import ToggleInspectorPanelButton from "../InspectorDrawer/ToggleInspectorPanelButton";
 import ToggleSamplesPanelButton from "../SamplesDrawer/ToggleSamplesPanelButton";
 
@@ -41,16 +44,43 @@ import SaveButton from "./SaveButton";
 import UndoButton from "./UndoButton";
 import RedoButton from "./RedoButton";
 import DrawerNote from "../../components/drawers/DrawerNote";
-import { useCurrentTemplate } from "../../contexts/templates";
+import { useCurrentTemplate } from "../../modules/templates/store";
 import TemplateNameField from "../../components/inputs/TemplateNameField";
 import ShowHTML from "../ShowHTML";
+import SaveNewTemplateDialog from "../../modules/templates/components/SaveNewTemplateDialog";
+import { setMessage } from "../../contexts";
+import { useTranslation } from "react-i18next";
+import { useParams, useNavigate } from "react-router-dom";
 
 export default function TemplatePanel() {
+	const { t } = useTranslation();
+	const { id } = useParams();
+	const navigate = useNavigate();
 	const document = useDocument();
 	const selectedMainTab = useSelectedMainTab();
 	const selectedScreenSize = useSelectedScreenSize();
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+	const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 	const open = Boolean(anchorEl);
+
+	const isNew = id === "new";
+
+	const handleManualSaveClick = () => {
+		try {
+			const html = renderToStaticMarkup(document as any, {
+				rootBlockId: "root",
+			});
+			const blockCount = (document.root.data as any).childrenIds?.length || 0;
+			if (blockCount === 0) {
+				setMessage("At least one block is required to save the template.");
+				return;
+			}
+			setSaveDialogOpen(true);
+		} catch (error) {
+			console.error("Error rendering document to HTML:", error);
+			setMessage("Failed to render template. Please check for errors.");
+		}
+	};
 
 	const handleClick = (event: React.MouseEvent<HTMLElement>) => {
 		setAnchorEl(event.currentTarget);
@@ -96,8 +126,9 @@ export default function TemplatePanel() {
 				return (
 					<Box sx={mainBoxSx}>
 						<Reader
-							document={document}
+							document={document as any}
 							rootBlockId="root"
+							{...({ blockConfigurationDictionary: READER_DICTIONARY } as any)}
 						/>
 					</Box>
 				);
@@ -115,7 +146,7 @@ export default function TemplatePanel() {
 					height: 49,
 					borderBottom: 1,
 					borderColor: "divider",
-					backgroundColor: "white",
+					backgroundColor: "background.paper",
 					position: "sticky",
 					top: 0,
 					zIndex: "appBar",
@@ -125,7 +156,7 @@ export default function TemplatePanel() {
 				justifyContent="space-between"
 				alignItems="center"
 			>
-				<ToggleSamplesPanelButton />
+				{/* <ToggleSamplesPanelButton /> */}
 				<Stack
 					px={2}
 					direction="row"
@@ -137,20 +168,35 @@ export default function TemplatePanel() {
 					<Stack
 						direction="row"
 						spacing={2}
+						alignItems="center"
 					>
+						<Button
+							size="small"
+							startIcon={<ChevronLeft />}
+							onClick={() => navigate("/templates")}
+							sx={{ mr: 1 }}
+						>
+							{t("templates.editor.back")}
+						</Button>
+						<Divider
+							orientation="vertical"
+							flexItem
+							sx={{ height: 24, alignSelf: "center" }}
+						/>
+						<TemplateNameField />
+						<Divider
+							orientation="vertical"
+							flexItem
+							sx={{ height: 24, alignSelf: "center" }}
+						/>
 						<MainTabsGroup />
 						<Divider
 							orientation="vertical"
 							flexItem
+							sx={{ height: 24, alignSelf: "center" }}
 						/>
 						<UndoButton />
 						<RedoButton />
-						<SaveButton />
-						{/* <Divider
-							orientation="vertical"
-							flexItem
-						/> */}
-						{/* <TemplateNameField /> */}
 					</Stack>
 					<Stack
 						direction="row"
@@ -163,23 +209,28 @@ export default function TemplatePanel() {
 							onChange={handleScreenSizeChange}
 						>
 							<ToggleButton value="desktop">
-								<Tooltip title="Desktop view">
+								<Tooltip title={t("templates.editor.desktop_view")}>
 									<MonitorOutlined fontSize="small" />
 								</Tooltip>
 							</ToggleButton>
 							<ToggleButton value="mobile">
-								<Tooltip title="Mobile view">
+								<Tooltip title={t("templates.editor.mobile_view")}>
 									<PhoneIphoneOutlined fontSize="small" />
 								</Tooltip>
 							</ToggleButton>
 						</ToggleButtonGroup>
+
+						<Box sx={{ display: "flex", alignItems: "center" }}>
+							<SaveButton />
+						</Box>
+
 						<Divider
 							orientation="vertical"
 							flexItem
 						/>
 
 						{/* Dropdown JSON Menu */}
-						<Tooltip title="Code actions">
+						<Tooltip title={t("templates.editor.code_actions")}>
 							<IconButton
 								size="small"
 								onClick={handleClick}
@@ -229,6 +280,11 @@ export default function TemplatePanel() {
 				{renderMainPanel()}
 				<DrawerNote />
 			</Box>
+			<SaveNewTemplateDialog
+				open={saveDialogOpen}
+				onClose={() => setSaveDialogOpen(false)}
+				campaignId="mock-campaign-id" // Placeholder or from context
+			/>
 		</>
 	);
 }
